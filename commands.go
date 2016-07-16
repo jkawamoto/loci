@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jkawamoto/loci/command"
+	// "github.com/jkawamoto/loci/command"
 	"github.com/urfave/cli"
 )
 
@@ -16,3 +16,6 @@ func CommandNotFound(c *cli.Context, command string) {
 	fmt.Fprintf(os.Stderr, "%s: '%s' is not a %s command. See '%s --help'.", c.App.Name, command, c.App.Name, c.App.Name)
 	os.Exit(2)
 }
+
+// TODO: Flag: name
+// TODO: Tag: usename/loci/name
