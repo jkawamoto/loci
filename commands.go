@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	// "github.com/jkawamoto/loci/command"
 	"github.com/urfave/cli"
 )
 

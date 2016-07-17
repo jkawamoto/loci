@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/jkawamoto/loci/command"
 	"github.com/urfave/cli"
 )
 
@@ -18,7 +19,7 @@ func main() {
 	// app.Flags = GlobalFlags
 	// app.Commands = Commands
 	app.CommandNotFound = CommandNotFound
-	app.Action = Run
+	app.Action = command.Run
 
 	app.Run(os.Args)
 }
