@@ -1,4 +1,4 @@
-FROM quay.io/travisci/travis-{{.Travis.Language}}
+FROM {{.Travis.Language}}
 MAINTAINER Junpei Kawamoto <kawamoto.junpei@gmail.com>
 
 ENV TERM vt100
@@ -10,7 +10,7 @@ RUN apt-get update && \
     rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/
 {{end}}
 
-ADD {{.PWD}} /data
+ADD source.tar.gz /data
 WORKDIR /data
 
 {{range .Travis.Install}}

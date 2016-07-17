@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"os"
 	"text/template"
 )
 
@@ -11,11 +10,11 @@ const DockerfileAsset = "asset/Dockerfile"
 
 type travisExt struct {
 	*Travis
-	PWD string
+	Archive string
 }
 
-// Dockerfile creates a Dockerfile from an instance of Travis.
-func Dockerfile(travis *Travis) (res []byte, err error) {
+// NewDockerfile creates a Dockerfile from an instance of Travis.
+func NewDockerfile(travis *Travis, archive string) (res []byte, err error) {
 
 	data, err := Asset(DockerfileAsset)
 	if err != nil {
@@ -27,13 +26,9 @@ func Dockerfile(travis *Travis) (res []byte, err error) {
 		return
 	}
 
-	pwd, err := os.Getwd()
-	if err != nil {
-		return
-	}
 	param := travisExt{
-		Travis: travis,
-		PWD:    pwd,
+		Travis:  travis,
+		Archive: archive,
 	}
 
 	buf := bytes.Buffer{}

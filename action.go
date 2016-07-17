@@ -10,6 +10,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+const SourceArchive = "source.tar.gz"
+
 func Run(c *cli.Context) error {
 
 	filename := c.Args().First()
@@ -30,7 +32,16 @@ func run(filename string) (err error) {
 	fmt.Println(tempDir)
 	// defer os.RemoveAll(tempDir)
 
-	docker, err := Dockerfile(travis)
+	pwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	archive := filepath.Join(tempDir, SourceArchive)
+	if err = Archive(pwd, archive, nil); err != nil {
+		return
+	}
+
+	docker, err := NewDockerfile(travis, archive)
 	if err != nil {
 		return
 	}
