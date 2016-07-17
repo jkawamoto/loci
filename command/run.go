@@ -37,7 +37,7 @@ func run(filename string) (err error) {
 		return
 	}
 	archive := filepath.Join(tempDir, SourceArchive)
-	if err = Archive(pwd, archive, nil); err != nil {
+	if err = Archive(pwd, archive); err != nil {
 		return
 	}
 

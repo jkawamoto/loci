@@ -1,58 +1,64 @@
 package command
 
 import (
+	"archive/tar"
+	"compress/gzip"
+	"io"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
-	"strings"
 	"testing"
 )
-
-const archiveFile = "test.tar.gz"
 
 func TestArchive(t *testing.T) {
 
 	temp := os.TempDir()
-	target := path.Join(temp, archiveFile)
+	target := path.Join(temp, "test.tar.gz")
 	t.Logf("Creating an archive file: %s", target)
 
-	if err := Archive("..", target, []string{"*.tar"}); err != nil {
+	if err := Archive("..", target); err != nil {
 		t.Error(err.Error())
+		return
 	}
+	if _, err := os.Stat(target); err != nil {
+		t.Error(err.Error())
+		return
+	}
+	// defer os.Remove(target)
 
-	root, err := os.Getwd()
+	fp, err := os.Open(target)
 	if err != nil {
 		t.Error(err.Error())
+		return
 	}
+	defer fp.Close()
 
-	os.Chdir(temp)
-	defer func() {
-		os.Chdir(root)
-	}()
-	exec.Command("tar", "-zxvf", archiveFile)
-
-	if err := filepath.Walk(path.Join(root, ".."), checkExistence(temp)); err != nil {
+	zip, err := gzip.NewReader(fp)
+	if err != nil {
 		t.Error(err.Error())
+		return
 	}
 
-}
+	reader := tar.NewReader(zip)
+	for {
 
-func checkExistence(target string) filepath.WalkFunc {
-
-	return func(path string, info os.FileInfo, err error) error {
-
-		if info.IsDir() {
-			if strings.HasSuffix(path, ".git") {
-				return filepath.SkipDir
-			}
-			return nil
-		} else if strings.HasSuffix(path, ".tar") {
-			return nil
+		info, err := reader.Next()
+		if err != io.EOF {
+			break
+		} else if err != nil {
+			t.Error(err.Error())
+			return
 		}
 
-		_, check := os.Stat(path)
-		return check
+		original, err := os.Stat(filepath.Join("..", info.Name))
+		if err != nil {
+			t.Error(err.Error())
+			return
+		}
+		if info.Size != original.Size() {
+			t.Errorf("%s seems broken. (%d != %d)", info.Name, info.Size, original.Size())
+			return
+		}
 
 	}
 
