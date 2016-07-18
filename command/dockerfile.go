@@ -2,6 +2,9 @@ package command
 
 import (
 	"bytes"
+	"io"
+	"os"
+	"os/exec"
 	"text/template"
 )
 
@@ -38,5 +41,52 @@ func NewDockerfile(travis *Travis, archive string) (res []byte, err error) {
 
 	res = buf.Bytes()
 	return
+
+}
+
+func Build(dir, tag string) (err error) {
+
+	cd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+	if err = os.Chdir(dir); err != nil {
+		return
+	}
+	defer os.Chdir(cd)
+
+	cmd := exec.Command("docker", "build", "-t", tag, ".")
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return
+	}
+
+	go io.Copy(os.Stdout, stdout)
+	go io.Copy(os.Stderr, stderr)
+
+	return cmd.Run()
+
+}
+
+func Start(tag string) (err error) {
+
+	cmd := exec.Command("docker", "run", "-t", "--rm", tag)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return
+	}
+
+	go io.Copy(os.Stdout, stdout)
+	go io.Copy(os.Stderr, stderr)
+
+	return cmd.Run()
 
 }

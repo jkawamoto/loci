@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/ttacon/chalk"
 	"github.com/urfave/cli"
 )
 
@@ -15,6 +16,9 @@ const SourceArchive = "source.tar.gz"
 func Run(c *cli.Context) error {
 
 	filename := c.Args().First()
+	if filename == "" {
+		filename = ".travis.yml"
+	}
 	if err := run(filename); err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
@@ -28,8 +32,11 @@ func run(filename string) (err error) {
 		return
 	}
 
-	tempDir := CreateTempDir()
-	fmt.Println(tempDir)
+	tag := fmt.Sprintf("loci/%s", time.Now().Format("20060102150405"))
+	tempDir := filepath.Join(os.TempDir(), tag)
+	if err = os.Mkdir(tempDir, 0777); err != nil {
+		return
+	}
 	// defer os.RemoveAll(tempDir)
 
 	pwd, err := os.Getwd()
@@ -37,10 +44,12 @@ func run(filename string) (err error) {
 		return
 	}
 	archive := filepath.Join(tempDir, SourceArchive)
+	fmt.Println(chalk.Bold.TextStyle("Creating archive of source codes."))
 	if err = Archive(pwd, archive); err != nil {
 		return
 	}
 
+	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
 	docker, err := NewDockerfile(travis, archive)
 	if err != nil {
 		return
@@ -48,8 +57,8 @@ func run(filename string) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "Dockerfile"), docker, 0644); err != nil {
 		return
 	}
-	// fmt.Println(string(docker))
 
+	fmt.Println(chalk.Bold.TextStyle("Creating entrypoint."))
 	entry, err := Entrypoint(travis)
 	if err != nil {
 		return
@@ -57,21 +66,13 @@ func run(filename string) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "entrypoint.sh"), entry, 0644); err != nil {
 		return
 	}
-	// fmt.Println(string(entry))
 
-	return
-
-}
-
-// CreateTempDir creates a temporaty directory.
-func CreateTempDir() (res string) {
-
-	for i := 0; i < 10; i++ {
-
-		res = filepath.Join(os.TempDir(), "loci", time.Now().Format("20060102150405"))
-		if err := os.Mkdir(res, 0777); err == nil {
-			return
-		}
+	fmt.Println(chalk.Bold.TextStyle("Building a image."))
+	err = Build(tempDir, tag)
+	if err != nil {
+		return
 	}
-	return
+	fmt.Println(chalk.Bold.TextStyle("Start CI."))
+	return Start(tag)
+
 }
