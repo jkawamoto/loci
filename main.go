@@ -1,3 +1,13 @@
+//
+// main.go
+//
+// Copyright (c) 2016 Junpei Kawamoto
+//
+// This software is released under the MIT License.
+//
+// http://opensource.org/licenses/mit-license.php
+//
+
 package main
 
 import (
@@ -13,11 +23,11 @@ func main() {
 	app.Name = Name
 	app.Version = Version
 	app.Author = "jkawamoto"
-	app.Email = ""
+	app.Email = "kawamoto.junpei@gmail.com"
 	app.Usage = ""
 
-	// app.Flags = GlobalFlags
-	// app.Commands = Commands
+	app.Flags = GlobalFlags
+	app.Commands = Commands
 	app.CommandNotFound = CommandNotFound
 	app.Action = command.Run
 

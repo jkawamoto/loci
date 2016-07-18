@@ -44,10 +44,10 @@ func run(filename string) (err error) {
 
 	tag := fmt.Sprintf("loci/%s", time.Now().Format("20060102150405"))
 	tempDir := filepath.Join(os.TempDir(), tag)
-	if err = os.Mkdir(tempDir, 0777); err != nil {
+	if err = os.MkdirAll(tempDir, 0777); err != nil {
 		return
 	}
-	// defer os.RemoveAll(tempDir)
+	defer os.RemoveAll(tempDir)
 
 	pwd, err := os.Getwd()
 	if err != nil {
