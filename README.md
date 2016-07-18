@@ -1,19 +1,10 @@
-# loci
+# Loci: Local Testing for CI
 
+loci runs CI tests locally to help your commits pass such tests
+before pushing remote repository.
 
+## Current status
+* Support Travis CI
 
-## Description
-
-## Usage
-
-## Install
-
-To install, use `go get`:
-
-```bash
-$ go get -d github.com/jkawamoto/loci
-```
-
-## Author
-
-[jkawamoto](https://github.com/jkawamoto)
+Supported language:
+* Python
