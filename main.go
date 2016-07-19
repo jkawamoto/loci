@@ -24,12 +24,36 @@ func main() {
 	app.Version = Version
 	app.Author = "jkawamoto"
 	app.Email = "kawamoto.junpei@gmail.com"
-	app.Usage = ""
+	app.Usage = "Run a cloud CI script locally."
+	app.UsageText = `loci [global options] [script file]
+
+	 If script file is omitted, .travis.yml will be used.`
 
 	app.Flags = GlobalFlags
 	app.Commands = Commands
 	app.CommandNotFound = CommandNotFound
+	app.Copyright = "MIT License"
 	app.Action = command.Run
+
+	cli.AppHelpTemplate = `NAME:
+   {{.Name}} - {{.Usage}}
+
+USAGE:
+   {{if .UsageText}}{{.UsageText}}{{else}}{{.HelpName}} {{if .VisibleFlags}}[global options]{{end}}{{if .Commands}} command [command options]{{end}} {{if .ArgsUsage}}{{.ArgsUsage}}{{else}}[arguments...]{{end}}{{end}}
+   {{if .Version}}{{if not .HideVersion}}
+VERSION:
+   {{.Version}}
+   {{end}}{{end}}{{if len .Authors}}
+AUTHOR(S):
+   {{range .Authors}}{{.}}{{end}}
+   {{end}}{{if .VisibleCommands}}
+GLOBAL OPTIONS:
+   {{range .VisibleFlags}}{{.}}
+   {{end}}{{end}}{{if .Copyright}}
+COPYRIGHT:
+   {{.Copyright}}
+   {{end}}
+`
 
 	app.Run(os.Args)
 }
