@@ -22,7 +22,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = Name
 	app.Version = Version
-	app.Author = "jkawamoto"
+	app.Author = "Junpei Kawamoto"
 	app.Email = "kawamoto.junpei@gmail.com"
 	app.Usage = "Run a cloud CI script locally."
 	app.UsageText = `loci [global options] [script file]
