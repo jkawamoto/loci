@@ -7,7 +7,7 @@
 #
 # http://opensource.org/licenses/mit-license.php
 #
-FROM ubuntu:latest
+FROM {{.BaseImage}}
 #{{.Travis.Language}}
 MAINTAINER Junpei Kawamoto <kawamoto.junpei@gmail.com>
 

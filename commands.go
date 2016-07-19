@@ -21,13 +21,17 @@ import (
 // GlobalFlags defines global flags.
 var GlobalFlags = []cli.Flag{
 	cli.StringFlag{
-		Name:  "name, n",
-		Usage: "creating a container named `NAME` to run tests.",
-		// If name is given, continer will not be deleted.
+		Name: "name, n",
+		Usage: "creating a container named `NAME` to run tests." +
+			"If name is given, continer will not be deleted.",
 	},
 	cli.StringFlag{
 		Name:  "tag, t",
 		Usage: "creating an image named `TAG`.",
+	},
+	cli.StringFlag{
+		Name:  "base, b",
+		Usage: "use image `TAG` as the base image.",
 	},
 }
 

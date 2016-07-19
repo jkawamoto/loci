@@ -28,20 +28,21 @@ const SourceArchive = "source.tar.gz"
 type RunOpt struct {
 	// Travis configuration file.
 	Filename string
-
 	// Container name.
 	Name string
-
 	// Image tag.
 	Tag string
+	// Base image name.
+	BaseImage string
 }
 
 func Run(c *cli.Context) error {
 
 	opt := RunOpt{
-		Filename: c.Args().First(),
-		Name:     c.String("name"),
-		Tag:      c.String("tag"),
+		Filename:  c.Args().First(),
+		Name:      c.String("name"),
+		Tag:       c.String("tag"),
+		BaseImage: c.String("base"),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -79,7 +80,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
-	docker, err := NewDockerfile(travis, archive)
+	docker, err := NewDockerfile(travis, opt.BaseImage, archive)
 	if err != nil {
 		return
 	}

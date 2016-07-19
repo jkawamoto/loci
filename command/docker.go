@@ -23,11 +23,12 @@ const DockerfileAsset = "asset/Dockerfile"
 
 type travisExt struct {
 	*Travis
-	Archive string
+	Archive   string
+	BaseImage string
 }
 
 // NewDockerfile creates a Dockerfile from an instance of Travis.
-func NewDockerfile(travis *Travis, archive string) (res []byte, err error) {
+func NewDockerfile(travis *Travis, base, archive string) (res []byte, err error) {
 
 	data, err := Asset(DockerfileAsset)
 	if err != nil {
@@ -39,9 +40,14 @@ func NewDockerfile(travis *Travis, archive string) (res []byte, err error) {
 		return
 	}
 
+	if base == "" {
+		base = "ubuntu:latest"
+	}
+
 	param := travisExt{
-		Travis:  travis,
-		Archive: archive,
+		Travis:    travis,
+		Archive:   archive,
+		BaseImage: base,
 	}
 
 	buf := bytes.Buffer{}
