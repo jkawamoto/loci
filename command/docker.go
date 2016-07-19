@@ -12,26 +12,37 @@ package command
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"text/template"
 )
 
+// TODO: Use Lauguage to choose asset file.
 // DockerfileAsset defines a asset name for Dockerfile.
 const DockerfileAsset = "asset/Dockerfile"
 
+// DefaultBaseImage is the default base image.
+const DefaultBaseImage = "ubuntu:latest"
+
 type travisExt struct {
 	*Travis
-	Archive string
+	Archive   string
+	BaseImage string
 }
 
 // NewDockerfile creates a Dockerfile from an instance of Travis.
-func NewDockerfile(travis *Travis, archive string) (res []byte, err error) {
+func NewDockerfile(travis *Travis, base, archive string) (res []byte, err error) {
 
-	data, err := Asset(DockerfileAsset)
+	var data []byte
+	name := fmt.Sprintf("%s-%s", DockerfileAsset, travis.Language)
+	data, err = Asset(name)
 	if err != nil {
-		return
+		data, err = Asset(DockerfileAsset)
+		if err != nil {
+			return
+		}
 	}
 
 	temp, err := template.New("").Parse(string(data))
@@ -39,9 +50,14 @@ func NewDockerfile(travis *Travis, archive string) (res []byte, err error) {
 		return
 	}
 
+	if base == "" {
+		base = DefaultBaseImage
+	}
+
 	param := travisExt{
-		Travis:  travis,
-		Archive: archive,
+		Travis:    travis,
+		Archive:   archive,
+		BaseImage: base,
 	}
 
 	buf := bytes.Buffer{}

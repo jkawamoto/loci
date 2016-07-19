@@ -28,20 +28,25 @@ const SourceArchive = "source.tar.gz"
 type RunOpt struct {
 	// Travis configuration file.
 	Filename string
-
 	// Container name.
 	Name string
-
 	// Image tag.
 	Tag string
+	// Base image name.
+	BaseImage string
+	// If true, print Dockerfile and entrypoint.sh.
+	Verbose bool
 }
 
+// Run implements the action of this command.
 func Run(c *cli.Context) error {
 
 	opt := RunOpt{
-		Filename: c.Args().First(),
-		Name:     c.String("name"),
-		Tag:      c.String("tag"),
+		Filename:  c.Args().First(),
+		Name:      c.String("name"),
+		Tag:       c.String("tag"),
+		BaseImage: c.String("base"),
+		Verbose:   c.Bool("verbose"),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -79,12 +84,15 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
-	docker, err := NewDockerfile(travis, archive)
+	docker, err := NewDockerfile(travis, opt.BaseImage, archive)
 	if err != nil {
 		return
 	}
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "Dockerfile"), docker, 0644); err != nil {
 		return
+	}
+	if opt.Verbose {
+		fmt.Println(string(docker))
 	}
 
 	fmt.Println(chalk.Bold.TextStyle("Creating entrypoint."))
@@ -94,6 +102,9 @@ func run(opt *RunOpt) (err error) {
 	}
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "entrypoint.sh"), entry, 0644); err != nil {
 		return
+	}
+	if opt.Verbose {
+		fmt.Println(string(entry))
 	}
 
 	fmt.Println(chalk.Bold.TextStyle("Building a image."))
