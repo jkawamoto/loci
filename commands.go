@@ -33,6 +33,10 @@ var GlobalFlags = []cli.Flag{
 		Name:  "base, b",
 		Usage: "use image `TAG` as the base image.",
 	},
+	cli.BoolFlag{
+		Name:  "verbose",
+		Usage: "verbose mode, which prints Dockerfile and entrypoint.sh.",
+	},
 }
 
 // Commands defines sub-commands.
