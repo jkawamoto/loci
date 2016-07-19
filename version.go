@@ -10,5 +10,9 @@
 
 package main
 
-const Name string = "loci"
-const Version string = "0.1.1"
+const (
+	// Name defines the name of this command.
+	Name string = "loci"
+	// Version defines version number.
+	Version string = "0.1.1"
+)

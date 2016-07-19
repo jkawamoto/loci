@@ -21,29 +21,48 @@ import (
 	"github.com/urfave/cli"
 )
 
+// SourceArchive defines a name of source archive file.
 const SourceArchive = "source.tar.gz"
+
+// RunOpt defines a option parameter for run function.
+type RunOpt struct {
+	// Travis configuration file.
+	Filename string
+
+	// Container name.
+	Name string
+
+	// Image tag.
+	Tag string
+}
 
 func Run(c *cli.Context) error {
 
-	filename := c.Args().First()
-	if filename == "" {
-		filename = ".travis.yml"
+	opt := RunOpt{
+		Filename: c.Args().First(),
+		Name:     c.String("name"),
+		Tag:      c.String("tag"),
 	}
-	if err := run(filename); err != nil {
+	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
 	}
 	return nil
 }
 
-func run(filename string) (err error) {
+func run(opt *RunOpt) (err error) {
 
-	travis, err := NewTravis(filename)
+	if opt.Filename == "" {
+		opt.Filename = ".travis.yml"
+	}
+	travis, err := NewTravis(opt.Filename)
 	if err != nil {
 		return
 	}
 
-	tag := fmt.Sprintf("loci/%s", time.Now().Format("20060102150405"))
-	tempDir := filepath.Join(os.TempDir(), tag)
+	if opt.Tag == "" {
+		opt.Tag = fmt.Sprintf("loci/%s", time.Now().Format("20060102150405"))
+	}
+	tempDir := filepath.Join(os.TempDir(), opt.Tag)
 	if err = os.MkdirAll(tempDir, 0777); err != nil {
 		return
 	}
@@ -78,11 +97,11 @@ func run(filename string) (err error) {
 	}
 
 	fmt.Println(chalk.Bold.TextStyle("Building a image."))
-	err = Build(tempDir, tag)
+	err = Build(tempDir, opt.Tag)
 	if err != nil {
 		return
 	}
 	fmt.Println(chalk.Bold.TextStyle("Start CI."))
-	return Start(tag)
+	return Start(opt.Tag, opt.Name)
 
 }

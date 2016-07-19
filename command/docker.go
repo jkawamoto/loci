@@ -1,5 +1,5 @@
 //
-// command/dockerfile.go
+// command/docker.go
 //
 // Copyright (c) 2016 Junpei Kawamoto
 //
@@ -54,6 +54,8 @@ func NewDockerfile(travis *Travis, archive string) (res []byte, err error) {
 
 }
 
+// Build builds a docker image from a directory. The built image named tag.
+// The directory must have Dockerfile.
 func Build(dir, tag string) (err error) {
 
 	cd, err := os.Getwd()
@@ -82,9 +84,16 @@ func Build(dir, tag string) (err error) {
 
 }
 
-func Start(tag string) (err error) {
+// Start runs a container to run tests.
+func Start(tag, name string) (err error) {
 
-	cmd := exec.Command("docker", "run", "-t", "--rm", tag)
+	var cmd *exec.Cmd
+	if name == "" {
+		cmd = exec.Command("docker", "run", "-t", "--rm", tag)
+	} else {
+		cmd = exec.Command("docker", "run", "-t", "--name", name, tag)
+	}
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return
