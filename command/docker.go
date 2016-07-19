@@ -21,6 +21,9 @@ import (
 // DockerfileAsset defines a asset name for Dockerfile.
 const DockerfileAsset = "asset/Dockerfile"
 
+// DefaultBaseImage is the default base image.
+const DefaultBaseImage = "ubuntu:latest"
+
 type travisExt struct {
 	*Travis
 	Archive   string
@@ -41,7 +44,7 @@ func NewDockerfile(travis *Travis, base, archive string) (res []byte, err error)
 	}
 
 	if base == "" {
-		base = "ubuntu:latest"
+		base = DefaultBaseImage
 	}
 
 	param := travisExt{
