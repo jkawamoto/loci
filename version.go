@@ -14,5 +14,5 @@ const (
 	// Name defines the name of this command.
 	Name string = "loci"
 	// Version defines version number.
-	Version string = "0.1.1"
+	Version string = "0.1.2"
 )
