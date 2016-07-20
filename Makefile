@@ -18,3 +18,9 @@ asset:
 .PHONY: build
 build: asset
 	goxc -os="darwin linux windows" -d=pkg -pv=$(VERSION)
+
+.PHONY: get-deps
+get-deps:
+	go get github.com/ttacon/chalk
+	go get github.com/urfave/cli
+	go get gopkg.in/yaml.v2
