@@ -1,0 +1,31 @@
+#
+# Dockerfile-go
+#
+# Copyright (c) 2016 Junpei Kawamoto
+#
+# This software is released under the MIT License.
+#
+# http://opensource.org/licenses/mit-license.php
+#
+FROM {{.BaseImage}}
+MAINTAINER Junpei Kawamoto <kawamoto.junpei@gmail.com>
+
+ENV TERM vt100
+ENV GOPATH /data
+ENV PATH $PATH:$GOPATH/bin
+
+{{if .Travis.Addons.Apt}}
+RUN apt-get update && \
+    apt-get install -y apt-utils golang git wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
+    apt-get upgrade -y && apt-get clean
+{{end}}
+
+ADD source.tar.gz $GOPATH/src/{{.Repository}}
+WORKDIR $GOPATH/src/{{.Repository}}
+
+{{range .Travis.Install}}
+RUN {{.}}
+{{end}}
+
+ADD entrypoint.sh /root
+ENTRYPOINT ["bash", "/root/entrypoint.sh"]

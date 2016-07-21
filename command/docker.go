@@ -16,10 +16,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"strings"
 	"text/template"
+
+	"github.com/tcnksm/go-gitconfig"
 )
 
-// TODO: Use Lauguage to choose asset file.
 // DockerfileAsset defines a asset name for Dockerfile.
 const DockerfileAsset = "asset/Dockerfile"
 
@@ -28,8 +30,9 @@ const DefaultBaseImage = "ubuntu:latest"
 
 type travisExt struct {
 	*Travis
-	Archive   string
-	BaseImage string
+	Archive    string
+	BaseImage  string
+	Repository string
 }
 
 // NewDockerfile creates a Dockerfile from an instance of Travis.
@@ -58,6 +61,24 @@ func NewDockerfile(travis *Travis, base, archive string) (res []byte, err error)
 		Travis:    travis,
 		Archive:   archive,
 		BaseImage: base,
+	}
+
+	origin, err := gitconfig.OriginURL()
+	if err != nil {
+		return
+	}
+	switch {
+	case strings.HasPrefix(origin, "http://"):
+		param.Repository = origin[len("http://"):]
+	case strings.HasPrefix(origin, "https://"):
+		param.Repository = origin[len("https://"):]
+	case strings.Contains(origin, "@"):
+		param.Repository = strings.Replace(strings.Split(origin, "@")[1], ":", "/", 1)
+	default:
+		param.Repository = strings.Replace(origin, ":", "/", 1)
+	}
+	if strings.HasSuffix(param.Repository, ".git") {
+		param.Repository = param.Repository[:len(param.Repository)-len(".git")]
 	}
 
 	buf := bytes.Buffer{}

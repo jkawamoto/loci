@@ -13,7 +13,7 @@ default: build
 
 .PHONY: asset
 asset:
-	go-bindata -pkg command -o command/assets.go asset
+	go-bindata -pkg command -o command/assets.go assets
 
 .PHONY: build
 build: asset
@@ -28,4 +28,5 @@ get-deps:
 	go get -u github.com/jteeuwen/go-bindata/...
 	go get github.com/ttacon/chalk
 	go get github.com/urfave/cli
+	go get github.com/tcnksm/go-gitconfig
 	go get gopkg.in/yaml.v2
