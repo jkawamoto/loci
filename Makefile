@@ -19,6 +19,10 @@ asset:
 build: asset
 	goxc -os="darwin linux windows" -d=pkg -pv=$(VERSION)
 
+.PHONY: release
+release:
+	ghr  -u jkawamoto  v$(VERSION) pkg/$(VERSION)
+
 .PHONY: test
 test: asset
 	go test -v ./...

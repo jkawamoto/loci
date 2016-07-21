@@ -1,3 +1,8 @@
+## 0.1.4 (2016-07-21)
+### Added
+* Support golang.
+
+
 ## 0.1.3 (2016-07-19)
 ### Added
 * Support verbose mode,
