@@ -16,7 +16,7 @@ import (
 )
 
 // EntrypointAsset defines a asset name for entrypoint.sh.
-const EntrypointAsset = "asset/entrypoint.sh"
+const EntrypointAsset = "assets/entrypoint.sh"
 
 // Entrypoint creates an entrypoint.sh from an instance of Travis.
 func Entrypoint(travis *Travis) (res []byte, err error) {

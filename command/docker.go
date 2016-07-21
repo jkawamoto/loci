@@ -23,7 +23,7 @@ import (
 )
 
 // DockerfileAsset defines a asset name for Dockerfile.
-const DockerfileAsset = "asset/Dockerfile"
+const DockerfileAsset = "assets/Dockerfile"
 
 // DefaultBaseImage is the default base image.
 const DefaultBaseImage = "ubuntu:latest"
