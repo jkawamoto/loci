@@ -30,7 +30,4 @@ test: asset
 .PHONY: get-deps
 get-deps:
 	go get -u github.com/jteeuwen/go-bindata/...
-	go get github.com/ttacon/chalk
-	go get github.com/urfave/cli
-	go get github.com/tcnksm/go-gitconfig
-	go get gopkg.in/yaml.v2
+	go get -d -t -v .
