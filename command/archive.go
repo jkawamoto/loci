@@ -36,7 +36,7 @@ func Archive(dir string, filename string) (err error) {
 
 	zipWriter, err := gzip.NewWriterLevel(writer, gzip.BestCompression)
 	if err != nil {
-		return err
+		return
 	}
 	defer zipWriter.Close()
 
@@ -56,16 +56,22 @@ func Archive(dir string, filename string) (err error) {
 	// Litsing up and write to a tarball.
 	ch := make(chan string)
 	doneLGS := make(chan error)
+	doneLGR := make(chan error)
 	doneTB := make(chan error)
 
 	go listupGitSources(ch, doneLGS)
+	go listupGitRepository(ch, doneLGR)
 	go tarballing(tarWriter, ch, doneTB)
 
-	err = <-doneLGS
+	err1 := <-doneLGS
+	err2 := <-doneLGR
 	close(ch)
-	if err != nil {
-		return
+	if err1 != nil {
+		return err1
+	} else if err2 != nil {
+		return err2
 	}
+
 	return <-doneTB
 
 }
@@ -88,6 +94,7 @@ func listupGitSources(ch chan<- string, done chan<- error) {
 
 	go readLine(stdout, ch, doneRL)
 	if err = cmd.Run(); err != nil {
+		<-doneRL
 		done <- err
 		return
 	}
@@ -95,6 +102,30 @@ func listupGitSources(ch chan<- string, done chan<- error) {
 	err = <-doneRL
 	done <- err
 	return
+
+}
+
+// listupGitRepository is a go-routine which lists up git repository
+// and puts founded paths to a given ch. After listing up all paths,
+// put nil to done. If an error occurs, put the error to done.
+func listupGitRepository(ch chan<- string, done chan<- error) {
+
+	err := filepath.Walk(".git", func(path string, info os.FileInfo, err error) error {
+
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		ch <- path
+		return nil
+
+	})
+
+	done <- err
 
 }
 
