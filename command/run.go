@@ -26,14 +26,14 @@ const SourceArchive = "source.tar.gz"
 
 // RunOpt defines a option parameter for run function.
 type RunOpt struct {
+	// Sampe options as DockerfileOpt.
+	*DockerfileOpt
 	// Travis configuration file.
 	Filename string
 	// Container name.
 	Name string
 	// Image tag.
 	Tag string
-	// Base image name.
-	BaseImage string
 	// If true, print Dockerfile and entrypoint.sh.
 	Verbose bool
 }
@@ -42,11 +42,15 @@ type RunOpt struct {
 func Run(c *cli.Context) error {
 
 	opt := RunOpt{
-		Filename:  c.Args().First(),
-		Name:      c.String("name"),
-		Tag:       c.String("tag"),
-		BaseImage: c.String("base"),
-		Verbose:   c.Bool("verbose"),
+		DockerfileOpt: &DockerfileOpt{
+			BaseImage: c.String("base"),
+			AptProxy:  c.String("apt-proxy"),
+			PypiProxy: c.String("pypi-proxy"),
+		},
+		Filename: c.Args().First(),
+		Name:     c.String("name"),
+		Tag:      c.String("tag"),
+		Verbose:  c.Bool("verbose"),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -84,7 +88,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
-	docker, err := NewDockerfile(travis, opt.BaseImage, archive)
+	docker, err := NewDockerfile(travis, opt.DockerfileOpt, archive)
 	if err != nil {
 		return
 	}

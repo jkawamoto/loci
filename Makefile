@@ -27,6 +27,11 @@ release:
 test: asset
 	go test -v ./...
 
+.PHONY: local
+local: asset
+	go build
+	go install
+
 .PHONY: get-deps
 get-deps:
 	go get -u github.com/jteeuwen/go-bindata/...

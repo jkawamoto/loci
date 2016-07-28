@@ -37,6 +37,16 @@ var GlobalFlags = []cli.Flag{
 		Name:  "verbose",
 		Usage: "verbose mode, which prints Dockerfile and entrypoint.sh.",
 	},
+	cli.StringFlag{
+		Name:   "apt-proxy",
+		Usage:  "`URL` for a proxy server of apt repository.",
+		EnvVar: "APT_PROXY",
+	},
+	cli.StringFlag{
+		Name:   "pypi-proxy",
+		Usage:  "`URL` for a proxy server of pypi repository.",
+		EnvVar: "PYPI_PROXY",
+	},
 }
 
 // Commands defines sub-commands.

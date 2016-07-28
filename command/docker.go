@@ -28,15 +28,21 @@ const DockerfileAsset = "assets/Dockerfile"
 // DefaultBaseImage is the default base image.
 const DefaultBaseImage = "ubuntu:latest"
 
-type travisExt struct {
-	*Travis
-	Archive    string
+type DockerfileOpt struct {
 	BaseImage  string
 	Repository string
+	AptProxy   string
+	PypiProxy  string
+}
+
+type travisExt struct {
+	*Travis
+	*DockerfileOpt
+	Archive string
 }
 
 // NewDockerfile creates a Dockerfile from an instance of Travis.
-func NewDockerfile(travis *Travis, base, archive string) (res []byte, err error) {
+func NewDockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte, err error) {
 
 	var data []byte
 	name := fmt.Sprintf("%s-%s", DockerfileAsset, travis.Language)
@@ -53,14 +59,15 @@ func NewDockerfile(travis *Travis, base, archive string) (res []byte, err error)
 		return
 	}
 
-	if base == "" {
-		base = DefaultBaseImage
+	if opt.BaseImage == "" {
+		opt.BaseImage = DefaultBaseImage
 	}
+	opt.PypiProxy = strings.TrimSuffix(opt.PypiProxy, "/")
 
 	param := travisExt{
-		Travis:    travis,
-		Archive:   archive,
-		BaseImage: base,
+		Travis:        travis,
+		DockerfileOpt: opt,
+		Archive:       archive,
 	}
 
 	origin, err := gitconfig.OriginURL()
