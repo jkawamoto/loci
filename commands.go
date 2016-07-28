@@ -22,7 +22,7 @@ import (
 var GlobalFlags = []cli.Flag{
 	cli.StringFlag{
 		Name: "name, n",
-		Usage: "creating a container named `NAME` to run tests." +
+		Usage: "creating a container named `NAME` to run tests. " +
 			"If name is given, continer will not be deleted.",
 	},
 	cli.StringFlag{
