@@ -34,10 +34,7 @@ RUN PYPI_PROXY={{.}} && \
     echo "[global]\nindex-url=$PYPI_PROXY/root/pypi\ntrusted-host=${IPPORT%:*}" >> ~/.pip/pip.conf
 {{end}}
 
-{{if .Travis.Addons.Apt}}
 {{template "apt" .}}
-{{end}}
-
 {{template "source" .}}
 
 {{range .Travis.Install}}
