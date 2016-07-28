@@ -26,7 +26,7 @@ const SourceArchive = "source.tar.gz"
 
 // RunOpt defines a option parameter for run function.
 type RunOpt struct {
-	// Sampe options as DockerfileOpt.
+	// Same options as DockerfileOpt.
 	*DockerfileOpt
 	// Travis configuration file.
 	Filename string

@@ -53,7 +53,7 @@ func Archive(dir string, filename string) (err error) {
 	}
 	defer os.Chdir(cd)
 
-	// Litsing up and write to a tarball.
+	// Listing up and write to a tarball.
 	ch := make(chan string)
 	doneLGS := make(chan error)
 	doneLGR := make(chan error)
@@ -76,7 +76,7 @@ func Archive(dir string, filename string) (err error) {
 
 }
 
-// listupGitSources is a go-routine which lists up git souces and puts
+// listupGitSources is a go-routine which lists up git sources and puts
 // finding paths to a given ch. After listing up all sources, put nil
 // to done. If an error occurs, put the error to done.
 func listupGitSources(ch chan<- string, done chan<- error) {
@@ -178,7 +178,7 @@ func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error) {
 }
 
 // readLine is a go-routine which reads a line from rd and puts it to ch.
-// It sends nil to done when reads all line or somr error when an error
+// It sends nil to done when reads all line or some error when an error
 // occurs.
 func readLine(rd io.Reader, ch chan<- string, done chan<- error) {
 
