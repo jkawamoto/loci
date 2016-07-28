@@ -7,35 +7,14 @@
 #
 # http://opensource.org/licenses/mit-license.php
 #
-FROM {{.DockerfileOpt.BaseImage}}
-MAINTAINER Junpei Kawamoto <kawamoto.junpei@gmail.com>
-
-ENV TERM vt100
-ENV DEBIAN_FRONTEND noninteractive
-
-{{if .DockerfileOpt.AptProxy}}
-RUN echo "Acquire::http { Proxy \"{{.DockerfileOpt.AptProxy}}\"; };" >> /etc/apt/apt.conf.d/01proxy
-{{end}}
-
-{{if .DockerfileOpt.PypiProxy}}
-RUN PYPI_PROXY={{.DockerfileOpt.PypiProxy}} && \
-    IPPORT=${PYPI_PROXY#*//} && \
-    mkdir -p ~/.pip/ && \
-    echo "[global]\nindex-url=$PYPI_PROXY/root/pypi\ntrusted-host=${IPPORT%:*}" >> ~/.pip/pip.conf
-{{end}}
-
-{{if .Travis.Addons.Apt}}
+{{define "apt"}}
 RUN apt-get update && \
     apt-get install -y apt-utils python python-pip python-dev wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
-    apt-get upgrade -y && apt-get clean
+    apt-get upgrade -y && apt-get clean && \
+    rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/
 {{end}}
 
+{{define "source"}}
 ADD source.tar.gz /data
 WORKDIR /data
-
-{{range .Travis.Install}}
-RUN {{.}}
 {{end}}
-
-ADD entrypoint.sh /root
-ENTRYPOINT ["bash", "/root/entrypoint.sh"]

@@ -45,20 +45,31 @@ type travisExt struct {
 func NewDockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte, err error) {
 
 	var data []byte
-	name := fmt.Sprintf("%s-%s", DockerfileAsset, travis.Language)
-	data, err = Asset(name)
+	// Loading the base template.
+	data, err = Asset(DockerfileAsset)
 	if err != nil {
-		data, err = Asset(DockerfileAsset)
-		if err != nil {
-			return
-		}
+		return
 	}
-
-	temp, err := template.New("").Parse(string(data))
+	base, err := template.New("").Parse(string(data))
 	if err != nil {
 		return
 	}
 
+	// Loading a child template.
+	name := fmt.Sprintf("%s-%s", DockerfileAsset, travis.Language)
+	data, err = Asset(name)
+	if err != nil {
+		data, err = Asset(fmt.Sprintf("%s-python", DockerfileAsset))
+		if err != nil {
+			return
+		}
+	}
+	temp, err := base.Parse(string(data))
+	if err != nil {
+		return
+	}
+
+	// Checking optional parameters.
 	if opt.BaseImage == "" {
 		opt.BaseImage = DefaultBaseImage
 	}
@@ -89,7 +100,7 @@ func NewDockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []by
 	}
 
 	buf := bytes.Buffer{}
-	if err = temp.Execute(&buf, &param); err != nil {
+	if err = temp.ExecuteTemplate(&buf, "base", &param); err != nil {
 		return
 	}
 
