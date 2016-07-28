@@ -28,11 +28,22 @@ const DockerfileAsset = "assets/Dockerfile"
 // DefaultBaseImage is the default base image.
 const DefaultBaseImage = "ubuntu:latest"
 
+// DockerfileOpt defines option variables used in Dockerfile templates.
 type DockerfileOpt struct {
-	BaseImage  string
+	// Customize FROM clause.
+	BaseImage string
+	// Git repository.
 	Repository string
-	AptProxy   string
-	PypiProxy  string
+	// URL for an Apt proxy.
+	AptProxy string
+	// URL for a pypi proxy.
+	PypiProxy string
+	// URL for a HTTP proxy.
+	HTTPProxy string
+	// URL for a HTTPS proxy.
+	HTTPSProxy string
+	// Comma separated URL lists.
+	NoProxy string
 }
 
 type travisExt struct {

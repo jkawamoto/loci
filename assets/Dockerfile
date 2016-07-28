@@ -13,13 +13,22 @@ MAINTAINER Junpei Kawamoto <kawamoto.junpei@gmail.com>
 
 ENV TERM vt100
 ENV DEBIAN_FRONTEND noninteractive
-
-{{if .DockerfileOpt.AptProxy}}
-RUN echo "Acquire::http { Proxy \"{{.DockerfileOpt.AptProxy}}\"; };" >> /etc/apt/apt.conf.d/01proxy
+{{with .HTTPProxy}}
+ENV HTTP_PROXY {{.}}
+{{end}}
+{{with .HTTPSProxy}}
+ENV HTTPS_PROXY {{.}}
+{{end}}
+{{with .NoProxy}}
+ENV NO_PROXY {{.}}
 {{end}}
 
-{{if .DockerfileOpt.PypiProxy}}
-RUN PYPI_PROXY={{.DockerfileOpt.PypiProxy}} && \
+{{with .DockerfileOpt.AptProxy}}
+RUN echo "Acquire::http { Proxy \"{{.}}\"; };" >> /etc/apt/apt.conf.d/01proxy
+{{end}}
+
+{{with .DockerfileOpt.PypiProxy}}
+RUN PYPI_PROXY={{.}} && \
     IPPORT=${PYPI_PROXY#*//} && \
     mkdir -p ~/.pip/ && \
     echo "[global]\nindex-url=$PYPI_PROXY/root/pypi\ntrusted-host=${IPPORT%:*}" >> ~/.pip/pip.conf

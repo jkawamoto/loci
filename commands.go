@@ -47,6 +47,21 @@ var GlobalFlags = []cli.Flag{
 		Usage:  "`URL` for a proxy server of pypi repository.",
 		EnvVar: "PYPI_PROXY",
 	},
+	cli.StringFlag{
+		Name:   "http-proxy",
+		Usage:  "`URL` for a http proxy server.",
+		EnvVar: "HTTP_PROXY",
+	},
+	cli.StringFlag{
+		Name:   "https-proxy",
+		Usage:  "`URL` for a https proxy server.",
+		EnvVar: "HTTPS_PROXY",
+	},
+	cli.StringFlag{
+		Name:   "no-proxy",
+		Usage:  "Comma separated URL `LIST` for which proxies won't be used.",
+		EnvVar: "NO_PROXY",
+	},
 }
 
 // Commands defines sub-commands.

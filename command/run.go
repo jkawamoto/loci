@@ -43,9 +43,12 @@ func Run(c *cli.Context) error {
 
 	opt := RunOpt{
 		DockerfileOpt: &DockerfileOpt{
-			BaseImage: c.String("base"),
-			AptProxy:  c.String("apt-proxy"),
-			PypiProxy: c.String("pypi-proxy"),
+			BaseImage:  c.String("base"),
+			AptProxy:   c.String("apt-proxy"),
+			PypiProxy:  c.String("pypi-proxy"),
+			HTTPProxy:  c.String("http-proxy"),
+			HTTPSProxy: c.String("https-proxy"),
+			NoProxy:    c.String("no-proxy"),
 		},
 		Filename: c.Args().First(),
 		Name:     c.String("name"),
