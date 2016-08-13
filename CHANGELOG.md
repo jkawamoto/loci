@@ -1,3 +1,9 @@
+## 0.2.1 (2016-08-13)
+### Fixed
+- Dead lock when tarballing raises errors,
+- List up functions gave directories to tarballing.
+
+
 ## 0.2.0 (2016-07-28)
 ### Added
 Proxy supports:
