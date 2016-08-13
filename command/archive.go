@@ -20,6 +20,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
+
+	"golang.org/x/net/context"
 )
 
 // Archive makes a tar.gz file consists of files maintained a git repository.
@@ -54,79 +57,47 @@ func Archive(dir string, filename string) (err error) {
 	defer os.Chdir(cd)
 
 	// Listing up and write to a tarball.
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+
 	ch := make(chan string)
 	doneLGS := make(chan error)
 	doneLGR := make(chan error)
 	doneTB := make(chan error)
 
-	go listupGitSources(ch, doneLGS)
-	go listupGitRepository(ch, doneLGR)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		doneLGS <- listupGitSources(ctx, ch)
+	}()
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		doneLGR <- listupGitRepository(ctx, ch)
+	}()
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+
+	// Require to close channel ch to end this goroutine.
 	go tarballing(tarWriter, ch, doneTB)
+	err = <-doneTB
+	if err != nil {
+		cancel()
+		return
+	}
 
 	err1 := <-doneLGS
 	err2 := <-doneLGR
-	close(ch)
 	if err1 != nil {
 		return err1
 	} else if err2 != nil {
 		return err2
 	}
 
-	return <-doneTB
-
-}
-
-// listupGitSources is a go-routine which lists up git sources and puts
-// finding paths to a given ch. After listing up all sources, put nil
-// to done. If an error occurs, put the error to done.
-func listupGitSources(ch chan<- string, done chan<- error) {
-
-	cmd := exec.Command("git", "ls-files")
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		done <- err
-		return
-	}
-	defer stdout.Close()
-
-	doneRL := make(chan error)
-	defer close(doneRL)
-
-	go readLine(stdout, ch, doneRL)
-	if err = cmd.Run(); err != nil {
-		<-doneRL
-		done <- err
-		return
-	}
-
-	err = <-doneRL
-	done <- err
 	return
-
-}
-
-// listupGitRepository is a go-routine which lists up git repository
-// and puts founded paths to a given ch. After listing up all paths,
-// put nil to done. If an error occurs, put the error to done.
-func listupGitRepository(ch chan<- string, done chan<- error) {
-
-	err := filepath.Walk(".git", func(path string, info os.FileInfo, err error) error {
-
-		if err != nil {
-			return err
-		}
-
-		if info.IsDir() {
-			return nil
-		}
-
-		ch <- path
-		return nil
-
-	})
-
-	done <- err
-
 }
 
 // tarballing is a go-routine which write a file given via ch to a tar writer.
@@ -138,11 +109,7 @@ func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error) {
 	var header *tar.Header
 	var err error
 
-	for {
-		path, ok := <-ch
-		if !ok {
-			break
-		}
+	for path := range ch {
 
 		// For Windows: Replace path delimiters.
 		path = filepath.ToSlash(path)
@@ -177,14 +144,69 @@ func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error) {
 
 }
 
+// listupGitRepository lists up git repository and puts founded paths to a given ch.
+func listupGitRepository(ctx context.Context, ch chan<- string) error {
+
+	return filepath.Walk(".git", func(path string, info os.FileInfo, err error) error {
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+
+		default:
+			if err != nil {
+				return err
+			}
+
+			if info.IsDir() {
+				return nil
+			}
+
+			ch <- path
+			return nil
+		}
+
+	})
+
+}
+
+// listupGitSources lists up git sources and puts finding paths to a given ch.
+func listupGitSources(ctx context.Context, ch chan<- string) (err error) {
+
+	cmd := exec.Command("git", "ls-files")
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return
+	}
+	defer stdout.Close()
+
+	doneRL := make(chan error)
+	defer close(doneRL)
+
+	go readLine(ctx, stdout, ch, doneRL)
+	if err = cmd.Run(); err != nil {
+		<-doneRL
+		return
+	}
+
+	return <-doneRL
+
+}
+
 // readLine is a go-routine which reads a line from rd and puts it to ch.
 // It sends nil to done when reads all line or some error when an error
 // occurs.
-func readLine(rd io.Reader, ch chan<- string, done chan<- error) {
+func readLine(ctx context.Context, rd io.Reader, ch chan<- string, done chan<- error) {
 
 	scanner := bufio.NewScanner(rd)
 	for scanner.Scan() {
-		ch <- scanner.Text()
+		select {
+		case <-ctx.Done():
+			done <- ctx.Err()
+			return
+		default:
+			ch <- scanner.Text()
+		}
 	}
 	// done <- scanner.Err()
 	done <- nil
