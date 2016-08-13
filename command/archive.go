@@ -20,7 +20,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"golang.org/x/net/context"
 )
@@ -127,24 +126,20 @@ func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error) {
 // both channels will be closed automatically.
 func parallelListup(ctx context.Context, fs ...pathListupFunc) (<-chan string, <-chan error) {
 
-	var wg sync.WaitGroup
 	ch := make(chan string)
 	errCh := make(chan error)
 	errors := make([]chan error, len(fs))
 
 	for i, f := range fs {
 
-		wg.Add(1)
-		go func(_f pathListupFunc, _errors []chan error, idx int) {
-			defer wg.Done()
-			_errors[idx] <- _f(ctx, ch)
-		}(f, errors, i)
+		errors[i] = make(chan error)
+		go func(_f pathListupFunc, _errCh *chan error) {
+			*_errCh <- _f(ctx, ch)
+		}(f, &errors[i])
 
 	}
 
 	go func() {
-		wg.Wait()
-		close(ch)
 
 		var err error
 		for _, e := range errors {
@@ -152,6 +147,7 @@ func parallelListup(ctx context.Context, fs ...pathListupFunc) (<-chan string, <
 				err = new
 			}
 		}
+		close(ch)
 
 		errCh <- err
 		close(errCh)
@@ -222,8 +218,14 @@ func readLine(ctx context.Context, rd io.Reader, ch chan<- string, done chan<- e
 		case <-ctx.Done():
 			done <- ctx.Err()
 			return
+
 		default:
-			ch <- scanner.Text()
+			path := scanner.Text()
+			info, err := os.Stat(path)
+			if err == nil && !info.IsDir() {
+				ch <- path
+			}
+
 		}
 	}
 	// done <- scanner.Err()
