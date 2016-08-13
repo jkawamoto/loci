@@ -25,6 +25,10 @@ import (
 	"golang.org/x/net/context"
 )
 
+// pathListupFunc defines a function which lists up paths and put them to a
+// given channel. This function is used with parallelListup.
+type pathListupFunc func(context.Context, chan<- string) error
+
 // Archive makes a tar.gz file consists of files maintained a git repository.
 func Archive(dir string, filename string) (err error) {
 
@@ -60,26 +64,8 @@ func Archive(dir string, filename string) (err error) {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
-	ch := make(chan string)
-	doneLGS := make(chan error)
-	doneLGR := make(chan error)
+	ch, errCh := parallelListup(ctx, listupGitSources, listupGitRepository)
 	doneTB := make(chan error)
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		doneLGS <- listupGitSources(ctx, ch)
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		doneLGR <- listupGitRepository(ctx, ch)
-	}()
-	go func() {
-		wg.Wait()
-		close(ch)
-	}()
 
 	// Require to close channel ch to end this goroutine.
 	go tarballing(tarWriter, ch, doneTB)
@@ -89,15 +75,7 @@ func Archive(dir string, filename string) (err error) {
 		return
 	}
 
-	err1 := <-doneLGS
-	err2 := <-doneLGR
-	if err1 != nil {
-		return err1
-	} else if err2 != nil {
-		return err2
-	}
-
-	return
+	return <-errCh
 }
 
 // tarballing is a go-routine which write a file given via ch to a tar writer.
@@ -141,6 +119,46 @@ func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error) {
 		}
 	}
 	done <- err
+
+}
+
+// parallelListup lists up paths using given pathListupFunc functions.
+// This method returns channels which will be used to put found paths and error.
+// both channels will be closed automatically.
+func parallelListup(ctx context.Context, fs ...pathListupFunc) (<-chan string, <-chan error) {
+
+	var wg sync.WaitGroup
+	ch := make(chan string)
+	errCh := make(chan error)
+	errors := make([]chan error, len(fs))
+
+	for i, f := range fs {
+
+		wg.Add(1)
+		go func(_f pathListupFunc, _errors []chan error, idx int) {
+			defer wg.Done()
+			_errors[idx] <- _f(ctx, ch)
+		}(f, errors, i)
+
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+
+		var err error
+		for _, e := range errors {
+			if new := <-e; new != nil {
+				err = new
+			}
+		}
+
+		errCh <- err
+		close(errCh)
+
+	}()
+
+	return ch, errCh
 
 }
 
