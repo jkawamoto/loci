@@ -58,4 +58,4 @@ Github's [release page](https://github.com/jkawamoto/loci/releases).
 
 
 # License
-This software is released under the MIT License, see [LICENSE](LICENSE).
+This software is released under the MIT License, see [LICENSE](https://github.com/jkawamoto/loci/blob/master/LICENSE).
