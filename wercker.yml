@@ -1,0 +1,16 @@
+box: jkawamoto/ghp-box
+build:
+  steps:
+    - script:
+        name: Prepare submodules
+        code: |-
+          git submodule update --init
+    - arjen/hugo-build:
+        version: "0.15"
+        basedir: docs
+deploy:
+  steps:
+    - jkawamoto/ghp-import:
+        token: $GIT_TOKEN
+        basedir: docs/public
+j
