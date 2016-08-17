@@ -13,4 +13,3 @@ deploy:
     - jkawamoto/ghp-import:
         token: $GIT_TOKEN
         basedir: docs/public
-j
