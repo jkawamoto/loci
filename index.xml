@@ -24,7 +24,7 @@
 &lt;p&gt;loci runs CI tests locally to make sure your commits will pass such tests
 &lt;em&gt;before&lt;/em&gt; pushing remote repository.&lt;/p&gt;
 
-&lt;h2 id=&#34;usage&#34;&gt;Usage&lt;/h2&gt;
+&lt;h2 id=&#34;usage:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Usage&lt;/h2&gt;
 
 &lt;p&gt;loci currently supports &lt;a href=&#34;https://travis-ci.org/&#34;&gt;Travis&lt;/a&gt;&amp;rsquo;s CI script.
 If your current directory has &lt;code&gt;.travis.yml&lt;/code&gt;, run just &lt;code&gt;loci&lt;/code&gt;.&lt;/p&gt;
@@ -57,7 +57,7 @@ GLOBAL OPTIONS:
 &lt;p&gt;Note that &lt;code&gt;$XXX&lt;/code&gt; means if those options aren&amp;rsquo;t given,
 environment variable &lt;code&gt;$XXX&lt;/code&gt; will be set.&lt;/p&gt;
 
-&lt;h2 id=&#34;installation&#34;&gt;Installation&lt;/h2&gt;
+&lt;h2 id=&#34;installation:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Installation&lt;/h2&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ go get github.com/jkawamoto/loci
 &lt;/code&gt;&lt;/pre&gt;
@@ -71,9 +71,9 @@ $ brew install loci
 &lt;p&gt;Compiled binaries are also available in
 Github&amp;rsquo;s &lt;a href=&#34;https://github.com/jkawamoto/loci/releases&#34;&gt;release page&lt;/a&gt;.&lt;/p&gt;
 
-&lt;h1 id=&#34;license&#34;&gt;License&lt;/h1&gt;
+&lt;h1 id=&#34;license:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;License&lt;/h1&gt;
 
-&lt;p&gt;This software is released under the MIT License, see &lt;a href=&#34;LICENSE&#34;&gt;LICENSE&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;This software is released under the MIT License, see &lt;a href=&#34;https://github.com/jkawamoto/loci/blob/master/LICENSE&#34;&gt;LICENSE&lt;/a&gt;.&lt;/p&gt;
 </description>
     </item>
     
