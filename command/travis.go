@@ -29,6 +29,8 @@ type Travis struct {
 			Packages []string
 		} `yaml:"apt,omitempty"`
 	} `yaml:"addons,omitempty"`
+	// List of commands run before install steps.
+	BeforeInstall []string `yaml:"before_install,omitempty"`
 	// List of commands used to install packages.
 	Install []string `yaml:"install,omitempty"`
 	// List of commands run before main scripts.
