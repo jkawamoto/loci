@@ -26,12 +26,6 @@ if [[ $# = 3 ]]; then
   env $2=$3
 fi
 
-echo "Before Install Steps:"
-{{range .BeforeInstall}}
-echo "{{.}}"
-{{.}}
-{{end}}
-
 echo "Install Steps:"
 if [ -e requirements.txt ]; then
   pip install -r requirements.txt
