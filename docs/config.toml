@@ -4,7 +4,7 @@ title = "loci"
 theme = "github-project-landing-page"
 
 [params]
-    Description = "Testing remote CI scripts locally."
+    Description = "loci: Testing remote CI scripts locally."
     AuthorName = "Junpei Kawamoto"
     AuthorURL = "https://www.jkawamoto.info/"
     GithubURL = "https://github.com/jkawamoto/loci"

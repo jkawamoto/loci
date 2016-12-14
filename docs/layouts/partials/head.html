@@ -1,14 +1,35 @@
 <!DOCTYPE html>
 <html>
-<head>
-
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-    <base href="{{ .Site.BaseURL }}">
+  <head prefix="og: http://ogp.me/ns#">
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <base href="{{ .Site.BaseURL }}"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>{{ .Title }}</title>
+
+    <meta name="author" content="{{ with .Site.Params.AuthorName }}{{ . }}{{ end }}"/>
+    {{ if isset .Params "description" }}
+		<meta name="description" content="{{ .Params.description }}"/>
+		{{ else }}
+		<meta name="description" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}"/>
+		{{ end }}
+
+    <meta property="og:type" content="article" />
+		<meta property="og:title" content="{{ .Title }}" />
+		{{ if isset .Params "description" }}
+		<meta name="og:description" content="{{ .Params.description }}" />
+		{{ else }}
+		<meta name="og:description" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}" />
+		{{ end }}
+		<meta property="og:image" content="{{ .Site.BaseURL }}img/image.png" />
+		<meta property="og:site_name"  content="{{ .Site.Title }}" />
+
+		{{ if isset .Params "description" }}
+		<meta name="twitter:card" content="{{ .Params.description }}" />
+		{{ else }}
+		<meta name="twitter:card" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}" />
+		{{ end }}
+		<meta name="twitter:site" content="@junkawamoto" />
 
     <!-- Bootstrap Core CSS -->
     <link href="{{ .Site.BaseURL }}css/bootstrap.min.css" rel="stylesheet">
@@ -21,7 +42,7 @@
 
     <style>
     {{ printf "%v" (partial "template.css" . ) | safeCSS  }}
-  </style>
+    </style>
 
-</head>
+  </head>
 <body>
