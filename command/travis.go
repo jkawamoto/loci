@@ -13,21 +13,31 @@ package command
 import (
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
 
 // Travis defines the structure of .travis.yml.
 type Travis struct {
+	// Base language.
 	Language string
-	Addons   struct {
+	// List of addons.
+	Addons struct {
 		Apt struct {
 			Packages []string
 		} `yaml:"apt,omitempty"`
 	}
-	Install      []string `yaml:"install,omitempty"`
+	// List of commands used to install packages.
+	Install []string `yaml:"install,omitempty"`
+	// List of commands run before main scripts.
 	BeforeScript []string `yaml:"before_script,omitempty"`
-	Script       []string `yaml:"script,omitempty"`
+	// List of scripts.
+	Script []string `yaml:"script,omitempty"`
+	// List of environment variables.
+	Env []string `yaml:"env,omitempty"`
+	// List of python versions. (used only in python)
+	Python []string `yaml:"python,omitempty"`
 }
 
 // NewTravis loads a .travis.yaml file and creates a structure instance.
@@ -49,5 +59,47 @@ func NewTravis(filename string) (res *Travis, err error) {
 		return
 	}
 	return
+
+}
+
+// ArgumentSet returns a set of arguments to run entrypoint based on a build
+// matrix.
+func (t *Travis) ArgumentSet() [][]string {
+
+	if t.Language == "python" {
+
+		if len(t.Python) == 0 {
+
+			if len(t.Env) == 0 {
+				return [][]string{[]string{"2.7"}}
+			}
+
+			res := make([][]string, len(t.Env))
+			for i, env := range t.Env {
+				res[i] = append([]string{"2.7"}, strings.SplitN(env, "=", 2)...)
+			}
+			return res
+
+		}
+
+		if len(t.Env) == 0 {
+			res := make([][]string, len(t.Python))
+			for i, ver := range t.Python {
+				res[i] = []string{ver}
+			}
+			return res
+		}
+
+		res := [][]string{}
+		for _, ver := range t.Python {
+			for _, env := range t.Env {
+				res = append(res, append([]string{ver}, strings.SplitN(env, "=", 2)...))
+			}
+		}
+		return res
+
+	}
+
+	return [][]string{{""}}
 
 }
