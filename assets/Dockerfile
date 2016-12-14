@@ -37,10 +37,6 @@ RUN PYPI_PROXY={{.}} && \
 {{template "apt" .}}
 {{template "source" .}}
 
-{{range .Travis.Install}}
-RUN {{.}}
-{{end}}
-
 ADD entrypoint.sh /root
 ENTRYPOINT ["bash", "/root/entrypoint.sh"]
 {{end}}

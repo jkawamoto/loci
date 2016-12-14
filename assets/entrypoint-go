@@ -8,9 +8,12 @@
 #
 # http://opensource.org/licenses/mit-license.php
 #
+PATH="$GOPATH/bin:$PATH"
+
 if [[ $# = 0 ]]; then
   exec bash
 fi
+
 
 echo "Before Script Steps:"
 {{range .BeforeScript}}

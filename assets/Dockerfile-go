@@ -15,6 +15,18 @@ RUN apt-get update && \
 {{end}}
 
 {{define "source"}}
+ENV GOPATH /data
 ADD source.tar.gz $GOPATH/src/{{.DockerfileOpt.Repository}}
 WORKDIR $GOPATH/src/{{.DockerfileOpt.Repository}}
+
+# Before Install Steps.
+{{range .Travis.BeforeInstall}}
+RUN {{.}}
+{{end}}
+
+# Install Steps.
+{{range .Travis.Install}}
+RUN {{.}}
+{{end}}
+
 {{end}}
