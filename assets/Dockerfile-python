@@ -8,11 +8,21 @@
 # http://opensource.org/licenses/mit-license.php
 #
 {{define "apt"}}
-RUN apt-get update && \
-    apt-get install -y apt-utils python python-pip python-dev wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
-    apt-get upgrade -y && apt-get clean && \
-    rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/
+# Install apt packages.
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y apt-utils python python-pip wget curl git \
+                       zlib1g-dev libreadline6-dev libbz2-dev libsqlite3-dev libssl-dev
+{{range .Travis.Addons.Apt.Packages}}
+RUN apt-get install -y {{.}}
 {{end}}
+
+# Update pip
+RUN pip install --upgrade pip
+
+# Install pyenv
+RUN curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
+{{end}}
+
 
 {{define "source"}}
 ADD source.tar.gz /data

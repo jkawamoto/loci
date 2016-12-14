@@ -91,7 +91,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
-	docker, err := NewDockerfile(travis, opt.DockerfileOpt, archive)
+	docker, err := Dockerfile(travis, opt.DockerfileOpt, archive)
 	if err != nil {
 		return
 	}
@@ -119,7 +119,18 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println(chalk.Bold.TextStyle("Start CI."))
-	return Start(opt.Tag, opt.Name)
 
+	fmt.Println(chalk.Bold.TextStyle("Start CI."))
+	for i, args := range travis.ArgumentSet() {
+		name := opt.Name
+		if name != "" {
+			name = fmt.Sprintf("%s-%d", name, i+1)
+		}
+		err := Start(opt.Tag, name, args)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

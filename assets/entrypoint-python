@@ -1,0 +1,54 @@
+#!/bin/bash -eu
+#
+# entrypoint.sh
+#
+# Copyright (c) 2016 Junpei Kawamoto
+#
+# This software is released under the MIT License.
+#
+# http://opensource.org/licenses/mit-license.php
+#
+PATH="/root/.pyenv/bin:$PATH"
+eval "$(pyenv init -)" && \
+eval "$(pyenv virtualenv-init -)"
+
+if [[ $# = 0 ]]; then
+  exec bash
+fi
+
+PYVERSION=$(pyenv install -l | sed "s/ //g" | grep -E "^$1($|[^-])" | head -1)
+echo "Set Python version: $PYVERSION"
+pyenv install $PYVERSION
+pyenv local $PYVERSION
+
+if [[ $# = 3 ]]; then
+  echo "Set environment: $2=$3"
+  env $2=$3
+fi
+
+echo "Before Install Steps:"
+{{range .BeforeInstall}}
+echo "{{.}}"
+{{.}}
+{{end}}
+
+echo "Install Steps:"
+if [ -e requirements.txt ]; then
+  pip install -r requirements.txt
+fi
+{{range .Install}}
+echo "{{.}}"
+{{.}}
+{{end}}
+
+echo "Before Script Steps:"
+{{range .BeforeScript}}
+echo "{{.}}"
+{{.}}
+{{end}}
+
+echo "Script Steps:"
+{{range .Script}}
+echo "{{.}}"
+{{.}}
+{{end}}
