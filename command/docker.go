@@ -25,9 +25,6 @@ import (
 // DockerfileAsset defines a asset name for Dockerfile.
 const DockerfileAsset = "assets/Dockerfile"
 
-// DefaultBaseImage is the default base image.
-const DefaultBaseImage = "ubuntu:latest"
-
 // DockerfileOpt defines option variables used in Dockerfile templates.
 type DockerfileOpt struct {
 	// Customize FROM clause.
@@ -81,9 +78,6 @@ func NewDockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []by
 	}
 
 	// Checking optional parameters.
-	if opt.BaseImage == "" {
-		opt.BaseImage = DefaultBaseImage
-	}
 	opt.PypiProxy = strings.TrimSuffix(opt.PypiProxy, "/")
 
 	param := travisExt{

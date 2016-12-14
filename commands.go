@@ -27,11 +27,12 @@ var GlobalFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  "tag, t",
-		Usage: "creating an image named `TAG`.",
+		Usage: "if given, the image hosting tests will be named `TAG`.",
 	},
 	cli.StringFlag{
 		Name:  "base, b",
 		Usage: "use image `TAG` as the base image.",
+		Value: "ubuntu:latest",
 	},
 	cli.BoolFlag{
 		Name:  "verbose",
