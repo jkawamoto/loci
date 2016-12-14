@@ -1,3 +1,11 @@
+## 0.3.0 (2016-12-14)
+### Added
+- Support matrix build for python projects.
+
+### Fixed
+- Set `GOPATH` and add $GOPATH/bin to `PATH`.
+
+
 ## 0.2.1 (2016-08-13)
 ### Fixed
 - Dead lock when tarballing raises errors,

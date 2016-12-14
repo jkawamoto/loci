@@ -2,14 +2,16 @@
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![Build Status](https://travis-ci.org/jkawamoto/loci.svg?branch=master)](https://travis-ci.org/jkawamoto/loci)
 [![Code Climate](https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg)](https://codeclimate.com/github/jkawamoto/loci)
-[![Release](https://img.shields.io/badge/release-0.2.1-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.2.1)
+[![Release](https://img.shields.io/badge/release-0.3.0-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.3.0)
 
 loci runs CI tests locally to make sure your commits will pass such tests
-*before* pushing remote repository.
+*before* pushing to a remote repository.
 
 
 ## Usage
-loci currently supports [Travis](https://travis-ci.org/)'s CI script.
+loci currently supports [Travis](https://travis-ci.org/)'s CI script,
+and python and golang projects.
+
 If your current directory has `.travis.yml`, run just `loci`.
 
 Here is the help text of the `loci` command:
@@ -23,6 +25,7 @@ GLOBAL OPTIONS:
                          If name is given, container will not be deleted.
    --tag TAG, -t TAG     creating an image named TAG.
    --base TAG, -b TAG    use image TAG as the base image.
+                         (default: "ubuntu:latest")
    --verbose             verbose mode, which prints Dockerfile and
                          entrypoint.sh.
    --apt-proxy URL       URL for a proxy server of apt repository.
@@ -37,8 +40,8 @@ GLOBAL OPTIONS:
    --version, -v         print the version
 ~~~
 
-Note that `$XXX` means if those options aren't given,
-environment variable `$XXX` will be set.
+Note that `$XXX` means environment variable `$XXX` will be used
+if the associated option value isn't given.
 
 
 ## Installation
