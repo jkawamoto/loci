@@ -129,7 +129,7 @@ SOFTWARE.&lt;/p&gt;
       <guid>https://jkawamoto.github.io/loci/readme/</guid>
       <description>
 
-&lt;p&gt;&lt;a href=&#34;LICENSE&#34;&gt;&lt;img src=&#34;http://img.shields.io/badge/license-MIT-blue.svg?style=flat&#34; alt=&#34;MIT License&#34; /&gt;&lt;/a&gt;
+&lt;p&gt;&lt;a href=&#34;./info/licenses/&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/license-MIT-blue.svg?style=flat&#34; alt=&#34;MIT License&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://travis-ci.org/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://travis-ci.org/jkawamoto/loci.svg?branch=master&#34; alt=&#34;Build Status&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://codeclimate.com/github/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg&#34; alt=&#34;Code Climate&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://github.com/jkawamoto/loci/releases/tag/v0.3.0&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/release-0.3.0-brightgreen.svg&#34; alt=&#34;Release&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
