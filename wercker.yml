@@ -16,4 +16,3 @@ deploy:
     - jkawamoto/ghp-import:
         token: $GIT_TOKEN
         basedir: docs/public
-        baseurl: https://jkawamoto.github.io/loci/
