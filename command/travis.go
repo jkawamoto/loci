@@ -27,7 +27,7 @@ type Travis struct {
 		Apt struct {
 			Packages []string
 		} `yaml:"apt,omitempty"`
-	}
+	} `yaml:"addons,omitempty"`
 	// List of commands used to install packages.
 	Install []string `yaml:"install,omitempty"`
 	// List of commands run before main scripts.
@@ -38,6 +38,14 @@ type Travis struct {
 	Env []string `yaml:"env,omitempty"`
 	// List of python versions. (used only in python)
 	Python []string `yaml:"python,omitempty"`
+	// Configuration for matrix build.
+	Matrix Matrix `yaml:"matrix,omitempty"`
+}
+
+// Matrix defines the structure of matrix element in .travis.yml.
+type Matrix struct {
+	Include []interface{} `yaml:"include,omitempty"`
+	Exclude []interface{} `yaml:"exclude,omitempty"`
 }
 
 // NewTravis loads a .travis.yaml file and creates a structure instance.
@@ -67,6 +75,19 @@ func NewTravis(filename string) (res *Travis, err error) {
 func (t *Travis) ArgumentSet() [][]string {
 
 	if t.Language == "python" {
+
+		if len(t.Matrix.Include) != 0 {
+
+			res := make([][]string, len(t.Matrix.Include))
+			for i, v := range t.Matrix.Include {
+				m, _ := v.(map[interface{}]interface{})
+				version, _ := m["python"].(string)
+				env, _ := m["env"].(string)
+				res[i] = append([]string{version}, strings.SplitN(env, "=", 2)...)
+			}
+			return res
+
+		}
 
 		if len(t.Python) == 0 {
 
