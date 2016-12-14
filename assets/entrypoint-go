@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 #
-# entrypoint.sh
+# entrypoint-go
 #
 # Copyright (c) 2016 Junpei Kawamoto
 #
