@@ -11,6 +11,7 @@
 package command
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -77,16 +78,18 @@ func (t *Travis) ArgumentSet() [][]string {
 	if t.Language == "python" {
 
 		if len(t.Matrix.Include) != 0 {
-
 			res := make([][]string, len(t.Matrix.Include))
 			for i, v := range t.Matrix.Include {
-				m, _ := v.(map[interface{}]interface{})
-				version, _ := m["python"].(string)
-				env, _ := m["env"].(string)
-				res[i] = append([]string{version}, strings.SplitN(env, "=", 2)...)
+				version, key, value := parsePythonCase(v)
+				res[i] = []string{version, key, value}
 			}
 			return res
+		}
 
+		exclude := make(map[string]struct{})
+		for _, v := range t.Matrix.Exclude {
+			version, key, value := parsePythonCase(v)
+			exclude[makeSetKey(version, key, value)] = struct{}{}
 		}
 
 		if len(t.Python) == 0 {
@@ -97,7 +100,8 @@ func (t *Travis) ArgumentSet() [][]string {
 
 			res := make([][]string, len(t.Env))
 			for i, env := range t.Env {
-				res[i] = append([]string{"2.7"}, strings.SplitN(env, "=", 2)...)
+				key, value := parseEnv(env)
+				res[i] = []string{"2.7", key, value}
 			}
 			return res
 
@@ -114,7 +118,11 @@ func (t *Travis) ArgumentSet() [][]string {
 		res := [][]string{}
 		for _, ver := range t.Python {
 			for _, env := range t.Env {
-				res = append(res, append([]string{ver}, strings.SplitN(env, "=", 2)...))
+				key, value := parseEnv(env)
+				if _, exist := exclude[makeSetKey(ver, key, value)]; exist {
+					continue
+				}
+				res = append(res, []string{ver, key, value})
 			}
 		}
 		return res
@@ -123,4 +131,21 @@ func (t *Travis) ArgumentSet() [][]string {
 
 	return [][]string{{""}}
 
+}
+
+func parseEnv(env string) (string, string) {
+	s := strings.SplitN(env, "=", 2)
+	return s[0], s[1]
+}
+
+func parsePythonCase(v interface{}) (version string, key string, value string) {
+	m, _ := v.(map[interface{}]interface{})
+	version, _ = m["python"].(string)
+	env, _ := m["env"].(string)
+	key, value = parseEnv(env)
+	return
+}
+
+func makeSetKey(version, key, value string) string {
+	return fmt.Sprintf("%s %s %s", version, key, value)
 }

@@ -77,6 +77,61 @@ func TestMatrixInclude(t *testing.T) {
 
 }
 
+func TestMatrixExclude(t *testing.T) {
+
+	var err error
+	temp := os.TempDir()
+	target := path.Join(temp, "sample.yml")
+
+	t.Logf("Creating a configuration file: %s", target)
+	sample, err := yaml.Marshal(&Travis{
+		Language: "python",
+		Python:   []string{"2.7", "3.5"},
+		Env:      []string{"FOO=BAR", "FOO=FUGA"},
+		Matrix: Matrix{
+			Exclude: []interface{}{
+				PythonCase{
+					Python: "3.5",
+					Env:    "FOO=BAR",
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if err = ioutil.WriteFile(target, sample, 0644); err != nil {
+		t.Fatal(err.Error())
+	}
+
+	travis, err := NewTravis(target)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if len(travis.Matrix.Exclude) != 1 {
+		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Exclude)
+	}
+
+	res := travis.ArgumentSet()
+	t.Log("Arguments:", res)
+	if len(res) != 3 {
+		t.Fatal("Generated arguments are wrong:", res)
+	}
+	if res[0][0] != "2.7" || res[1][0] != "2.7" || res[2][0] != "3.5" {
+		t.Error("Version is wrong:", res)
+	}
+	if len(res[0]) != 3 || res[0][1] != "FOO" || res[0][2] != "BAR" {
+		t.Error("Env has wrong values:", res)
+	}
+	if len(res[1]) != 3 || res[1][1] != "FOO" || res[1][2] != "FUGA" {
+		t.Error("Env has wrong values:", res)
+	}
+	if len(res[2]) != 3 || res[2][1] != "FOO" || res[2][2] != "FUGA" {
+		t.Error("Env has wrong values:", res)
+	}
+
+}
+
 // TestArgumentSet tests ArgumentSet method returns correct argument sets.
 func TestArgumentSet(t *testing.T) {
 
