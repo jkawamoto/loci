@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>loci</title>
-    <link>https://jkawamoto.github.io/loci/</link>
-    <description>Recent content on loci</description>
+    <title>Infos on loci</title>
+    <link>https://jkawamoto.github.io/loci/info/</link>
+    <description>Recent content in Infos on loci</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Wed, 14 Dec 2016 00:00:00 +0000</lastBuildDate>
-    <atom:link href="https://jkawamoto.github.io/loci/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://jkawamoto.github.io/loci/info/index.xml" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Licenses</title>
@@ -118,78 +118,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>loci: Testing remote CI scripts locally.</title>
-      <link>https://jkawamoto.github.io/loci/readme/</link>
-      <pubDate>Wed, 14 Dec 2016 00:00:00 +0000</pubDate>
-      
-      <guid>https://jkawamoto.github.io/loci/readme/</guid>
-      <description>
-
-&lt;p&gt;&lt;a href=&#34;LICENSE&#34;&gt;&lt;img src=&#34;http://img.shields.io/badge/license-MIT-blue.svg?style=flat&#34; alt=&#34;MIT License&#34; /&gt;&lt;/a&gt;
-&lt;a href=&#34;https://travis-ci.org/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://travis-ci.org/jkawamoto/loci.svg?branch=master&#34; alt=&#34;Build Status&#34; /&gt;&lt;/a&gt;
-&lt;a href=&#34;https://codeclimate.com/github/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg&#34; alt=&#34;Code Climate&#34; /&gt;&lt;/a&gt;
-&lt;a href=&#34;https://github.com/jkawamoto/loci/releases/tag/v0.3.0&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/release-0.3.0-brightgreen.svg&#34; alt=&#34;Release&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;loci runs CI tests locally to make sure your commits will pass such tests
-&lt;em&gt;before&lt;/em&gt; pushing to a remote repository.&lt;/p&gt;
-
-&lt;h3 id=&#34;usage:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Usage&lt;/h3&gt;
-
-&lt;p&gt;loci currently supports &lt;a href=&#34;https://travis-ci.org/&#34;&gt;Travis&lt;/a&gt;&amp;rsquo;s CI script,
-and python and golang projects.&lt;/p&gt;
-
-&lt;p&gt;If your current directory has &lt;code&gt;.travis.yml&lt;/code&gt;, run just &lt;code&gt;loci&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Here is the help text of the &lt;code&gt;loci&lt;/code&gt; command:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;loci [global options] [script file]
-
-   If script file is omitted, .travis.yml will be used.
-
-GLOBAL OPTIONS:
-   --name NAME, -n NAME  creating a container named NAME to run tests.
-                         If name is given, container will not be deleted.
-   --tag TAG, -t TAG     creating an image named TAG.
-   --base TAG, -b TAG    use image TAG as the base image.
-                         (default: &amp;quot;ubuntu:latest&amp;quot;)
-   --verbose             verbose mode, which prints Dockerfile and
-                         entrypoint.sh.
-   --apt-proxy URL       URL for a proxy server of apt repository.
-                         [$APT_PROXY]
-   --pypi-proxy URL      URL for a proxy server of pypi repository.
-                         [$PYPI_PROXY]
-   --http-proxy URL      URL for a http proxy server. [$HTTP_PROXY]
-   --https-proxy URL     URL for a https proxy server. [$HTTPS_PROXY]
-   --no-proxy LIST       Comma separated URL LIST for which proxies won&#39;t be
-                         used. [$NO_PROXY]
-   --help, -h            show help
-   --version, -v         print the version
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Note that &lt;code&gt;$XXX&lt;/code&gt; means environment variable &lt;code&gt;$XXX&lt;/code&gt; will be used
-if the associated option value isn&amp;rsquo;t given.&lt;/p&gt;
-
-&lt;h3 id=&#34;installation:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Installation&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ go get github.com/jkawamoto/loci
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;or if you&amp;rsquo;re &lt;a href=&#34;http://brew.sh/&#34;&gt;Homebrew&lt;/a&gt; user,&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ brew tap jkawamoto/loci
-$ brew install loci
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Compiled binaries are also available in
-Github&amp;rsquo;s &lt;a href=&#34;https://github.com/jkawamoto/loci/releases&#34;&gt;release page&lt;/a&gt;.&lt;/p&gt;
-
-&lt;h3 id=&#34;license:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;License&lt;/h3&gt;
-
-&lt;p&gt;This software is released under the MIT License, see &lt;a href=&#34;./info/licenses/&#34;&gt;LICENSE&lt;/a&gt;.&lt;/p&gt;
 </description>
     </item>
     
