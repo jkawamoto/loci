@@ -49,8 +49,8 @@ type travisExt struct {
 	Archive string
 }
 
-// NewDockerfile creates a Dockerfile from an instance of Travis.
-func NewDockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte, err error) {
+// Dockerfile creates a Dockerfile from an instance of Travis.
+func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte, err error) {
 
 	var data []byte
 	// Loading the base template.
@@ -145,13 +145,13 @@ func Build(dir, tag string) (err error) {
 }
 
 // Start runs a container to run tests.
-func Start(tag, name string) (err error) {
+func Start(tag, name string, args []string) (err error) {
 
 	var cmd *exec.Cmd
 	if name == "" {
-		cmd = exec.Command("docker", "run", "-t", "--rm", tag)
+		cmd = exec.Command("docker", append([]string{"run", "-t", "--rm", tag}, args...)...)
 	} else {
-		cmd = exec.Command("docker", "run", "-t", "--name", name, tag)
+		cmd = exec.Command("docker", append([]string{"run", "-t", "--name", name, tag}, args...)...)
 	}
 
 	stdout, err := cmd.StdoutPipe()
