@@ -1,7 +1,7 @@
 # Notices for libraries
 This software uses the following open source libraries:
 
-## go-gitconfig
+## [go-gitconfig](https://github.com/tcnksm/go-gitconfig)
 
 Copyright (c) 2014 tcnksm
 
@@ -26,7 +26,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## chalk
+## [chalk](https://github.com/ttacon/chalk)
 
 Copyright (c) 2014 Trey Tacon
 
@@ -50,7 +50,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## cli
+## [cli](https://github.com/urfave/cli)
 
 Copyright (c) 2016 Jeremy Saenz & Contributors
 

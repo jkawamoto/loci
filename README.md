@@ -7,12 +7,12 @@
 loci runs CI tests locally to make sure your commits will pass such tests
 *before* pushing to a remote repository.
 
-
 ## Usage
-loci currently supports [Travis](https://travis-ci.org/)'s CI script,
+Loci currently supports [Travis](https://travis-ci.org/)'s CI script,
 and python and golang projects.
 
 If your current directory has `.travis.yml`, run just `loci`.
+Note that loci requires [docker](https://www.docker.com/).
 
 Here is the help text of the `loci` command:
 ~~~

@@ -50,6 +50,12 @@ GLOBAL OPTIONS:
 Note that `$XXX` means environment variable `$XXX` will be used
 if the associated option value isn't given.
 
+### Requirements
+Loci works with [docker](https://www.docker.com/).
+
+[![docker logo](img/small_h-trans.png)](https://www.docker.com/)
+
+If your environment doesn't have docker, install it first.
 
 ### Installation
 ```sh
