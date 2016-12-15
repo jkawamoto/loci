@@ -1,10 +1,14 @@
 baseurl = "https://jkawamoto.github.io/loci/"
 languageCode = "en-us"
-title = "loci"
+title = "Loci"
 theme = "github-project-landing-page"
 
 [params]
-    Description = "loci: Testing remote CI scripts locally."
+    SubTitle = "Testing remote CI scripts locally"
+    Description = """\
+      Loci runs CI tests locally to make sure your commits will pass such tests\
+      before pushing to a remote repository.\
+      """
     AuthorName = "Junpei Kawamoto"
     AuthorURL = "https://www.jkawamoto.info/"
     GithubURL = "https://github.com/jkawamoto/loci"

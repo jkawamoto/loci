@@ -1,6 +1,6 @@
 ---
 title: Licenses
-description: Notices for libraries.
+description: License information of loci.
 date: 2016-12-14
 slug: licenses
 ---
