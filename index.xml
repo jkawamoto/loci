@@ -173,6 +173,14 @@ GLOBAL OPTIONS:
 &lt;p&gt;Note that &lt;code&gt;$XXX&lt;/code&gt; means environment variable &lt;code&gt;$XXX&lt;/code&gt; will be used
 if the associated option value isn&amp;rsquo;t given.&lt;/p&gt;
 
+&lt;h3 id=&#34;requirements:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Requirements&lt;/h3&gt;
+
+&lt;p&gt;Loci works with &lt;a href=&#34;https://www.docker.com/&#34;&gt;docker&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.docker.com/&#34;&gt;&lt;img src=&#34;img/small_h-trans.png&#34; alt=&#34;docker logo&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;If your environment doesn&amp;rsquo;t have docker, install it first.&lt;/p&gt;
+
 &lt;h3 id=&#34;installation:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Installation&lt;/h3&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ go get github.com/jkawamoto/loci
