@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>loci</title>
+    <title>Loci</title>
     <link>https://jkawamoto.github.io/loci/</link>
-    <description>Recent content on loci</description>
+    <description>Recent content on Loci</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Wed, 14 Dec 2016 00:00:00 +0000</lastBuildDate>
@@ -122,7 +122,7 @@ SOFTWARE.&lt;/p&gt;
     </item>
     
     <item>
-      <title>loci: Testing remote CI scripts locally.</title>
+      <title>Loci: Testing remote CI scripts locally</title>
       <link>https://jkawamoto.github.io/loci/readme/</link>
       <pubDate>Wed, 14 Dec 2016 00:00:00 +0000</pubDate>
       
@@ -134,13 +134,14 @@ SOFTWARE.&lt;/p&gt;
 &lt;a href=&#34;https://codeclimate.com/github/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg&#34; alt=&#34;Code Climate&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://github.com/jkawamoto/loci/releases/tag/v0.3.0&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/release-0.3.0-brightgreen.svg&#34; alt=&#34;Release&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;loci runs CI tests locally to make sure your commits will pass such tests
+&lt;p&gt;Loci runs CI tests locally to make sure your commits will pass such tests
 &lt;em&gt;before&lt;/em&gt; pushing to a remote repository.&lt;/p&gt;
 
-&lt;h3 id=&#34;usage:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Usage&lt;/h3&gt;
+&lt;p&gt;Loci currently supports &lt;a href=&#34;https://travis-ci.org/&#34;&gt;Travis&lt;/a&gt;&amp;rsquo;s CI scripts
+for &lt;a href=&#34;https://www.python.org/&#34;&gt;Python&lt;/a&gt; and &lt;a href=&#34;https://golang.org/&#34;&gt;Go&lt;/a&gt; projects.
+Loci also requires &lt;a href=&#34;https://www.docker.com/&#34;&gt;Docker&lt;/a&gt; to run tests in a sandbox.&lt;/p&gt;
 
-&lt;p&gt;loci currently supports &lt;a href=&#34;https://travis-ci.org/&#34;&gt;Travis&lt;/a&gt;&amp;rsquo;s CI script,
-and python and golang projects.&lt;/p&gt;
+&lt;h3 id=&#34;usage:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Usage&lt;/h3&gt;
 
 &lt;p&gt;If your current directory has &lt;code&gt;.travis.yml&lt;/code&gt;, run just &lt;code&gt;loci&lt;/code&gt;.&lt;/p&gt;
 
@@ -148,11 +149,11 @@ and python and golang projects.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code&gt;loci [global options] [script file]
 
-   If script file is omitted, .travis.yml will be used.
+  If script file isn&#39;t given, .travis.yml will be used.
 
 GLOBAL OPTIONS:
-   --name NAME, -n NAME  creating a container named NAME to run tests.
-                         If name is given, container will not be deleted.
+   --name NAME, -n NAME  creating a container named NAME to run tests,
+                         and that container will not be deleted.
    --tag TAG, -t TAG     creating an image named TAG.
    --base TAG, -b TAG    use image TAG as the base image.
                          (default: &amp;quot;ubuntu:latest&amp;quot;)
@@ -164,14 +165,22 @@ GLOBAL OPTIONS:
                          [$PYPI_PROXY]
    --http-proxy URL      URL for a http proxy server. [$HTTP_PROXY]
    --https-proxy URL     URL for a https proxy server. [$HTTPS_PROXY]
-   --no-proxy LIST       Comma separated URL LIST for which proxies won&#39;t be
-                         used. [$NO_PROXY]
+   --no-proxy LIST       Comma separated URL LIST for which proxies won&#39;t
+                         be used. [$NO_PROXY]
    --help, -h            show help
    --version, -v         print the version
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Note that &lt;code&gt;$XXX&lt;/code&gt; means environment variable &lt;code&gt;$XXX&lt;/code&gt; will be used
+&lt;p&gt;Note that &lt;code&gt;$XYZ&lt;/code&gt; means that environment variable &lt;code&gt;$XYZ&lt;/code&gt; will be used
 if the associated option value isn&amp;rsquo;t given.&lt;/p&gt;
+
+&lt;p&gt;Loci builds docker images every time to run tests in a sandbox.
+The default image name will be &lt;code&gt;loci/&lt;/code&gt; + time but you can specify another name
+with &lt;code&gt;--tag&lt;/code&gt; or &lt;code&gt;-t&lt;/code&gt; flag.&lt;/p&gt;
+
+&lt;p&gt;Loci creates a container to run a set of tests in a container,
+and deletes it after the test set ends.
+If you want to keep the container, give a name with &lt;code&gt;--name&lt;/code&gt; or &lt;code&gt;-n&lt;/code&gt; flag.&lt;/p&gt;
 
 &lt;h3 id=&#34;requirements:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Requirements&lt;/h3&gt;
 
@@ -186,14 +195,14 @@ if the associated option value isn&amp;rsquo;t given.&lt;/p&gt;
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ go get github.com/jkawamoto/loci
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;or if you&amp;rsquo;re &lt;a href=&#34;http://brew.sh/&#34;&gt;Homebrew&lt;/a&gt; user,&lt;/p&gt;
+&lt;p&gt;or if you&amp;rsquo;re a &lt;a href=&#34;http://brew.sh/&#34;&gt;Homebrew&lt;/a&gt; user,&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ brew tap jkawamoto/loci
 $ brew install loci
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;Compiled binaries are also available in
-Github&amp;rsquo;s &lt;a href=&#34;https://github.com/jkawamoto/loci/releases&#34;&gt;release page&lt;/a&gt;.&lt;/p&gt;
+&lt;a href=&#34;https://github.com/jkawamoto/loci/releases&#34;&gt;Github&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id=&#34;license:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;License&lt;/h3&gt;
 
