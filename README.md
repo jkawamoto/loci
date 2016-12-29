@@ -4,6 +4,8 @@
 [![Code Climate](https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg)](https://codeclimate.com/github/jkawamoto/loci)
 [![Release](https://img.shields.io/badge/release-0.3.0-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.3.0)
 
+![Loci Logo](https://jkawamoto.github.io/loci/img/image.png)
+
 Loci runs CI tests locally to make sure your commits will pass such tests
 *before* pushing to a remote repository.
 
