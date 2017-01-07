@@ -4,7 +4,7 @@ description: >-
   Loci runs CI tests locally to make sure your commits will pass such tests
   before pushing to a remote repository.
 date: 2016-12-14
-lastmod: 2016-12-15
+lastmod: 2017-01-06
 slug: readme
 ---
 
@@ -12,6 +12,7 @@ slug: readme
 [![Build Status](https://travis-ci.org/jkawamoto/loci.svg?branch=master)](https://travis-ci.org/jkawamoto/loci)
 [![Code Climate](https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg)](https://codeclimate.com/github/jkawamoto/loci)
 [![Release](https://img.shields.io/badge/release-0.3.0-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.3.0)
+[![Japanese](https://img.shields.io/badge/qiita-%E6%97%A5%E6%9C%AC%E8%AA%9E-brightgreen.svg)](http://qiita.com/jkawamoto/items/a409dd9cd6e63034aa28)
 
 Loci runs CI tests locally to make sure your commits will pass such tests
 *before* pushing to a remote repository.
