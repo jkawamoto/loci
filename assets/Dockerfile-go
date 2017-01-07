@@ -9,13 +9,19 @@
 #
 {{define "apt"}}
 RUN apt-get update && \
-    apt-get install -y apt-utils golang git wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
+    apt-get install -y apt-utils golang git curl wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
     apt-get upgrade -y && apt-get clean && \
     rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/
+
+ENV GOPATH /data
+
+# Install gimme
+RUN mkdir -p $GOPATH/bin && \
+    curl -sL -o $GOPATH/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme && \
+    chmod +x $GOPATH/bin/gimme
 {{end}}
 
 {{define "source"}}
-ENV GOPATH /data
 {{if .Travis.GoImportPath}}
 ADD {{.Archive}} $GOPATH/src/{{.Travis.GoImportPath}}
 {{else}}
@@ -26,15 +32,6 @@ WORKDIR $GOPATH/src/{{.Repository}}
 # Before Install Steps.
 {{range .Travis.BeforeInstall}}
 RUN {{.}}
-{{end}}
-
-# Install Steps.
-{{if .Travis.Install}}
-{{range .Travis.Install}}
-RUN {{.}}
-{{end}}
-{{else}}
-RUN go get -t ./...
 {{end}}
 
 {{end}}

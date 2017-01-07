@@ -14,6 +14,25 @@ if [[ $# = 0 ]]; then
   exec bash
 fi
 
+TRAVIS_GO_VERSION=$1
+echo "Set Go version: $TRAVIS_GO_VERSION"
+eval "$(GIMME_GO_VERSION=$TRAVIS_GO_VERSION gimme)"
+
+if [[ $# = 3 ]]; then
+  echo "Set environment: $2=$3"
+  env $2=$3
+fi
+
+echo "Install Steps:"
+{{if .Travis.Install}}
+{{range .Travis.Install}}
+echo "{{.}}"
+{{.}}
+{{end}}
+{{else}}
+echo "go get -t ./..."
+go get -t ./...
+{{end}}
 
 echo "Before Script Steps:"
 {{range .BeforeScript}}
@@ -22,7 +41,20 @@ echo "{{.}}"
 {{end}}
 
 echo "Script Steps:"
+{{/* if script isn't givenm use make or the default golang test command. */}}
+{{if .Script}}
 {{range .Script}}
 echo "{{.}}"
 {{.}}
+{{end}}
+{{else}}
+if [ -e GNUMakefile ] || [ -e Makefile ] || [ -e BSDmakefile ] || [ -e makefile ]; then
+  make
+else
+  {{if .GoBuildArgs}}
+  go test {{.GoBuildArgs}}
+  {{else}}
+  go test -v ./...
+  {{end}}
+fi
 {{end}}

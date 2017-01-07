@@ -36,6 +36,7 @@ type Travis struct {
 	Install []string `yaml:"install,omitempty"`
 	// List of commands run before main scripts.
 	BeforeScript []string `yaml:"before_script,omitempty"`
+	// TODO: The Script section can be a string instead of a list.
 	// List of scripts.
 	Script []string `yaml:"script,omitempty"`
 	// List of environment variables.
@@ -50,6 +51,8 @@ type Travis struct {
 	Go []string `yaml:"go,omitempty"`
 	// Go import path. (used only in go)
 	GoImportPath string `yaml:"go_import_path,omitempty"`
+	// Build args for go project.
+	GoBuildArgs string `yaml:"gobuild_args,omitempty"`
 }
 
 // Matrix defines the structure of matrix element in .travis.yml.
