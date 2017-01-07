@@ -1,7 +1,7 @@
 #
 # Dockerfile-go
 #
-# Copyright (c) 2016 Junpei Kawamoto
+# Copyright (c) 2016-2017 Junpei Kawamoto
 #
 # This software is released under the MIT License.
 #
@@ -16,8 +16,8 @@ RUN apt-get update && \
 
 {{define "source"}}
 ENV GOPATH /data
-ADD source.tar.gz $GOPATH/src/{{.DockerfileOpt.Repository}}
-WORKDIR $GOPATH/src/{{.DockerfileOpt.Repository}}
+ADD {{.Archive}} $GOPATH/src/{{.Repository}}
+WORKDIR $GOPATH/src/{{.Repository}}
 
 # Before Install Steps.
 {{range .Travis.BeforeInstall}}

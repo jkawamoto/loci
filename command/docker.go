@@ -1,7 +1,7 @@
 //
 // command/docker.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -51,6 +51,7 @@ type travisExt struct {
 func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte, err error) {
 
 	var data []byte
+
 	// Loading the base template.
 	data, err = Asset(DockerfileAsset)
 	if err != nil {
