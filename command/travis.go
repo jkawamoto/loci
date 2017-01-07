@@ -77,77 +77,24 @@ func NewTravis(filename string) (res *Travis, err error) {
 // matrix.
 func (t *Travis) ArgumentSet() [][]string {
 
-	if t.Language == "python" {
-
-		if len(t.Matrix.Include) != 0 {
-			res := make([][]string, len(t.Matrix.Include))
-			for i, v := range t.Matrix.Include {
-				version, key, value := parsePythonCase(v)
-				res[i] = []string{version, key, value}
-			}
-			return res
-		}
-
-		exclude := make(map[string]struct{})
-		for _, v := range t.Matrix.Exclude {
-			version, key, value := parsePythonCase(v)
-			exclude[makeSetKey(version, key, value)] = struct{}{}
-		}
-
-		if len(t.Python) == 0 {
-
-			if len(t.Env) == 0 {
-				return [][]string{[]string{"2.7"}}
-			}
-
-			res := make([][]string, len(t.Env))
-			for i, env := range t.Env {
-				key, value := parseEnv(env)
-				res[i] = []string{"2.7", key, value}
-			}
-			return res
-
-		}
-
-		if len(t.Env) == 0 {
-			res := make([][]string, len(t.Python))
-			for i, ver := range t.Python {
-				res[i] = []string{ver}
-			}
-			return res
-		}
-
-		res := [][]string{}
-		for _, ver := range t.Python {
-			for _, env := range t.Env {
-				key, value := parseEnv(env)
-				if _, exist := exclude[makeSetKey(ver, key, value)]; exist {
-					continue
-				}
-				res = append(res, []string{ver, key, value})
-			}
-		}
-		return res
-
+	switch t.Language {
+	case "python":
+		return t.argumentSetPython()
+	default:
+		return [][]string{{""}}
 	}
-
-	return [][]string{{""}}
 
 }
 
+// parseEnv parses a string consisting of a name of an environment variable
+// and its value by concatinating with =, and returns a tuple of the name and
+// value.
 func parseEnv(env string) (string, string) {
 	s := strings.SplitN(env, "=", 2)
 	return s[0], s[1]
 }
 
-func parsePythonCase(v interface{}) (version string, key string, value string) {
-	m, _ := v.(map[interface{}]interface{})
-	version, _ = m["python"].(string)
-	env, _ := m["env"].(string)
-	key, value = parseEnv(env)
-	return
-}
-
+// makeSetKey returns a string consisting of version, key, and value.
 func makeSetKey(version, key, value string) string {
 	return fmt.Sprintf("%s %s %s", version, key, value)
 }

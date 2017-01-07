@@ -1,5 +1,5 @@
 //
-// command/travis_test.go
+// command/travis_python_test.go
 //
 // Copyright (c) 2016 Junpei Kawamoto
 //
@@ -24,7 +24,7 @@ type PythonCase struct {
 	Env    string `yaml:"env"`
 }
 
-func TestMatrixInclude(t *testing.T) {
+func TestPythonMatrixInclude(t *testing.T) {
 
 	var err error
 	temp := os.TempDir()
@@ -77,7 +77,7 @@ func TestMatrixInclude(t *testing.T) {
 
 }
 
-func TestMatrixExclude(t *testing.T) {
+func TestPythonMatrixExclude(t *testing.T) {
 
 	var err error
 	temp := os.TempDir()
@@ -132,8 +132,8 @@ func TestMatrixExclude(t *testing.T) {
 
 }
 
-// TestArgumentSet tests ArgumentSet method returns correct argument sets.
-func TestArgumentSet(t *testing.T) {
+// TestPythonArgumentSet tests ArgumentSet method returns correct argument sets.
+func TestPythonArgumentSet(t *testing.T) {
 
 	var v *Travis
 	var res [][]string
