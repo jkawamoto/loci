@@ -7,7 +7,6 @@ date: 2016-12-14
 lastmod: 2017-01-07
 slug: readme
 ---
-
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./info/licenses/)
 [![Build Status](https://travis-ci.org/jkawamoto/loci.svg?branch=master)](https://travis-ci.org/jkawamoto/loci)
 [![Code Climate](https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg)](https://codeclimate.com/github/jkawamoto/loci)
@@ -56,12 +55,13 @@ Note that `$XYZ` means that environment variable `$XYZ` will be used
 if the associated option value isn't given.
 
 Loci builds docker images every time to run tests in a sandbox.
-The default image name will be `loci/` + time but you can specify another name
-with `--tag` or `-t` flag.
+The default image name will be the repository name of the project with
+prefix `loci/`, you can specify another name with `--tag` or `-t` flag.
 
-Loci creates a container to run a set of tests in a container,
-and deletes it after the test set ends.
-If you want to keep the container, give a name with `--name` or `-n` flag.
+Loci creates a container to run a set of tests,
+and then deletes it after the test set ends.
+If you want to keep the container,
+give a container name with `--name` or `-n` flag.
 
 
 ### Requirements
