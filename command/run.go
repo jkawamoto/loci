@@ -96,15 +96,14 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
-	archive := filepath.Join(tempDir, SourceArchive)
 	fmt.Println(chalk.Bold.TextStyle("Creating archive of source codes."))
-	if err = Archive(pwd, archive); err != nil {
+	if err = Archive(pwd, filepath.Join(tempDir, SourceArchive)); err != nil {
 		return
 	}
 
 	// Create Dockerfile.
 	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
-	docker, err := Dockerfile(travis, opt.DockerfileOpt, archive)
+	docker, err := Dockerfile(travis, opt.DockerfileOpt, SourceArchive)
 	if err != nil {
 		return
 	}
