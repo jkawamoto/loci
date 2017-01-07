@@ -1,7 +1,7 @@
 //
 // command/docker.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -18,8 +18,6 @@ import (
 	"os/exec"
 	"strings"
 	"text/template"
-
-	"github.com/tcnksm/go-gitconfig"
 )
 
 // DockerfileAsset defines a asset name for Dockerfile.
@@ -53,6 +51,7 @@ type travisExt struct {
 func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte, err error) {
 
 	var data []byte
+
 	// Loading the base template.
 	data, err = Asset(DockerfileAsset)
 	if err != nil {
@@ -80,36 +79,18 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 	// Checking optional parameters.
 	opt.PypiProxy = strings.TrimSuffix(opt.PypiProxy, "/")
 
+	// Creating Dockerfile.
 	param := travisExt{
 		Travis:        travis,
 		DockerfileOpt: opt,
 		Archive:       archive,
 	}
-
-	origin, err := gitconfig.OriginURL()
-	if err != nil {
-		return
-	}
-	switch {
-	case strings.HasPrefix(origin, "http://"):
-		param.Repository = origin[len("http://"):]
-	case strings.HasPrefix(origin, "https://"):
-		param.Repository = origin[len("https://"):]
-	case strings.Contains(origin, "@"):
-		param.Repository = strings.Replace(strings.Split(origin, "@")[1], ":", "/", 1)
-	default:
-		param.Repository = strings.Replace(origin, ":", "/", 1)
-	}
-	if strings.HasSuffix(param.Repository, ".git") {
-		param.Repository = param.Repository[:len(param.Repository)-len(".git")]
-	}
-
 	buf := bytes.Buffer{}
 	if err = temp.ExecuteTemplate(&buf, "base", &param); err != nil {
 		return
 	}
-
 	res = buf.Bytes()
+
 	return
 
 }
@@ -145,7 +126,7 @@ func Build(dir, tag string) (err error) {
 }
 
 // Start runs a container to run tests.
-func Start(tag, name string, args []string) (err error) {
+func Start(tag, name string, args ...string) (err error) {
 
 	var cmd *exec.Cmd
 	if name == "" {

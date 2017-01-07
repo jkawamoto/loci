@@ -8,7 +8,7 @@
 # http://opensource.org/licenses/mit-license.php
 #
 {{define "base"}}
-FROM {{.DockerfileOpt.BaseImage}}
+FROM {{.BaseImage}}
 MAINTAINER Junpei Kawamoto <kawamoto.junpei@gmail.com>
 
 ENV TERM vt100
@@ -23,11 +23,11 @@ ENV HTTPS_PROXY {{.}}
 ENV NO_PROXY {{.}}
 {{end}}
 
-{{with .DockerfileOpt.AptProxy}}
+{{with .AptProxy}}
 RUN echo "Acquire::http { Proxy \"{{.}}\"; };" >> /etc/apt/apt.conf.d/01proxy
 {{end}}
 
-{{with .DockerfileOpt.PypiProxy}}
+{{with .PypiProxy}}
 RUN PYPI_PROXY={{.}} && \
     IPPORT=${PYPI_PROXY#*//} && \
     mkdir -p ~/.pip/ && \

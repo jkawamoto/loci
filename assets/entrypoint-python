@@ -21,10 +21,10 @@ echo "Set Python version: $PYVERSION"
 pyenv install $PYVERSION
 pyenv local $PYVERSION
 
-if [[ $# = 3 ]]; then
-  echo "Set environment: $2=$3"
-  env $2=$3
-fi
+for e in ${@:2:($#-1)}; do
+  echo "Set environment: $e"
+  env $e
+done
 
 echo "Install Steps:"
 if [ -e requirements.txt ]; then

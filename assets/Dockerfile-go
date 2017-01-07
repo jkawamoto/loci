@@ -1,7 +1,7 @@
 #
 # Dockerfile-go
 #
-# Copyright (c) 2016 Junpei Kawamoto
+# Copyright (c) 2016-2017 Junpei Kawamoto
 #
 # This software is released under the MIT License.
 #
@@ -9,23 +9,28 @@
 #
 {{define "apt"}}
 RUN apt-get update && \
-    apt-get install -y apt-utils golang git wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
+    apt-get install -y apt-utils golang git curl wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
     apt-get upgrade -y && apt-get clean && \
     rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/
+
+ENV GOPATH /data
+
+# Install gimme
+RUN mkdir -p $GOPATH/bin && \
+    curl -sL -o $GOPATH/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme && \
+    chmod +x $GOPATH/bin/gimme
 {{end}}
 
 {{define "source"}}
-ENV GOPATH /data
-ADD source.tar.gz $GOPATH/src/{{.DockerfileOpt.Repository}}
-WORKDIR $GOPATH/src/{{.DockerfileOpt.Repository}}
+{{if .Travis.GoImportPath}}
+ADD {{.Archive}} $GOPATH/src/{{.Travis.GoImportPath}}
+{{else}}
+ADD {{.Archive}} $GOPATH/src/{{.Repository}}
+{{end}}
+WORKDIR $GOPATH/src/{{.Repository}}
 
 # Before Install Steps.
 {{range .Travis.BeforeInstall}}
-RUN {{.}}
-{{end}}
-
-# Install Steps.
-{{range .Travis.Install}}
 RUN {{.}}
 {{end}}
 

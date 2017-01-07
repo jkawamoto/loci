@@ -1,7 +1,7 @@
 #
 # Dockerfile-python
 #
-# Copyright (c) 2016 Junpei Kawamoto
+# Copyright (c) 2016-2017 Junpei Kawamoto
 #
 # This software is released under the MIT License.
 #
@@ -25,7 +25,7 @@ RUN curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/py
 
 
 {{define "source"}}
-ADD source.tar.gz /data
+ADD {{.Archive}} /data
 WORKDIR /data
 
 # Before Install Steps.
