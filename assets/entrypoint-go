@@ -14,14 +14,18 @@ if [[ $# = 0 ]]; then
   exec bash
 fi
 
-TRAVIS_GO_VERSION=$1
-echo "Set Go version: $TRAVIS_GO_VERSION"
-eval "$(GIMME_GO_VERSION=$TRAVIS_GO_VERSION gimme)"
-
-if [[ $# = 3 ]]; then
-  echo "Set environment: $2=$3"
-  env $2=$3
+if [[ $1 = "any" ]]; then
+  TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
+else
+  TRAVIS_GO_VERSION=$1
+  echo "Set Go version: $TRAVIS_GO_VERSION"
+  eval "$(GIMME_GO_VERSION=$TRAVIS_GO_VERSION gimme)"
 fi
+
+for e in ${@:2:($#-1)}; do
+  echo "Set environment: $e"
+  env $e
+done
 
 echo "Install Steps:"
 {{if .Install}}

@@ -50,7 +50,7 @@ type Travis struct {
 	Go []string `yaml:"go,omitempty"`
 	// Go import path. (used only in go)
 	GoImportPath string `yaml:"go_import_path,omitempty"`
-	// Build args for go project.
+	// Build args for go project. (used only in go)
 	GoBuildArgs string `yaml:"gobuild_args,omitempty"`
 }
 
@@ -89,6 +89,8 @@ func (t *Travis) ArgumentSet() (res []Arguments, err error) {
 	switch t.Language {
 	case "python":
 		res, err = t.argumentSetPython()
+	case "go":
+		res, err = t.argumentSetGo()
 	default:
 		res = []Arguments{
 			Arguments{},
