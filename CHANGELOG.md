@@ -1,3 +1,12 @@
+## 0.3.1 (2017-01-07)
+### Added
+- Support build matrices for go projects.
+- Use repository names as a part of tag names of container images.
+
+### Fixed
+- Use correct archived source files. 
+
+
 ## 0.3.0 (2016-12-14)
 ### Added
 - Support matrix build for python projects.

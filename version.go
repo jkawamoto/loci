@@ -1,7 +1,7 @@
 //
 // version.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -14,5 +14,5 @@ const (
 	// Name defines the name of this command.
 	Name string = "loci"
 	// Version defines version number.
-	Version string = "0.3.0"
+	Version string = "0.3.1"
 )
