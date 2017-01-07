@@ -2,7 +2,7 @@
 #
 # entrypoint-go
 #
-# Copyright (c) 2016 Junpei Kawamoto
+# Copyright (c) 2016-2017 Junpei Kawamoto
 #
 # This software is released under the MIT License.
 #
@@ -24,8 +24,8 @@ if [[ $# = 3 ]]; then
 fi
 
 echo "Install Steps:"
-{{if .Travis.Install}}
-{{range .Travis.Install}}
+{{if .Install}}
+{{range .Install}}
 echo "{{.}}"
 {{.}}
 {{end}}
