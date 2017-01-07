@@ -16,7 +16,11 @@ RUN apt-get update && \
 
 {{define "source"}}
 ENV GOPATH /data
+{{if .Travis.GoImportPath}}
+ADD {{.Archive}} $GOPATH/src/{{.Travis.GoImportPath}}
+{{else}}
 ADD {{.Archive}} $GOPATH/src/{{.Repository}}
+{{end}}
 WORKDIR $GOPATH/src/{{.Repository}}
 
 # Before Install Steps.
@@ -25,8 +29,12 @@ RUN {{.}}
 {{end}}
 
 # Install Steps.
+{{if .Travis.Install}}
 {{range .Travis.Install}}
 RUN {{.}}
+{{end}}
+{{else}}
+RUN go get -t ./...
 {{end}}
 
 {{end}}

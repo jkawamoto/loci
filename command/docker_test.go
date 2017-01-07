@@ -140,6 +140,7 @@ func TestDockerfileGo(t *testing.T) {
 	travis.Language = "go"
 	travis.Addons.Apt.Packages = []string{"package1", "package2"}
 	travis.BeforeInstall = []string{"abc", "def"}
+	travis.Install = []string{"installing_package_a", "installing_package_b"}
 
 	opt := DockerfileOpt{
 		BaseImage:  "ubuntu:latest",
@@ -163,6 +164,57 @@ func TestDockerfileGo(t *testing.T) {
 
 	if !strings.Contains(dockerfile, "RUN abc") || !strings.Contains(dockerfile, "RUN def") {
 		t.Error("Dockerfile doesn't execute commands in before install:", dockerfile)
+	}
+
+	if !strings.Contains(dockerfile, "RUN installing_package_a") || !strings.Contains(dockerfile, "RUN installing_package_b") {
+		t.Error("Dockerfile doesn't execute commands in install:", dockerfile)
+	}
+
+}
+
+func TestDockerfileGoWithDefaultInstall(t *testing.T) {
+
+	var travis Travis
+	travis.Language = "go"
+
+	opt := DockerfileOpt{
+		BaseImage:  "ubuntu:latest",
+		Repository: "path/to/repo",
+	}
+	archive := "source.tar.gz"
+
+	res, err := Dockerfile(&travis, &opt, archive)
+	if err != nil {
+		t.Error("Dockerfile returns an error:", err.Error())
+	}
+	dockerfile := string(res)
+
+	if !strings.Contains(dockerfile, "RUN go get -t ./...") {
+		t.Error("Dockerfile missed the default install step:", dockerfile)
+	}
+
+}
+
+func TestDockerfileGoWithGoImportPath(t *testing.T) {
+
+	var travis Travis
+	travis.Language = "go"
+	travis.GoImportPath = "example.org/pkg/foo"
+
+	opt := DockerfileOpt{
+		BaseImage:  "ubuntu:latest",
+		Repository: "path/to/repo",
+	}
+	archive := "source.tar.gz"
+
+	res, err := Dockerfile(&travis, &opt, archive)
+	if err != nil {
+		t.Error("Dockerfile returns an error:", err.Error())
+	}
+	dockerfile := string(res)
+
+	if !strings.Contains(dockerfile, fmt.Sprintf("ADD %s $GOPATH/src/%s", archive, travis.GoImportPath)) {
+		t.Error("Dockerfile doesn't add correct source files:", dockerfile)
 	}
 
 }

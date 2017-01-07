@@ -31,6 +31,7 @@ type Travis struct {
 	} `yaml:"addons,omitempty"`
 	// List of commands run before install steps.
 	BeforeInstall []string `yaml:"before_install,omitempty"`
+	// TODO: The Install section can be a string not a list.
 	// List of commands used to install packages.
 	Install []string `yaml:"install,omitempty"`
 	// List of commands run before main scripts.
@@ -39,10 +40,16 @@ type Travis struct {
 	Script []string `yaml:"script,omitempty"`
 	// List of environment variables.
 	Env []string `yaml:"env,omitempty"`
-	// List of python versions. (used only in python)
-	Python []string `yaml:"python,omitempty"`
 	// Configuration for matrix build.
 	Matrix Matrix `yaml:"matrix,omitempty"`
+
+	// List of python versions. (used only in python)
+	Python []string `yaml:"python,omitempty"`
+
+	// List of golang versions. (used only in go)
+	Go []string `yaml:"go,omitempty"`
+	// Go import path. (used only in go)
+	GoImportPath string `yaml:"go_import_path,omitempty"`
 }
 
 // Matrix defines the structure of matrix element in .travis.yml.
