@@ -176,12 +176,13 @@ GLOBAL OPTIONS:
 if the associated option value isn&amp;rsquo;t given.&lt;/p&gt;
 
 &lt;p&gt;Loci builds docker images every time to run tests in a sandbox.
-The default image name will be &lt;code&gt;loci/&lt;/code&gt; + time but you can specify another name
-with &lt;code&gt;--tag&lt;/code&gt; or &lt;code&gt;-t&lt;/code&gt; flag.&lt;/p&gt;
+The default image name will be the repository name of the project with
+prefix &lt;code&gt;loci/&lt;/code&gt;, you can specify another name with &lt;code&gt;--tag&lt;/code&gt; or &lt;code&gt;-t&lt;/code&gt; flag.&lt;/p&gt;
 
-&lt;p&gt;Loci creates a container to run a set of tests in a container,
-and deletes it after the test set ends.
-If you want to keep the container, give a name with &lt;code&gt;--name&lt;/code&gt; or &lt;code&gt;-n&lt;/code&gt; flag.&lt;/p&gt;
+&lt;p&gt;Loci creates a container to run a set of tests,
+and then deletes it after the test set ends.
+If you want to keep the container,
+give a container name with &lt;code&gt;--name&lt;/code&gt; or &lt;code&gt;-n&lt;/code&gt; flag.&lt;/p&gt;
 
 &lt;h3 id=&#34;requirements:04c6e90faac2675aa89e2176d2eec7d8&#34;&gt;Requirements&lt;/h3&gt;
 
