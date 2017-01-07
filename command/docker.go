@@ -18,8 +18,6 @@ import (
 	"os/exec"
 	"strings"
 	"text/template"
-
-	"github.com/tcnksm/go-gitconfig"
 )
 
 // DockerfileAsset defines a asset name for Dockerfile.
@@ -80,36 +78,18 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 	// Checking optional parameters.
 	opt.PypiProxy = strings.TrimSuffix(opt.PypiProxy, "/")
 
+	// Creating Dockerfile.
 	param := travisExt{
 		Travis:        travis,
 		DockerfileOpt: opt,
 		Archive:       archive,
 	}
-
-	origin, err := gitconfig.OriginURL()
-	if err != nil {
-		return
-	}
-	switch {
-	case strings.HasPrefix(origin, "http://"):
-		param.Repository = origin[len("http://"):]
-	case strings.HasPrefix(origin, "https://"):
-		param.Repository = origin[len("https://"):]
-	case strings.Contains(origin, "@"):
-		param.Repository = strings.Replace(strings.Split(origin, "@")[1], ":", "/", 1)
-	default:
-		param.Repository = strings.Replace(origin, ":", "/", 1)
-	}
-	if strings.HasSuffix(param.Repository, ".git") {
-		param.Repository = param.Repository[:len(param.Repository)-len(".git")]
-	}
-
 	buf := bytes.Buffer{}
 	if err = temp.ExecuteTemplate(&buf, "base", &param); err != nil {
 		return
 	}
-
 	res = buf.Bytes()
+
 	return
 
 }

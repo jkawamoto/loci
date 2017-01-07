@@ -1,7 +1,7 @@
 //
 // command/run.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -14,9 +14,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
-	"time"
+	"strings"
 
+	gitconfig "github.com/tcnksm/go-gitconfig"
 	"github.com/ttacon/chalk"
 	"github.com/urfave/cli"
 )
@@ -63,6 +65,7 @@ func Run(c *cli.Context) error {
 
 func run(opt *RunOpt) (err error) {
 
+	// Load a Travis's script file.
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
 	}
@@ -71,8 +74,16 @@ func run(opt *RunOpt) (err error) {
 		return
 	}
 
+	// Get repository information.
+	origin, err := gitconfig.OriginURL()
+	if err != nil {
+		return
+	}
+	opt.Repository = getRepository(origin)
+
+	// Set up the tag name of the container image.
 	if opt.Tag == "" {
-		opt.Tag = fmt.Sprintf("loci/%s", time.Now().Format("20060102150405"))
+		opt.Tag = fmt.Sprintf("loci/%s", path.Base(opt.Repository))
 	}
 	tempDir := filepath.Join(os.TempDir(), opt.Tag)
 	if err = os.MkdirAll(tempDir, 0777); err != nil {
@@ -80,6 +91,7 @@ func run(opt *RunOpt) (err error) {
 	}
 	defer os.RemoveAll(tempDir)
 
+	// Archive source files.
 	pwd, err := os.Getwd()
 	if err != nil {
 		return
@@ -90,6 +102,7 @@ func run(opt *RunOpt) (err error) {
 		return
 	}
 
+	// Create Dockerfile.
 	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
 	docker, err := Dockerfile(travis, opt.DockerfileOpt, archive)
 	if err != nil {
@@ -102,6 +115,7 @@ func run(opt *RunOpt) (err error) {
 		fmt.Println(string(docker))
 	}
 
+	// Create entrypoint.sh.
 	fmt.Println(chalk.Bold.TextStyle("Creating entrypoint."))
 	entry, err := Entrypoint(travis)
 	if err != nil {
@@ -114,12 +128,14 @@ func run(opt *RunOpt) (err error) {
 		fmt.Println(string(entry))
 	}
 
+	// Build the container image.
 	fmt.Println(chalk.Bold.TextStyle("Building a image."))
 	err = Build(tempDir, opt.Tag)
 	if err != nil {
 		return
 	}
 
+	// Run tests in sandboxes.
 	fmt.Println(chalk.Bold.TextStyle("Start CI."))
 	for i, args := range travis.ArgumentSet() {
 		name := opt.Name
@@ -133,4 +149,27 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	return nil
+}
+
+// getRepository returns the repository path from a given remote URL of
+// origin repository. The repository path consists of a URL without
+// sheme, user name, password, and .git suffix.
+func getRepository(origin string) (res string) {
+
+	switch {
+	case strings.Contains(origin, "@"):
+		res = strings.Replace(strings.Split(origin, "@")[1], ":", "/", 1)
+	case strings.HasPrefix(origin, "http://"):
+		res = origin[len("http://"):]
+	case strings.HasPrefix(origin, "https://"):
+		res = origin[len("https://"):]
+	default:
+		res = strings.Replace(origin, ":", "/", 1)
+	}
+	if strings.HasSuffix(res, ".git") {
+		res = res[:len(res)-len(".git")]
+	}
+
+	return
+
 }
