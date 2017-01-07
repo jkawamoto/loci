@@ -133,3 +133,36 @@ func TestDockerfilePython(t *testing.T) {
 	}
 
 }
+
+func TestDockerfileGo(t *testing.T) {
+
+	var travis Travis
+	travis.Language = "go"
+	travis.Addons.Apt.Packages = []string{"package1", "package2"}
+	travis.BeforeInstall = []string{"abc", "def"}
+
+	opt := DockerfileOpt{
+		BaseImage:  "ubuntu:latest",
+		Repository: "path/to/repo",
+	}
+	archive := "source.tar.gz"
+
+	res, err := Dockerfile(&travis, &opt, archive)
+	if err != nil {
+		t.Error("Dockerfile returns an error:", err.Error())
+	}
+	dockerfile := string(res)
+
+	if !strings.Contains(dockerfile, "wget  package1  package2") {
+		t.Error("Dockerfile doesn't install required packages:", dockerfile)
+	}
+
+	if !strings.Contains(dockerfile, fmt.Sprintf("ADD %s $GOPATH/src/%s", archive, opt.Repository)) {
+		t.Error("Dockerfile doesn't add correct source files:", dockerfile)
+	}
+
+	if !strings.Contains(dockerfile, "RUN abc") || !strings.Contains(dockerfile, "RUN def") {
+		t.Error("Dockerfile doesn't execute commands in before install:", dockerfile)
+	}
+
+}
