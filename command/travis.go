@@ -1,7 +1,7 @@
 //
 // command/travis.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -85,26 +84,28 @@ func NewTravis(filename string) (res *Travis, err error) {
 
 // ArgumentSet returns a set of arguments to run entrypoint based on a build
 // matrix.
-func (t *Travis) ArgumentSet() [][]string {
+func (t *Travis) ArgumentSet() (res []Arguments, err error) {
 
 	switch t.Language {
 	case "python":
-		return t.argumentSetPython()
+		res, err = t.argumentSetPython()
 	default:
-		return [][]string{{""}}
+		res = []Arguments{
+			Arguments{},
+		}
 	}
 
+	return
+
 }
 
-// parseEnv parses a string consisting of a name of an environment variable
-// and its value by concatinating with =, and returns a tuple of the name and
-// value.
-func parseEnv(env string) (string, string) {
-	s := strings.SplitN(env, "=", 2)
-	return s[0], s[1]
+// Arguments defines a set of arguments for build matrix.
+type Arguments struct {
+	Version string
+	Env     string
 }
 
-// makeSetKey returns a string consisting of version, key, and value.
-func makeSetKey(version, key, value string) string {
-	return fmt.Sprintf("%s %s %s", version, key, value)
+// String method returns a string format of an Arguments.
+func (a Arguments) String() string {
+	return fmt.Sprintf("%s %s", a.Version, a.Env)
 }

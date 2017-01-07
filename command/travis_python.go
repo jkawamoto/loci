@@ -1,7 +1,7 @@
 //
 // command/travis_python.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -10,68 +10,103 @@
 
 package command
 
+import "fmt"
+
 // argumentSetPython returns a set of arguments to run entrypoint based on a build
 // matrix for python projects.
-func (t *Travis) argumentSetPython() [][]string {
+func (t *Travis) argumentSetPython() (res []Arguments, err error) {
 
 	if len(t.Matrix.Include) != 0 {
-		res := make([][]string, len(t.Matrix.Include))
+		res = make([]Arguments, len(t.Matrix.Include))
 		for i, v := range t.Matrix.Include {
-			version, key, value := parsePythonCase(v)
-			res[i] = []string{version, key, value}
+			args, err := newPythonArguments(v)
+			if err != nil {
+				return nil, err
+			}
+			res[i] = args
 		}
-		return res
+		return
 	}
 
 	exclude := make(map[string]struct{})
 	for _, v := range t.Matrix.Exclude {
-		version, key, value := parsePythonCase(v)
-		exclude[makeSetKey(version, key, value)] = struct{}{}
+		args, err := newPythonArguments(v)
+		if err != nil {
+			return nil, err
+		}
+		exclude[args.String()] = struct{}{}
 	}
 
 	if len(t.Python) == 0 {
 
 		if len(t.Env) == 0 {
-			return [][]string{[]string{"2.7"}}
+			res = []Arguments{
+				Arguments{
+					Version: "2.7",
+				},
+			}
+			return
 		}
 
-		res := make([][]string, len(t.Env))
+		res = make([]Arguments, len(t.Env))
 		for i, env := range t.Env {
-			key, value := parseEnv(env)
-			res[i] = []string{"2.7", key, value}
+			res[i] = Arguments{
+				Version: "2.7",
+				Env:     env,
+			}
 		}
-		return res
+		return
 
 	}
 
 	if len(t.Env) == 0 {
-		res := make([][]string, len(t.Python))
+		res = make([]Arguments, len(t.Python))
 		for i, ver := range t.Python {
-			res[i] = []string{ver}
+			res[i] = Arguments{
+				Version: ver,
+			}
 		}
-		return res
+		return
 	}
 
-	res := [][]string{}
 	for _, ver := range t.Python {
 		for _, env := range t.Env {
-			key, value := parseEnv(env)
-			if _, exist := exclude[makeSetKey(ver, key, value)]; exist {
-				continue
+			args := Arguments{
+				Version: ver,
+				Env:     env,
 			}
-			res = append(res, []string{ver, key, value})
+			if _, exist := exclude[args.String()]; !exist {
+				res = append(res, args)
+			}
 		}
 	}
-	return res
+
+	return
 
 }
 
-// parsePythonCase parses a given item v in the exclude list, and returns
-// a tuple of version, key of an environment variable, and its value.
-func parsePythonCase(v interface{}) (version string, key string, value string) {
-	m, _ := v.(map[interface{}]interface{})
-	version, _ = m["python"].(string)
-	env, _ := m["env"].(string)
-	key, value = parseEnv(env)
+// newPythonArguments parses a given item v in an include/exclude list.
+// v must be castable to map[interface{}]interface{}.
+func newPythonArguments(v interface{}) (res Arguments, err error) {
+
+	m, ok := v.(map[interface{}]interface{})
+	if !ok {
+		err = fmt.Errorf("Given item is broken.")
+		return
+	}
+
+	res.Version, ok = m["python"].(string)
+	if !ok {
+		err = fmt.Errorf("Python version of the given item is broken.")
+		return
+	}
+
+	res.Env, ok = m["env"].(string)
+	if !ok {
+		err = fmt.Errorf("Env of the given item is broken.")
+		return
+	}
+
 	return
+
 }

@@ -126,7 +126,7 @@ func Build(dir, tag string) (err error) {
 }
 
 // Start runs a container to run tests.
-func Start(tag, name string, args []string) (err error) {
+func Start(tag, name string, args ...string) (err error) {
 
 	var cmd *exec.Cmd
 	if name == "" {

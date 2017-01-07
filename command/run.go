@@ -136,12 +136,16 @@ func run(opt *RunOpt) (err error) {
 
 	// Run tests in sandboxes.
 	fmt.Println(chalk.Bold.TextStyle("Start CI."))
-	for i, args := range travis.ArgumentSet() {
+	argset, err := travis.ArgumentSet()
+	if err != nil {
+		return
+	}
+	for i, args := range argset {
 		name := opt.Name
 		if name != "" {
 			name = fmt.Sprintf("%s-%d", name, i+1)
 		}
-		err := Start(opt.Tag, name, args)
+		err := Start(opt.Tag, name, args.Version, args.Env)
 		if err != nil {
 			return err
 		}

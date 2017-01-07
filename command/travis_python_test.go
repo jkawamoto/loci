@@ -1,7 +1,7 @@
 //
 // command/travis_python_test.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -60,18 +60,19 @@ func TestPythonMatrixInclude(t *testing.T) {
 		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Include)
 	}
 
-	res := travis.ArgumentSet()
+	res, err := travis.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	t.Log("Arguments:", res)
 	if len(res) != 2 {
 		t.Fatal("Generated arguments are wrong:", res)
 	}
-	if res[0][0] != "2.7" || res[1][0] != "3.5" {
+	if res[0].Version != "2.7" || res[1].Version != "3.5" {
 		t.Error("Version is wrong:", res)
 	}
-	if len(res[0]) != 3 || res[0][1] != "FOO" || res[0][2] != "BAR" {
-		t.Error("Env has wrong values:", res)
-	}
-	if len(res[1]) != 3 || res[1][1] != "FOO" || res[1][2] != "FUGA" {
+	if res[0].Env != "FOO=BAR" || res[1].Env != "FOO=FUGA" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -112,21 +113,19 @@ func TestPythonMatrixExclude(t *testing.T) {
 		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Exclude)
 	}
 
-	res := travis.ArgumentSet()
+	res, err := travis.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	t.Log("Arguments:", res)
 	if len(res) != 3 {
 		t.Fatal("Generated arguments are wrong:", res)
 	}
-	if res[0][0] != "2.7" || res[1][0] != "2.7" || res[2][0] != "3.5" {
+	if res[0].Version != "2.7" || res[1].Version != "2.7" || res[2].Version != "3.5" {
 		t.Error("Version is wrong:", res)
 	}
-	if len(res[0]) != 3 || res[0][1] != "FOO" || res[0][2] != "BAR" {
-		t.Error("Env has wrong values:", res)
-	}
-	if len(res[1]) != 3 || res[1][1] != "FOO" || res[1][2] != "FUGA" {
-		t.Error("Env has wrong values:", res)
-	}
-	if len(res[2]) != 3 || res[2][1] != "FOO" || res[2][2] != "FUGA" {
+	if res[0].Env != "FOO=BAR" || res[1].Env != "FOO=FUGA" || res[2].Env != "FOO=FUGA" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -136,36 +135,45 @@ func TestPythonMatrixExclude(t *testing.T) {
 func TestPythonArgumentSet(t *testing.T) {
 
 	var v *Travis
-	var res [][]string
+	var res []Arguments
+	var err error
 
 	v = &Travis{
 		Language: "python",
 	}
-	res = v.ArgumentSet()
+
+	res, err = v.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	t.Log("Arguments:", res)
 	if len(res) != 1 {
 		t.Error("Generated arguments are wrong:", res)
 	}
-	if res[0][0] != "2.7" {
-		t.Error("Version is wrong:", res[0][0])
+	if res[0].Version != "2.7" {
+		t.Error("Version is wrong:", res[0].Version)
 	}
-	if len(res[0]) != 1 {
-		t.Error("Env has wrong values:", res[0])
+	if res[0].Env != "" {
+		t.Error("Env has wrong values:", res[0].Env)
 	}
 
 	v = &Travis{
 		Language: "python",
 		Env:      []string{"FOO=BAR"},
 	}
-	res = v.ArgumentSet()
+	res, err = v.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
 	t.Log("Arguments:", res)
 	if len(res) != 1 {
 		t.Error("Generated arguments are wrong:", res)
 	}
-	if res[0][0] != "2.7" {
+	if res[0].Version != "2.7" {
 		t.Error("Version is wrong:", res)
 	}
-	if len(res[0]) != 3 || res[0][1] != "FOO" || res[0][2] != "BAR" {
+	if res[0].Env != "FOO=BAR" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -173,15 +181,18 @@ func TestPythonArgumentSet(t *testing.T) {
 		Language: "python",
 		Python:   []string{"2.7", "3.5"},
 	}
-	res = v.ArgumentSet()
+	res, err = v.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
 	t.Log("Arguments:", res)
 	if len(res) != 2 {
 		t.Error("Generated arguments are wrong:", res)
 	}
-	if res[0][0] != "2.7" || res[1][0] != "3.5" {
+	if res[0].Version != "2.7" || res[1].Version != "3.5" {
 		t.Error("Version is wrong:", res)
 	}
-	if len(res[0]) != 1 || len(res[1]) != 1 {
+	if res[0].Env != "" || res[1].Env != "" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -190,24 +201,27 @@ func TestPythonArgumentSet(t *testing.T) {
 		Python:   []string{"2.7", "3.5"},
 		Env:      []string{"FOO=BAR", "FOO=FUGA"},
 	}
-	res = v.ArgumentSet()
+	res, err = v.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
 	t.Log("Arguments:", res)
 	if len(res) != 4 {
 		t.Error("Generated arguments are wrong:", res)
 	}
-	if res[0][0] != "2.7" || res[1][0] != "2.7" || res[2][0] != "3.5" || res[3][0] != "3.5" {
+	if res[0].Version != "2.7" || res[1].Version != "2.7" || res[2].Version != "3.5" || res[3].Version != "3.5" {
 		t.Error("Version is wrong:", res)
 	}
-	if len(res[0]) != 3 || res[0][1] != "FOO" || res[0][2] != "BAR" {
+	if res[0].Env != "FOO=BAR" {
 		t.Error("Env has wrong values:", res)
 	}
-	if len(res[1]) != 3 || res[1][1] != "FOO" || res[1][2] != "FUGA" {
+	if res[1].Env != "FOO=FUGA" {
 		t.Error("Env has wrong values:", res)
 	}
-	if len(res[2]) != 3 || res[2][1] != "FOO" || res[2][2] != "BAR" {
+	if res[2].Env != "FOO=BAR" {
 		t.Error("Env has wrong values:", res)
 	}
-	if len(res[3]) != 3 || res[3][1] != "FOO" || res[3][2] != "FUGA" {
+	if res[3].Env != "FOO=FUGA" {
 		t.Error("Env has wrong values:", res)
 	}
 
