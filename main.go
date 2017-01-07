@@ -1,7 +1,7 @@
 //
 // main.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -32,7 +32,8 @@ func main() {
 	app.Flags = GlobalFlags
 	app.Commands = Commands
 	app.CommandNotFound = CommandNotFound
-	app.Copyright = "MIT License"
+	app.Copyright = "MIT License. " +
+		"See https://jkawamoto.github.io/loci/info/licenses/ for more information."
 	app.Action = command.Run
 
 	cli.AppHelpTemplate = `NAME:
