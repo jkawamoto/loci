@@ -12,6 +12,7 @@ package command
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -97,7 +98,7 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 
 // Build builds a docker image from a directory. The built image named tag.
 // The directory must have Dockerfile.
-func Build(dir, tag string) (err error) {
+func Build(ctx context.Context, dir, tag string) (err error) {
 
 	cd, err := os.Getwd()
 	if err != nil {
@@ -108,7 +109,7 @@ func Build(dir, tag string) (err error) {
 	}
 	defer os.Chdir(cd)
 
-	cmd := exec.Command("docker", "build", "-t", tag, ".")
+	cmd := exec.CommandContext(ctx, "docker", "build", "-t", tag, ".")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return
@@ -126,13 +127,13 @@ func Build(dir, tag string) (err error) {
 }
 
 // Start runs a container to run tests.
-func Start(tag, name string, args ...string) (err error) {
+func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 
 	var cmd *exec.Cmd
 	if name == "" {
-		cmd = exec.Command("docker", append([]string{"run", "-t", "--rm", tag}, args...)...)
+		cmd = exec.CommandContext(ctx, "docker", append([]string{"run", "-t", "--rm", tag}, args...)...)
 	} else {
-		cmd = exec.Command("docker", append([]string{"run", "-t", "--name", name, tag}, args...)...)
+		cmd = exec.CommandContext(ctx, "docker", append([]string{"run", "-t", "--name", name, tag}, args...)...)
 	}
 
 	stdout, err := cmd.StdoutPipe()
