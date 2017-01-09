@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -231,21 +232,14 @@ func archiveContext(ctx context.Context, root string, writer io.Writer) (err err
 	defer tarWriter.Close()
 
 	// Create a tarball.
-	// TODO: Use ioutil.ReadDir
-	sources, err := filepath.Glob(filepath.Join(root, "*"))
+	sources, err := ioutil.ReadDir(root)
 	if err != nil {
 		return
 	}
-	for _, path := range sources {
+	for _, info := range sources {
 
 		// Write a file header.
-		info, err := os.Stat(path)
-		if err != nil {
-			fmt.Printf("Cannot find %s (%s)", path, err.Error())
-			break
-		}
-
-		header, err := tar.FileInfoHeader(info, path)
+		header, err := tar.FileInfoHeader(info, info.Name())
 		if err != nil {
 			fmt.Println(err.Error())
 			break
@@ -253,7 +247,7 @@ func archiveContext(ctx context.Context, root string, writer io.Writer) (err err
 		tarWriter.WriteHeader(header)
 
 		// Write the body.
-		if err = copyFile(path, tarWriter); err != nil {
+		if err = copyFile(filepath.Join(root, info.Name()), tarWriter); err != nil {
 			break
 		}
 
