@@ -13,6 +13,7 @@ package command
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"io"
 	"os"
 	"path"
@@ -26,7 +27,7 @@ func TestArchive(t *testing.T) {
 	target := path.Join(temp, "test.tar.gz")
 	t.Logf("Creating an archive file: %s", target)
 
-	if err := Archive("..", target); err != nil {
+	if err := Archive(context.Background(), "..", target); err != nil {
 		t.Error(err.Error())
 		return
 	}

@@ -14,14 +14,13 @@ import (
 	"archive/tar"
 	"bufio"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"golang.org/x/net/context"
 )
 
 // pathListupFunc defines a function which lists up paths and put them to a
@@ -29,7 +28,7 @@ import (
 type pathListupFunc func(context.Context, chan<- string) error
 
 // Archive makes a tar.gz file consists of files maintained a git repository.
-func Archive(dir string, filename string) (err error) {
+func Archive(ctx context.Context, dir string, filename string) (err error) {
 
 	writeFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -60,7 +59,6 @@ func Archive(dir string, filename string) (err error) {
 	defer os.Chdir(cd)
 
 	// Listing up and write to a tarball.
-	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
 	ch, errCh := parallelListup(ctx, listupGitSources, listupGitRepository)

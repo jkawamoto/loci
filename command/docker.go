@@ -11,13 +11,23 @@
 package command
 
 import (
+	"archive/tar"
+	"bufio"
 	"bytes"
+	"compress/gzip"
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
 )
 
 // DockerfileAsset defines a asset name for Dockerfile.
@@ -45,6 +55,11 @@ type travisExt struct {
 	*Travis
 	*DockerfileOpt
 	Archive string
+}
+
+// buildLog defines the JSON format of logs from building docker images.
+type buildLog struct {
+	Stream string `json:"stream,omitempty"`
 }
 
 // Dockerfile creates a Dockerfile from an instance of Travis.
@@ -97,56 +112,192 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 
 // Build builds a docker image from a directory. The built image named tag.
 // The directory must have Dockerfile.
-func Build(dir, tag string) (err error) {
+func Build(ctx context.Context, dir, tag string) (err error) {
 
-	cd, err := os.Getwd()
+	// Create a docker client.
+	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
 	if err != nil {
 		return
 	}
-	if err = os.Chdir(dir); err != nil {
-		return
-	}
-	defer os.Chdir(cd)
+	defer cli.Close()
 
-	cmd := exec.Command("docker", "build", "-t", tag, ".")
-	stdout, err := cmd.StdoutPipe()
+	// Create a pipe.
+	reader, writer := io.Pipe()
+
+	// Send the build context.
+	go func() {
+		archiveContext(ctx, dir, writer)
+		writer.Close()
+	}()
+
+	// Start to build an image.
+	res, err := cli.ImageBuild(ctx, reader, types.ImageBuildOptions{
+		Tags:   []string{tag},
+		Remove: true,
+	})
 	if err != nil {
 		return
 	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
+	defer res.Body.Close()
+
+	// Wait untile the copy ends or the context will be canceled.
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+
+		var log buildLog
+		s := bufio.NewScanner(res.Body)
+		for s.Scan() {
+			select {
+			case <-ctx.Done():
+				err = ctx.Err()
+				return
+			default:
+				e := s.Text()
+				if json.Unmarshal([]byte(e), &log) == nil {
+					os.Stdout.WriteString(log.Stream)
+				} else {
+					os.Stdout.WriteString(e)
+					os.Stdout.WriteString("\n")
+				}
+			}
+		}
+		os.Stdout.Sync()
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-done:
 		return
 	}
-
-	go io.Copy(os.Stdout, stdout)
-	go io.Copy(os.Stderr, stderr)
-
-	return cmd.Run()
 
 }
 
 // Start runs a container to run tests.
-func Start(tag, name string, args ...string) (err error) {
+func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 
-	var cmd *exec.Cmd
+	// Create a docker client.
+	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
+	if err != nil {
+		return
+	}
+	defer cli.Close()
+
+	// Create a docker container.
+	config := container.Config{
+		Image: tag,
+		Cmd:   args,
+	}
+	container, err := cli.ContainerCreate(ctx, &config, nil, nil, name)
+	if err != nil {
+		return
+	}
 	if name == "" {
-		cmd = exec.Command("docker", append([]string{"run", "-t", "--rm", tag}, args...)...)
-	} else {
-		cmd = exec.Command("docker", append([]string{"run", "-t", "--name", name, tag}, args...)...)
+		// If any container name isn't given, remove the container.
+		// Note that, the context ctx may be canceled before removing the container,
+		// and use another context here.
+		defer cli.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})
 	}
 
-	stdout, err := cmd.StdoutPipe()
+	// Attach stdout of the container.
+	stdout, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
+		Stream: true,
+		Stdout: true,
+	})
 	if err != nil {
 		return
 	}
-	stderr, err := cmd.StderrPipe()
+	defer stdout.Close()
+	go io.Copy(os.Stdout, stdout.Reader)
+
+	// Attach stderr of the container.
+	stderr, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
+		Stream: true,
+		Stderr: true,
+	})
 	if err != nil {
 		return
 	}
+	defer stderr.Close()
+	go io.Copy(os.Stderr, stderr.Reader)
 
-	go io.Copy(os.Stdout, stdout)
-	go io.Copy(os.Stderr, stderr)
+	// Start the container.
+	options := types.ContainerStartOptions{}
+	if err = cli.ContainerStart(ctx, container.ID, options); err != nil {
+		return
+	}
 
-	return cmd.Run()
+	// Wait until the container ends.
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+
+		var exit int64
+		exit, err = cli.ContainerWait(ctx, container.ID)
+		if exit != 0 {
+			err = fmt.Errorf("Testing container returns an error:", exit)
+		}
+
+	}()
+
+	select {
+	case <-ctx.Done():
+		// Kill the running container when the context is canceled.
+		// The context ctx has been canceled already, use another context here.
+		cli.ContainerKill(context.Background(), container.ID, "")
+		return ctx.Err()
+	case <-done:
+		return
+	}
+
+}
+
+// archiveContext makes a tar.gz stream consists of files.
+func archiveContext(ctx context.Context, root string, writer io.Writer) (err error) {
+
+	// Create a buffered writer.
+	bufWriter := bufio.NewWriter(writer)
+	defer bufWriter.Flush()
+
+	// Create a zipped writer on the bufferd writer.
+	zipWriter, err := gzip.NewWriterLevel(bufWriter, gzip.BestCompression)
+	if err != nil {
+		return
+	}
+	defer zipWriter.Close()
+
+	// Create a tarball writer on the zipped writer.
+	tarWriter := tar.NewWriter(zipWriter)
+	defer tarWriter.Close()
+
+	// Create a tarball.
+	sources, err := ioutil.ReadDir(root)
+	if err != nil {
+		return
+	}
+	for _, info := range sources {
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+
+		default:
+			// Write a file header.
+			header, err := tar.FileInfoHeader(info, info.Name())
+			if err != nil {
+				fmt.Println(err.Error())
+				return err
+			}
+			tarWriter.WriteHeader(header)
+
+			// Write the body.
+			if err = copyFile(filepath.Join(root, info.Name()), tarWriter); err != nil {
+				return err
+			}
+		}
+	}
+
+	return
 
 }

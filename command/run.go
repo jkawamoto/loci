@@ -11,12 +11,15 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	gitconfig "github.com/tcnksm/go-gitconfig"
 	"github.com/ttacon/chalk"
@@ -65,6 +68,16 @@ func Run(c *cli.Context) error {
 
 func run(opt *RunOpt) (err error) {
 
+	// Prepare to be canceled.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGQUIT)
+	go func() {
+		<-sig
+		cancel()
+	}()
+
 	// Load a Travis's script file.
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
@@ -97,7 +110,7 @@ func run(opt *RunOpt) (err error) {
 		return
 	}
 	fmt.Println(chalk.Bold.TextStyle("Creating archive of source codes."))
-	if err = Archive(pwd, filepath.Join(tempDir, SourceArchive)); err != nil {
+	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive)); err != nil {
 		return
 	}
 
@@ -129,13 +142,13 @@ func run(opt *RunOpt) (err error) {
 
 	// Build the container image.
 	fmt.Println(chalk.Bold.TextStyle("Building a image."))
-	err = Build(tempDir, opt.Tag)
+	err = Build(ctx, tempDir, opt.Tag)
 	if err != nil {
 		return
 	}
 
 	// Run tests in sandboxes.
-	fmt.Println(chalk.Bold.TextStyle("Start CI."))
+	fmt.Println(chalk.Bold.TextStyle("Start CI."), "  ")
 	argset, err := travis.ArgumentSet()
 	if err != nil {
 		return
@@ -145,7 +158,7 @@ func run(opt *RunOpt) (err error) {
 		if name != "" {
 			name = fmt.Sprintf("%s-%d", name, i+1)
 		}
-		err := Start(opt.Tag, name, args.Version, args.Env)
+		err := Start(ctx, opt.Tag, name, args.Version, args.Env)
 		if err != nil {
 			return err
 		}
