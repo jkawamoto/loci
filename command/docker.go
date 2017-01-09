@@ -19,6 +19,11 @@ import (
 	"os/exec"
 	"strings"
 	"text/template"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/client"
 )
 
 // DockerfileAsset defines a asset name for Dockerfile.
@@ -129,25 +134,65 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 // Start runs a container to run tests.
 func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 
-	var cmd *exec.Cmd
-	if name == "" {
-		cmd = exec.CommandContext(ctx, "docker", append([]string{"run", "-t", "--rm", tag}, args...)...)
-	} else {
-		cmd = exec.CommandContext(ctx, "docker", append([]string{"run", "-t", "--name", name, tag}, args...)...)
-	}
-
-	stdout, err := cmd.StdoutPipe()
+	// Create a docker client.
+	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
 	if err != nil {
 		return
 	}
-	stderr, err := cmd.StderrPipe()
+	defer cli.Close()
+
+	// Create a docker container.
+	config := container.Config{
+		Image: tag,
+		Cmd:   args,
+	}
+	host := container.HostConfig{}
+	nw := network.NetworkingConfig{}
+	container, err := cli.ContainerCreate(ctx, &config, &host, &nw, name)
 	if err != nil {
 		return
 	}
+	if name != "" {
+		// If any container name isn't given, remove the container.
+		defer cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
+	}
 
-	go io.Copy(os.Stdout, stdout)
-	go io.Copy(os.Stderr, stderr)
+	// Attach stdout of the container.
+	stdout, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
+		Stream: true,
+		Stdout: true,
+	})
+	if err != nil {
+		return
+	}
+	defer stdout.Close()
+	go io.Copy(os.Stdout, stdout.Reader)
 
-	return cmd.Run()
+	// Attach stderr of the container.
+	stderr, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
+		Stream: true,
+		Stderr: true,
+	})
+	if err != nil {
+		return
+	}
+	defer stderr.Close()
+	go io.Copy(os.Stderr, stderr.Reader)
+
+	// Start the container.
+	options := types.ContainerStartOptions{}
+	if err = cli.ContainerStart(ctx, container.ID, options); err != nil {
+		return
+	}
+
+	// Wait until the container ends.
+	exit, err := cli.ContainerWait(ctx, container.ID)
+	if err != nil {
+		return
+	} else if exit != 0 {
+		return fmt.Errorf("Testing container returns an error:", exit)
+	}
+
+	return
 
 }
