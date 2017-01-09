@@ -132,7 +132,8 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 
 	// Start to build an image.
 	res, err := cli.ImageBuild(ctx, reader, types.ImageBuildOptions{
-		Tags: []string{tag},
+		Tags:   []string{tag},
+		Remove: true,
 	})
 	if err != nil {
 		return
