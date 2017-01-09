@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -54,6 +55,11 @@ type travisExt struct {
 	*Travis
 	*DockerfileOpt
 	Archive string
+}
+
+// buildLog defines the JSON format of logs from building docker images.
+type buildLog struct {
+	Stream string `json:"stream,omitempty"`
 }
 
 // Dockerfile creates a Dockerfile from an instance of Travis.
@@ -136,8 +142,25 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 	// Wait untile the copy ends or the context will be canceled.
 	done := make(chan struct{})
 	go func() {
-		io.Copy(os.Stderr, res.Body)
-		close(done)
+		defer close(done)
+
+		var log buildLog
+		s := bufio.NewScanner(res.Body)
+		for s.Scan() {
+			select {
+			case <-ctx.Done():
+				err = ctx.Err()
+				return
+			default:
+				e := s.Text()
+				if json.Unmarshal([]byte(e), &log) == nil {
+					os.Stdout.WriteString(log.Stream)
+				} else {
+					os.Stdout.WriteString(e)
+					os.Stdout.WriteString("\n")
+				}
+			}
+		}
 	}()
 
 	select {
@@ -238,19 +261,24 @@ func archiveContext(ctx context.Context, root string, writer io.Writer) (err err
 	}
 	for _, info := range sources {
 
-		// Write a file header.
-		header, err := tar.FileInfoHeader(info, info.Name())
-		if err != nil {
-			fmt.Println(err.Error())
-			break
-		}
-		tarWriter.WriteHeader(header)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
 
-		// Write the body.
-		if err = copyFile(filepath.Join(root, info.Name()), tarWriter); err != nil {
-			break
-		}
+		default:
+			// Write a file header.
+			header, err := tar.FileInfoHeader(info, info.Name())
+			if err != nil {
+				fmt.Println(err.Error())
+				return err
+			}
+			tarWriter.WriteHeader(header)
 
+			// Write the body.
+			if err = copyFile(filepath.Join(root, info.Name()), tarWriter); err != nil {
+				return err
+			}
+		}
 	}
 
 	return
