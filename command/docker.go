@@ -11,18 +11,20 @@
 package command
 
 import (
+	"archive/tar"
+	"bufio"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
 	"text/template"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 )
 
@@ -105,29 +107,44 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 // The directory must have Dockerfile.
 func Build(ctx context.Context, dir, tag string) (err error) {
 
-	cd, err := os.Getwd()
+	// Create a docker client.
+	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
 	if err != nil {
 		return
 	}
-	if err = os.Chdir(dir); err != nil {
-		return
-	}
-	defer os.Chdir(cd)
+	defer cli.Close()
 
-	cmd := exec.CommandContext(ctx, "docker", "build", "-t", tag, ".")
-	stdout, err := cmd.StdoutPipe()
+	// Create a pipe.
+	reader, writer := io.Pipe()
+
+	// Send the build context.
+	go func() {
+		archiveContext(ctx, dir, writer)
+		writer.Close()
+	}()
+
+	// Start to build an image.
+	res, err := cli.ImageBuild(ctx, reader, types.ImageBuildOptions{
+		Tags: []string{tag},
+	})
 	if err != nil {
 		return
 	}
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
+	defer res.Body.Close()
+
+	// Wait untile the copy ends or the context will be canceled.
+	done := make(chan struct{})
+	go func() {
+		io.Copy(os.Stderr, res.Body)
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-done:
 		return
 	}
-
-	go io.Copy(os.Stdout, stdout)
-	go io.Copy(os.Stderr, stderr)
-
-	return cmd.Run()
 
 }
 
@@ -146,9 +163,7 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 		Image: tag,
 		Cmd:   args,
 	}
-	host := container.HostConfig{}
-	nw := network.NetworkingConfig{}
-	container, err := cli.ContainerCreate(ctx, &config, &host, &nw, name)
+	container, err := cli.ContainerCreate(ctx, &config, nil, nil, name)
 	if err != nil {
 		return
 	}
@@ -191,6 +206,57 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 		return
 	} else if exit != 0 {
 		return fmt.Errorf("Testing container returns an error:", exit)
+	}
+
+	return
+
+}
+
+// archiveContext makes a tar.gz stream consists of files.
+func archiveContext(ctx context.Context, root string, writer io.Writer) (err error) {
+
+	// Create a buffered writer.
+	bufWriter := bufio.NewWriter(writer)
+	defer bufWriter.Flush()
+
+	// Create a zipped writer on the bufferd writer.
+	zipWriter, err := gzip.NewWriterLevel(bufWriter, gzip.BestCompression)
+	if err != nil {
+		return
+	}
+	defer zipWriter.Close()
+
+	// Create a tarball writer on the zipped writer.
+	tarWriter := tar.NewWriter(zipWriter)
+	defer tarWriter.Close()
+
+	// Create a tarball.
+	// TODO: Use ioutil.ReadDir
+	sources, err := filepath.Glob(filepath.Join(root, "*"))
+	if err != nil {
+		return
+	}
+	for _, path := range sources {
+
+		// Write a file header.
+		info, err := os.Stat(path)
+		if err != nil {
+			fmt.Printf("Cannot find %s (%s)", path, err.Error())
+			break
+		}
+
+		header, err := tar.FileInfoHeader(info, path)
+		if err != nil {
+			fmt.Println(err.Error())
+			break
+		}
+		tarWriter.WriteHeader(header)
+
+		// Write the body.
+		if err = copyFile(path, tarWriter); err != nil {
+			break
+		}
+
 	}
 
 	return
