@@ -1,10 +1,17 @@
+## 0.3.2 (2017-01-09)
+### Fixed
+- Running containers weren't stopped when loci is canceled,
+- Use newer python version when an ambiguous version given,
+- Fix garbled characters from outputs.
+
+
 ## 0.3.1 (2017-01-07)
 ### Added
 - Support build matrices for go projects.
 - Use repository names as a part of tag names of container images.
 
 ### Fixed
-- Use correct archived source files. 
+- Use correct archived source files.
 
 
 ## 0.3.0 (2016-12-14)
