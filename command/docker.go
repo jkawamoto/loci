@@ -162,6 +162,7 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 				}
 			}
 		}
+		os.Stdout.Sync()
 	}()
 
 	select {
@@ -192,9 +193,11 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 	if err != nil {
 		return
 	}
-	if name != "" {
+	if name == "" {
 		// If any container name isn't given, remove the container.
-		defer cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
+		// Note that, the context ctx may be canceled before removing the container,
+		// and use another context here.
+		defer cli.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})
 	}
 
 	// Attach stdout of the container.
@@ -226,14 +229,27 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 	}
 
 	// Wait until the container ends.
-	exit, err := cli.ContainerWait(ctx, container.ID)
-	if err != nil {
-		return
-	} else if exit != 0 {
-		return fmt.Errorf("Testing container returns an error:", exit)
-	}
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
 
-	return
+		var exit int64
+		exit, err = cli.ContainerWait(ctx, container.ID)
+		if exit != 0 {
+			err = fmt.Errorf("Testing container returns an error:", exit)
+		}
+
+	}()
+
+	select {
+	case <-ctx.Done():
+		// Kill the running container when the context is canceled.
+		// The context ctx has been canceled already, use another context here.
+		cli.ContainerKill(context.Background(), container.ID, "")
+		return ctx.Err()
+	case <-done:
+		return
+	}
 
 }
 
