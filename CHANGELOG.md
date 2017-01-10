@@ -1,3 +1,8 @@
+## 0.3.3 (2017-01-10)
+### Fixed
+- Declaring environment variables in startup scripts.
+
+
 ## 0.3.2 (2017-01-09)
 ### Fixed
 - Running containers weren't stopped when loci is canceled,
