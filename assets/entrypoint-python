@@ -16,18 +16,18 @@ if [[ $# = 0 ]]; then
   exec bash
 fi
 
-PYVERSION=$(pyenv install -l | sed "s/ //g" | grep -E "^$1($|[^-])" | tail -1)
+readonly PYVERSION=$(pyenv install -l | sed "s/ //g" | grep -E "^$1($|[^-])" | tail -1)
 echo "Set Python version: $PYVERSION"
 pyenv install $PYVERSION
 pyenv local $PYVERSION
 
 for e in ${@:2:($#-1)}; do
   echo "Set environment: $e"
-  env $e
+  declare -x $e
 done
 
 echo "Install Steps:"
-if [ -e requirements.txt ]; then
+if [[ -e requirements.txt ]]; then
   pip install -r requirements.txt
 fi
 {{range .Install}}

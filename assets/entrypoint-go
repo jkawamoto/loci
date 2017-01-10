@@ -15,16 +15,16 @@ if [[ $# = 0 ]]; then
 fi
 
 if [[ $1 = "any" ]]; then
-  TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
+  readonly TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
 else
-  TRAVIS_GO_VERSION=$1
+  readonly TRAVIS_GO_VERSION=$1
   echo "Set Go version: $TRAVIS_GO_VERSION"
   eval "$(GIMME_GO_VERSION=$TRAVIS_GO_VERSION gimme)"
 fi
 
 for e in ${@:2:($#-1)}; do
   echo "Set environment: $e"
-  env $e
+  declare -x $e
 done
 
 echo "Install Steps:"
@@ -52,7 +52,7 @@ echo "{{.}}"
 {{.}}
 {{end}}
 {{else}}
-if [ -e GNUMakefile ] || [ -e Makefile ] || [ -e BSDmakefile ] || [ -e makefile ]; then
+if [[ -e GNUMakefile ]] || [[ -e Makefile ]] || [[ -e BSDmakefile ]] || [[ -e makefile ]]; then
   make
 else
   {{if .GoBuildArgs}}

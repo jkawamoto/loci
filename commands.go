@@ -20,6 +20,7 @@ import (
 
 // GlobalFlags defines global flags.
 var GlobalFlags = []cli.Flag{
+	// TODO: Remote docker host.
 	cli.StringFlag{
 		Name: "name, n",
 		Usage: "creating a container named `NAME` to run tests. " +
@@ -27,7 +28,7 @@ var GlobalFlags = []cli.Flag{
 	},
 	cli.StringFlag{
 		Name:  "tag, t",
-		Usage: "if given, the image hosting tests will be named `TAG`.",
+		Usage: "specify a `TAG` name of the docker image to be build.",
 	},
 	cli.StringFlag{
 		Name:  "base, b",

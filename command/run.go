@@ -72,7 +72,7 @@ func run(opt *RunOpt) (err error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGHUP, syscall.SIGQUIT)
+	signal.Notify(sig, os.Interrupt, os.Kill, syscall.SIGQUIT)
 	go func() {
 		<-sig
 		cancel()
