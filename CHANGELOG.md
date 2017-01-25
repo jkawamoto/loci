@@ -1,3 +1,11 @@
+## 0.3.4 (2017-01-25)
+### Fixed
+- Stop testing when building a test image is failed.
+
+### Update
+- Use aria2 to prepare virtual environments for matrix evaluations for Python.
+
+
 ## 0.3.3 (2017-01-10)
 ### Fixed
 - Declaring environment variables in startup scripts.
