@@ -10,7 +10,7 @@
 {{define "apt"}}
 # Install apt packages.
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y apt-utils python python-pip wget curl git \
+    apt-get install -y apt-utils python python-pip aria2 curl git \
                        zlib1g-dev libreadline6-dev libbz2-dev libsqlite3-dev libssl-dev
 {{range .Travis.Addons.Apt.Packages}}
 RUN apt-get install -y {{.}}
