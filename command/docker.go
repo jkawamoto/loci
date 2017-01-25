@@ -59,7 +59,12 @@ type travisExt struct {
 
 // buildLog defines the JSON format of logs from building docker images.
 type buildLog struct {
-	Stream string `json:"stream,omitempty"`
+	Stream      string
+	Error       string
+	ErrorDetail struct {
+		Code    int
+		Message string
+	}
 }
 
 // Dockerfile creates a Dockerfile from an instance of Travis.
@@ -144,8 +149,8 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
+		defer os.Stdout.Sync()
 
-		var log buildLog
 		s := bufio.NewScanner(res.Body)
 		for s.Scan() {
 			select {
@@ -154,7 +159,13 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 				return
 			default:
 				e := s.Text()
+
+				var log buildLog
 				if json.Unmarshal([]byte(e), &log) == nil {
+					if log.Error != "" {
+						err = fmt.Errorf(log.Error)
+						return
+					}
 					os.Stdout.WriteString(log.Stream)
 				} else {
 					os.Stdout.WriteString(e)
@@ -162,7 +173,6 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 				}
 			}
 		}
-		os.Stdout.Sync()
 	}()
 
 	select {
