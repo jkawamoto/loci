@@ -1,3 +1,8 @@
+## 0.3.5 (2017-01-26)
+### Fixed
+- To lower repository names to create a docker image since docker tags allow only lower characters.
+
+
 ## 0.3.4 (2017-01-25)
 ### Fixed
 - Stop testing when building a test image is failed.
