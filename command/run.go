@@ -96,7 +96,7 @@ func run(opt *RunOpt) (err error) {
 
 	// Set up the tag name of the container image.
 	if opt.Tag == "" {
-		opt.Tag = fmt.Sprintf("loci/%s", path.Base(opt.Repository))
+		opt.Tag = fmt.Sprintf("loci/%s", strings.ToLower(path.Base(opt.Repository)))
 	}
 	tempDir := filepath.Join(os.TempDir(), opt.Tag)
 	if err = os.MkdirAll(tempDir, 0777); err != nil {
@@ -148,7 +148,10 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Run tests in sandboxes.
-	fmt.Println(chalk.Bold.TextStyle("Start CI."), "  ")
+	fmt.Println(chalk.Bold.TextStyle("Start CI."))
+	fmt.Printf("%s%s\r", chalk.Reset.String(), chalk.ResetColor.String())
+	os.Stdout.Sync()
+
 	argset, err := travis.ArgumentSet()
 	if err != nil {
 		return

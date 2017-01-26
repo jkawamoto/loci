@@ -167,9 +167,6 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 						return
 					}
 					os.Stdout.WriteString(log.Stream)
-				} else {
-					os.Stdout.WriteString(e)
-					os.Stdout.WriteString("\n")
 				}
 			}
 		}
