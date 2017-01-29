@@ -27,6 +27,12 @@ for e in ${@:2:($#-1)}; do
   declare -x $e
 done
 
+echo "Before Install Steps:"
+{{range .BeforeInstall}}
+echo "{{.}}"
+{{.}}
+{{end}}
+
 echo "Install Steps:"
 {{if .Install}}
 {{range .Install}}

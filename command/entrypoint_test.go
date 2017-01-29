@@ -53,10 +53,11 @@ func TestEntrypointPython(t *testing.T) {
 func TestEntrypointGo(t *testing.T) {
 
 	travis := Travis{
-		Language:     "go",
-		Install:      []string{"install_1", "install_2"},
-		BeforeScript: []string{"before_1", "before_2"},
-		Script:       []string{"script_1", "script_2"},
+		Language:      "go",
+		BeforeInstall: []string{"binstall_1", "binstall_2"},
+		Install:       []string{"install_1", "install_2"},
+		BeforeScript:  []string{"before_1", "before_2"},
+		Script:        []string{"script_1", "script_2"},
 	}
 
 	res, err := Entrypoint(&travis)
@@ -64,6 +65,10 @@ func TestEntrypointGo(t *testing.T) {
 		t.Error("Entrypoint returns an error:", err.Error())
 	}
 	e := string(res)
+
+	if !strings.Contains(e, travis.BeforeInstall[0]) || !strings.Contains(e, travis.BeforeInstall[1]) {
+		t.Error("Entrypoint doesn't have correct before install steps:", e)
+	}
 
 	if !strings.Contains(e, travis.Install[0]) || !strings.Contains(e, travis.Install[1]) {
 		t.Error("Entrypoint doesn't have correct install steps:", e)

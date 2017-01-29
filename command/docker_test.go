@@ -134,7 +134,6 @@ func TestDockerfileGo(t *testing.T) {
 	var travis Travis
 	travis.Language = "go"
 	travis.Addons.Apt.Packages = []string{"package1", "package2"}
-	travis.BeforeInstall = []string{"abc", "def"}
 
 	opt := DockerfileOpt{
 		BaseImage:  "ubuntu:latest",
@@ -154,10 +153,6 @@ func TestDockerfileGo(t *testing.T) {
 
 	if !strings.Contains(dockerfile, fmt.Sprintf("ADD %s $GOPATH/src/%s", archive, opt.Repository)) {
 		t.Error("Dockerfile doesn't add correct source files:", dockerfile)
-	}
-
-	if !strings.Contains(dockerfile, "RUN abc") || !strings.Contains(dockerfile, "RUN def") {
-		t.Error("Dockerfile doesn't execute commands in before install:", dockerfile)
 	}
 
 }
