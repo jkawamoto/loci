@@ -28,6 +28,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	client "github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 // DockerfileAsset defines a asset name for Dockerfile.
@@ -207,27 +208,17 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 		defer cli.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})
 	}
 
-	// Attach stdout of the container.
-	stdout, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
+	// Attach stdout and stderr of the container.
+	stream, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
 		Stream: true,
 		Stdout: true,
-	})
-	if err != nil {
-		return
-	}
-	defer stdout.Close()
-	go io.Copy(os.Stdout, stdout.Reader)
-
-	// Attach stderr of the container.
-	stderr, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
-		Stream: true,
 		Stderr: true,
 	})
 	if err != nil {
 		return
 	}
-	defer stderr.Close()
-	go io.Copy(os.Stderr, stderr.Reader)
+	defer stream.Close()
+	go stdcopy.StdCopy(os.Stdout, os.Stderr, stream.Reader)
 
 	// Start the container.
 	options := types.ContainerStartOptions{}
