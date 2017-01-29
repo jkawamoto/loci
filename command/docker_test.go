@@ -100,7 +100,6 @@ func TestDockerfilePython(t *testing.T) {
 	var travis Travis
 	travis.Language = "python"
 	travis.Addons.Apt.Packages = []string{"package1", "package2"}
-	travis.BeforeInstall = []string{"abc", "def"}
 
 	opt := DockerfileOpt{
 		BaseImage: "ubuntu:latest",
@@ -126,10 +125,6 @@ func TestDockerfilePython(t *testing.T) {
 
 	if !strings.Contains(dockerfile, "ADD source.tar.gz /data") {
 		t.Error("Dockerfile doesn't add correct source files:", dockerfile)
-	}
-
-	if !strings.Contains(dockerfile, "RUN abc") || !strings.Contains(dockerfile, "RUN def") {
-		t.Error("Dockerfile doesn't execute commands in before install:", dockerfile)
 	}
 
 }
