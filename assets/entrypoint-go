@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
 # entrypoint-go
 #
@@ -8,24 +8,19 @@
 #
 # http://opensource.org/licenses/mit-license.php
 #
+
+# Run before install steps, install steps, before script steps, and script
+# steps in this order. This entry point script focuses on running tests for
+# Go applications. If any parameters are given, execute the parameters
+# instead. For example, to debug this script, run this with `bash` as the
+# parameter and get a shell access.
+set -eu
 PATH="$GOPATH/bin:$PATH"
+readonly TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
 
-if [[ $# = 0 ]]; then
-  exec bash
+if [[ $# != 0 ]]; then
+  exec $@
 fi
-
-if [[ $1 = "any" ]]; then
-  readonly TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
-else
-  readonly TRAVIS_GO_VERSION=$1
-  echo "Set Go version: $TRAVIS_GO_VERSION"
-  eval "$(GIMME_GO_VERSION=$TRAVIS_GO_VERSION gimme)"
-fi
-
-for e in ${@:2:($#-1)}; do
-  echo "Set environment: $e"
-  declare -x $e
-done
 
 echo "Before Install Steps:"
 {{range .BeforeInstall}}

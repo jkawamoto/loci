@@ -1,16 +1,34 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
 # entrypoint
 #
-# Copyright (c) 2016 Junpei Kawamoto
+# Copyright (c) 2016-2017 Junpei Kawamoto
 #
 # This software is released under the MIT License.
 #
 # http://opensource.org/licenses/mit-license.php
 #
-if [[ $# = 0 ]]; then
-  exec bash
+
+# Run before install steps, install steps, before script steps, and script
+# steps in this order. If any parameters are given, execute the parameters
+# instead. For example, to debug this script, run this with `bash` as the
+# parameter and get a shell access.
+set -eu
+if [[ $# != 0 ]]; then
+  exec $@
 fi
+
+echo "Before Install Steps:"
+{{range .BeforeInstall}}
+echo "{{.}}"
+{{.}}
+{{end}}
+
+echo "Install Steps:"
+{{range .Install}}
+echo "{{.}}"
+{{.}}
+{{end}}
 
 echo "Before Script Steps:"
 {{range .BeforeScript}}
