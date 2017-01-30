@@ -118,7 +118,7 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 
 // Build builds a docker image from a directory. The built image named tag.
 // The directory must have Dockerfile.
-func Build(ctx context.Context, dir, tag string) (err error) {
+func Build(ctx context.Context, dir, tag, version string) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -140,6 +140,9 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 	res, err := cli.ImageBuild(ctx, reader, types.ImageBuildOptions{
 		Tags:   []string{tag},
 		Remove: true,
+		BuildArgs: map[string]*string{
+			"VERSION": &version,
+		},
 	})
 	if err != nil {
 		return
@@ -182,8 +185,13 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 
 }
 
-// Start runs a container to run tests.
-func Start(ctx context.Context, tag, name string, args ...string) (err error) {
+// Start runs a container to run tests with a given context.
+// This function creates a container from the image of the given tag name,
+// and the created container has the given name. If the given name is empty,
+// the container will have a random temporary name and be deleted after
+// after all steps end. env is a list of environment variables to be passed
+// to the created container.
+func Start(ctx context.Context, tag, name string, env []string) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -195,7 +203,7 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 	// Create a docker container.
 	config := container.Config{
 		Image: tag,
-		Cmd:   args,
+		Env:   env,
 	}
 	container, err := cli.ContainerCreate(ctx, &config, nil, nil, name)
 	if err != nil {
