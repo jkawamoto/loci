@@ -1,7 +1,7 @@
 #
 # Dockerfile
 #
-# Copyright (c) 2016 Junpei Kawamoto
+# Copyright (c) 2016-2017 Junpei Kawamoto
 #
 # This software is released under the MIT License.
 #
@@ -34,6 +34,7 @@ RUN PYPI_PROXY={{.}} && \
     echo "[global]\nindex-url=$PYPI_PROXY/root/pypi\ntrusted-host=${IPPORT%:*}" >> ~/.pip/pip.conf
 {{end}}
 
+ARG VERSION
 {{template "apt" .}}
 {{template "source" .}}
 
