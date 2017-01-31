@@ -109,9 +109,8 @@ func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
 	case "go":
 		res, err = t.argumentSetGo()
 	default:
-		// res = []Arguments{
-		// 	Arguments{},
-		// }
+		res = make(TestCaseSet)
+		res[""] = [][]string{}
 	}
 
 	return
@@ -150,17 +149,5 @@ func (t *Travis) parseEnv() (err error) {
 
 }
 
-// Arguments defines a set of arguments for build matrix.
-// type Arguments struct {
-// 	// Version of the runtime to be run.
-// 	Version string
-// 	// Evn variables; each variable invokes one container.
-// 	Env [][]string
-// }
-
+// TestCaseSet defines a set of arguments for build matrix.
 type TestCaseSet map[string][][]string
-
-// // String method returns a string format of an Arguments.
-// func (a Arguments) String() string {
-// 	return fmt.Sprintf("%s %s", a.Version, a.Env)
-// }
