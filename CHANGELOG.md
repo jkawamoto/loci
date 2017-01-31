@@ -1,3 +1,14 @@
+## 0.4.0 (2017-01-31)
+### Added
+- Build images based on installed runtime to reduce preparation time.
+
+### Fixed
+- Avoid installing apt packages when another version number is given.
+- env attribute in .travis.yml allows both a string and a list of strings,
+- Before install step allows define environment variables,
+- Garbled characters in outputs of containers.
+
+
 ## 0.3.5 (2017-01-26)
 ### Fixed
 - To lower repository names to create a docker image since docker tags allow only lower characters.

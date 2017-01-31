@@ -2,8 +2,8 @@ language: go
 go:
 - 1.7.4
 env:
-- TEST_ENV=true
-- TEST_ENV=false
+- TEST_ENV=true TEST_ENV2=false
+- TEST_ENV=false TEST_ENV2=true
 install:
 - make get-deps
 script:
