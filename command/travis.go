@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -31,17 +32,23 @@ type Travis struct {
 			Packages []string
 		} `yaml:"apt,omitempty"`
 	} `yaml:"addons,omitempty"`
+
+	// RawBeforeInstall defines a temporary space to store before_install attribute for parseRawField.
+	RawBeforeInstall interface{} `yaml:"before_install,omitempty"`
 	// List of commands run before install steps.
-	BeforeInstall []string `yaml:"before_install,omitempty"`
+	BeforeInstall []string `yaml:"_before_install,omitempty"`
 
-	// TODO: The Install section can be a string not a list.
-	// -> Use interface{} at first and case it to some other variables.
+	// RawInstall defines a temporary space to store install attribute for parseRawField.
+	RawInstall interface{} `yaml:"install,omitempty"`
 	// List of commands used to install packages.
-	Install []string `yaml:"install,omitempty"`
-	// List of commands run before main scripts.
-	BeforeScript []string `yaml:"before_script,omitempty"`
+	Install []string `yaml:"_install,omitempty"`
 
-	// RawScript defines a temporary space to store script attribute for parseScript.
+	// RawBeforeScript defines a temporary space to store before_script attribute for parseRawField.
+	RawBeforeScript interface{} `yaml:"before_script,omitempty"`
+	// List of commands run before main scripts.
+	BeforeScript []string `yaml:"_before_script,omitempty"`
+
+	// RawScript defines a temporary space to store script attribute for parseRawField.
 	RawScript interface{} `yaml:"script,omitempty"`
 	// List of scripts.
 	Script []string `yaml:"_script,omitempty"`
@@ -95,9 +102,11 @@ func NewTravis(filename string) (res *Travis, err error) {
 	if err = yaml.Unmarshal(buf, res); err != nil {
 		return
 	}
-	err = res.parseScript()
-	if err != nil {
-		return
+	for _, name := range []string{"BeforeInstall", "Install", "BeforeScript", "Script"} {
+		err = res.parseRawField(name)
+		if err != nil {
+			return
+		}
 	}
 	err = res.parseEnv()
 	return
@@ -122,24 +131,28 @@ func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
 
 }
 
-func (t *Travis) parseScript() (err error) {
+func (t *Travis) parseRawField(name string) (err error) {
 
-	switch raw := t.RawScript.(type) {
+	r := reflect.Indirect(reflect.ValueOf(t))
+	src := r.FieldByName(fmt.Sprintf("Raw%s", name))
+	dest := r.FieldByName(name)
+
+	switch raw := src.Interface().(type) {
 	case string:
-		t.Script = []string{raw}
+		dest.Set(reflect.ValueOf([]string{raw}))
 
 	case []interface{}:
-		t.Script = make([]string, len(raw))
+		list := make([]string, len(raw))
 		for i, r := range raw {
 			v, ok := r.(string)
 			if !ok {
-				return fmt.Errorf("An item in evn cannot be converted to a string: %v", t.RawScript)
+				return fmt.Errorf("An item in evn cannot be converted to a string: %v", src)
 			}
-			t.Script[i] = v
+			list[i] = v
 		}
+		dest.Set(reflect.ValueOf(list))
 
 	}
-
 	return
 }
 
