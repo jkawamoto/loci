@@ -34,12 +34,17 @@ RUN PYPI_PROXY={{.}} && \
     echo "[global]\nindex-url=$PYPI_PROXY/root/pypi\ntrusted-host=${IPPORT%:*}" >> ~/.pip/pip.conf
 {{end}}
 
-{{template "apt" .}}
+{{block "package" .}}
+{{end}}
 
 ARG VERSION
-{{template "version" .}}
+{{block "version" .}}
+{{end}}
 
-{{template "source" .}}
+{{block "source" .}}
+ADD {{.Archive}} /data
+WORKDIR /data
+{{end}}
 
 ADD entrypoint.sh /root
 ENTRYPOINT ["bash", "/root/entrypoint.sh"]

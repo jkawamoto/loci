@@ -7,7 +7,7 @@
 #
 # http://opensource.org/licenses/mit-license.php
 #
-{{define "apt"}}
+{{define "package"}}
 RUN apt-get update && \
     apt-get install -y apt-utils golang git curl wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
     apt-get upgrade -y && apt-get clean && \
