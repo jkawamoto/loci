@@ -21,7 +21,9 @@ RUN pip install --upgrade pip
 
 # Install pyenv
 RUN curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
+{{end}}
 
+{{define "version"}}
 # Install a specific python version
 ENV PYTHON_BUILD_ARIA2_OPTS "-x 10 -k 1M"
 RUN PATH="/root/.pyenv/bin:$PATH" && \

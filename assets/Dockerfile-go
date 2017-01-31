@@ -19,9 +19,12 @@ ENV GOPATH /data
 RUN mkdir -p $GOPATH/bin && \
     curl -sL -o $GOPATH/bin/gimme https://raw.githubusercontent.com/travis-ci/gimme/master/gimme && \
     chmod +x $GOPATH/bin/gimme
+{{end}}
 
+{{define "version"}}
 # Install a specific version of Go
-RUN [[ $VERSION != "any" ]] && eval "$(GIMME_GO_VERSION=$VERSION gimme)"
+RUN PATH="$GOPATH/bin/:$PATH" && \
+    [ $VERSION = "any" ] || eval "$(GIMME_GO_VERSION=$VERSION gimme)"
 {{end}}
 
 {{define "source"}}
