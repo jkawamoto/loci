@@ -140,31 +140,39 @@ func run(opt *RunOpt) (err error) {
 		fmt.Println(string(entry))
 	}
 
-	// Build the container image.
-	fmt.Println(chalk.Bold.TextStyle("Building a image."))
-	err = Build(ctx, tempDir, opt.Tag)
-	if err != nil {
-		return
-	}
-
-	// Run tests in sandboxes.
-	fmt.Println(chalk.Bold.TextStyle("Start CI."))
-	fmt.Printf("%s%s\r", chalk.Reset.String(), chalk.ResetColor.String())
-	os.Stdout.Sync()
-
 	argset, err := travis.ArgumentSet()
 	if err != nil {
 		return
 	}
-	for i, args := range argset {
-		name := opt.Name
-		if name != "" {
-			name = fmt.Sprintf("%s-%d", name, i+1)
-		}
-		err := Start(ctx, opt.Tag, name, args.Version, args.Env)
+	var i int
+	for version, set := range argset {
+		// TODO: parallel build and run.
+
+		// Build the container image.
+		fmt.Printf(chalk.Bold.TextStyle("Building a image for %v\n"), version)
+		tag := fmt.Sprintf("%v/%v", opt.Tag, version)
+		err = Build(ctx, tempDir, tag, version)
 		if err != nil {
-			return err
+			return
 		}
+
+		for _, envs := range set {
+
+			// Run tests in sandboxes.
+			fmt.Printf(chalk.Bold.TextStyle("Start CI (%v: %v)\n"), version, envs)
+			os.Stdout.Sync()
+
+			name := opt.Name
+			if name != "" {
+				i++
+				name = fmt.Sprintf("%s-%d", name, i)
+			}
+			err := Start(ctx, tag, name, envs)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
