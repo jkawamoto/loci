@@ -14,24 +14,18 @@
 # Python applications. If any parameters are given, execute the parameters
 # instead. For example, to debug this script, run this with `bash` as the
 # parameter and get a shell access.
-set -eu
+{{define "env"}}
 PATH="/root/.pyenv/bin:$PATH"
 eval "$(pyenv init -)" && \
 eval "$(pyenv virtualenv-init -)"
-
-if [[ $# != 0 ]]; then
-  exec $@
-fi
-
-TERM=xterm
-readonly PYVERSION=$(pyenv local)
-
-echo "Before Install Steps:"
-{{range .BeforeInstall}}
-echo {{.}}
-{{.}}
 {{end}}
 
+{{define "prepare"}}
+TERM=xterm
+readonly PYVERSION=$(pyenv local)
+{{end}}
+
+{{define "install"}}
 echo "Install Steps:"
 if [[ -e requirements.txt ]]; then
   pip install -r requirements.txt
@@ -40,15 +34,4 @@ fi
 echo "{{.}}"
 {{.}}
 {{end}}
-
-echo "Before Script Steps:"
-{{range .BeforeScript}}
-echo "{{.}}"
-{{.}}
-{{end}}
-
-echo "Script Steps:"
-{{range .Script}}
-echo "{{.}}"
-{{.}}
 {{end}}

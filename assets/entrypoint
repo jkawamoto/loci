@@ -1,3 +1,4 @@
+{{define "base"}}
 #!/bin/bash
 #
 # entrypoint
@@ -14,30 +15,44 @@
 # instead. For example, to debug this script, run this with `bash` as the
 # parameter and get a shell access.
 set -eu
+{{block "env" .}}
+{{end}}
 if [[ $# != 0 ]]; then
   exec $@
 fi
+{{block "prepare" .}}
+{{end}}
 
+{{block "before_install" .}}
 echo "Before Install Steps:"
 {{range .BeforeInstall}}
 echo "{{.}}"
 {{.}}
 {{end}}
+{{end}}
 
+{{block "install" .}}
 echo "Install Steps:"
 {{range .Install}}
 echo "{{.}}"
 {{.}}
 {{end}}
+{{end}}
 
+{{block "before_script" .}}
 echo "Before Script Steps:"
 {{range .BeforeScript}}
 echo "{{.}}"
 {{.}}
 {{end}}
+{{end}}
 
+{{block "script" .}}
 echo "Script Steps:"
 {{range .Script}}
 echo "{{.}}"
 {{.}}
+{{end}}
+{{end}}
+
 {{end}}

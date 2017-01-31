@@ -14,24 +14,16 @@
 # Go applications. If any parameters are given, execute the parameters
 # instead. For example, to debug this script, run this with `bash` as the
 # parameter and get a shell access.
-set -eu
+{{define "env"}}
 PATH="$GOPATH/bin:$PATH"
 declare -x GIMME_GO_VERSION=$(gimme -l)
 if [[ -n "$GIMME_GO_VERSION" ]]; then
   eval "$(gimme)"
 fi
 readonly TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
-
-if [[ $# != 0 ]]; then
-  exec $@
-fi
-
-echo "Before Install Steps:"
-{{range .BeforeInstall}}
-echo "{{.}}"
-{{.}}
 {{end}}
 
+{{define "install"}}
 echo "Install Steps:"
 {{if .Install}}
 {{range .Install}}
@@ -42,13 +34,9 @@ echo "{{.}}"
 echo "go get -t ./..."
 go get -t ./...
 {{end}}
-
-echo "Before Script Steps:"
-{{range .BeforeScript}}
-echo "{{.}}"
-{{.}}
 {{end}}
 
+{{define "script"}}
 echo "Script Steps:"
 {{/* if script isn't givenm use make or the default golang test command. */}}
 {{if .Script}}
@@ -66,4 +54,5 @@ else
   go test -v ./...
   {{end}}
 fi
+{{end}}
 {{end}}

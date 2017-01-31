@@ -31,6 +31,7 @@ func TestEntrypointPython(t *testing.T) {
 		t.Error("Entrypoint returns an error:", err.Error())
 	}
 	e := string(res)
+	t.Log(e)
 
 	if !strings.Contains(e, travis.BeforeInstall[0]) || !strings.Contains(e, travis.BeforeInstall[1]) {
 		t.Error("Entrypoint doesn't have correct before install steps:", e)
@@ -65,6 +66,7 @@ func TestEntrypointGo(t *testing.T) {
 		t.Error("Entrypoint returns an error:", err.Error())
 	}
 	e := string(res)
+	t.Log(e)
 
 	if !strings.Contains(e, travis.BeforeInstall[0]) || !strings.Contains(e, travis.BeforeInstall[1]) {
 		t.Error("Entrypoint doesn't have correct before install steps:", e)
@@ -95,6 +97,7 @@ func TestEntrypointGoByDefault(t *testing.T) {
 		t.Error("Entrypoint returns an error:", err.Error())
 	}
 	e := string(res)
+	t.Log(e)
 
 	if !strings.Contains(e, "go get -t ./...") {
 		t.Error("Entrypoint doesn't have the default install steps:", e)
