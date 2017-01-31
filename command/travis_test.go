@@ -33,6 +33,40 @@ func storeAndLoadTravis(src *Travis) (res *Travis, err error) {
 	return NewTravis(target)
 }
 
+func TestParseScriptWithNoValues(t *testing.T) {
+	travis, err := storeAndLoadTravis(&Travis{})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if len(travis.Script) != 0 {
+		t.Error("Script is wrong:", travis.Script)
+	}
+}
+
+func TestParseScriptWithString(t *testing.T) {
+	travis, err := storeAndLoadTravis(&Travis{
+		RawScript: "python setup.py test",
+	})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if len(travis.Script) != 1 || travis.Script[0] != "python setup.py test" {
+		t.Error("Script is wrong:", travis.Script)
+	}
+}
+
+func TestParseScriptWithList(t *testing.T) {
+	travis, err := storeAndLoadTravis(&Travis{
+		RawScript: []string{"python setup.py test"},
+	})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if len(travis.Script) != 1 || travis.Script[0] != "python setup.py test" {
+		t.Error("Script is wrong:", travis.Script)
+	}
+}
+
 func TestParseEnvWithNoValues(t *testing.T) {
 
 	travis, err := storeAndLoadTravis(&Travis{})

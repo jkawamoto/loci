@@ -40,10 +40,11 @@ type Travis struct {
 	Install []string `yaml:"install,omitempty"`
 	// List of commands run before main scripts.
 	BeforeScript []string `yaml:"before_script,omitempty"`
-	// TODO: The Script section can be a string instead of a list.
-	// Use RasScript interface{} to recieve items then parse to and store here.
+
+	// RawScript defines a temporary space to store script attribute for parseScript.
+	RawScript interface{} `yaml:"script,omitempty"`
 	// List of scripts.
-	Script []string `yaml:"script,omitempty"`
+	Script []string `yaml:"_script,omitempty"`
 
 	// RawEnv defines a temporary space to store env attribute for parseEnv.
 	RawEnv interface{} `yaml:"env,omitempty"`
@@ -94,6 +95,10 @@ func NewTravis(filename string) (res *Travis, err error) {
 	if err = yaml.Unmarshal(buf, res); err != nil {
 		return
 	}
+	err = res.parseScript()
+	if err != nil {
+		return
+	}
 	err = res.parseEnv()
 	return
 
@@ -115,6 +120,27 @@ func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
 
 	return
 
+}
+
+func (t *Travis) parseScript() (err error) {
+
+	switch raw := t.RawScript.(type) {
+	case string:
+		t.Script = []string{raw}
+
+	case []interface{}:
+		t.Script = make([]string, len(raw))
+		for i, r := range raw {
+			v, ok := r.(string)
+			if !ok {
+				return fmt.Errorf("An item in evn cannot be converted to a string: %v", t.RawScript)
+			}
+			t.Script[i] = v
+		}
+
+	}
+
+	return
 }
 
 func (t *Travis) parseEnv() (err error) {
