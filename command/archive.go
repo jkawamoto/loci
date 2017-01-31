@@ -28,7 +28,7 @@ import (
 type pathListupFunc func(context.Context, chan<- string) error
 
 // Archive makes a tar.gz file consists of files maintained a git repository.
-func Archive(ctx context.Context, dir string, filename string) (err error) {
+func Archive(ctx context.Context, dir string, filename string, dstout, dsterr io.Writer) (err error) {
 
 	writeFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -65,7 +65,7 @@ func Archive(ctx context.Context, dir string, filename string) (err error) {
 	doneTB := make(chan error)
 
 	// Require to close channel ch to end this goroutine.
-	go tarballing(tarWriter, ch, doneTB)
+	go tarballing(tarWriter, ch, doneTB, dstout, dsterr)
 	err = <-doneTB
 	if err != nil {
 		cancel()
@@ -78,7 +78,7 @@ func Archive(ctx context.Context, dir string, filename string) (err error) {
 // tarballing is a go-routine which write a file given via ch to a tar writer.
 // It puts nil to done when it ends. If an error occurs, it puts the error to
 // done.
-func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error) {
+func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error, dstout, dsterr io.Writer) {
 
 	var info os.FileInfo
 	var header *tar.Header
@@ -88,18 +88,18 @@ func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error) {
 
 		// For Windows: Replace path delimiters.
 		path = filepath.ToSlash(path)
-		fmt.Println(path)
+		fmt.Fprintln(dstout, path)
 
 		// Write a file header.
 		info, err = os.Stat(path)
 		if err != nil {
-			fmt.Printf("Cannot find %s (%s)", path, err.Error())
+			fmt.Fprintf(dsterr, "Cannot find %s (%s)", path, err.Error())
 			break
 		}
 
 		header, err = tar.FileInfoHeader(info, path)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Fprintln(dsterr, err.Error())
 			break
 		}
 

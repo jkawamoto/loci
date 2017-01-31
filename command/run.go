@@ -13,6 +13,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/signal"
@@ -110,7 +111,13 @@ func run(opt *RunOpt) (err error) {
 		return
 	}
 	fmt.Println(chalk.Bold.TextStyle("Creating archive of source codes."))
-	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive)); err != nil {
+	var dstout io.Writer
+	if opt.Verbose {
+		dstout = os.Stdout
+	} else {
+		dstout = ioutil.Discard
+	}
+	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), dstout, os.Stderr); err != nil {
 		return
 	}
 
