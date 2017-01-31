@@ -1,3 +1,8 @@
+## 0.4.1 (2017-01-31)
+### Update
+- Allow unbounded variables in Travis's scripts.
+
+
 ## 0.4.0 (2017-01-31)
 ### Added
 - Build images based on installed runtime to reduce preparation time.
