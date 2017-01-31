@@ -42,6 +42,8 @@ type RunOpt struct {
 	Tag string
 	// If true, print Dockerfile and entrypoint.sh.
 	Verbose bool
+	// If true, not using cache during buidling a docker image.
+	NoCache bool
 }
 
 // Run implements the action of this command.
@@ -60,6 +62,7 @@ func Run(c *cli.Context) error {
 		Name:     c.String("name"),
 		Tag:      c.String("tag"),
 		Verbose:  c.Bool("verbose"),
+		NoCache:  c.Bool("no-cache"),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -158,7 +161,7 @@ func run(opt *RunOpt) (err error) {
 		// Build the container image.
 		fmt.Printf(chalk.Bold.TextStyle("Building a image for %v\n"), version)
 		tag := fmt.Sprintf("%v/%v", opt.Tag, version)
-		err = Build(ctx, tempDir, tag, version)
+		err = Build(ctx, tempDir, tag, version, opt.NoCache)
 		if err != nil {
 			return
 		}

@@ -21,6 +21,8 @@ import (
 // GlobalFlags defines global flags.
 var GlobalFlags = []cli.Flag{
 	// TODO: Remote docker host.
+	// TODO: no-colour option.
+	// TODO: delete name option because lots of containers will be created.
 	cli.StringFlag{
 		Name: "name, n",
 		Usage: "creating a container named `NAME` to run tests. " +
@@ -63,6 +65,10 @@ var GlobalFlags = []cli.Flag{
 		Name:   "no-proxy",
 		Usage:  "Comma separated URL `LIST` for which proxies won't be used.",
 		EnvVar: "NO_PROXY",
+	},
+	cli.BoolFlag{
+		Name:  "no-build-cache",
+		Usage: "Do not use cache when building the image",
 	},
 }
 
