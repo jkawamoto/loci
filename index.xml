@@ -134,6 +134,30 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.&lt;/p&gt;
+
+&lt;h1 id=&#34;mapstructure-https-github-com-mitchellh-mapstructure:066a44a3ef946eeb40375cef0248ec8a&#34;&gt;&lt;a href=&#34;https://github.com/mitchellh/mapstructure&#34;&gt;mapstructure&lt;/a&gt;&lt;/h1&gt;
+
+&lt;p&gt;Copyright &amp;copy; 2013 Mitchell Hashimoto&lt;/p&gt;
+
+&lt;p&gt;Licensed under the MIT License (MIT)&lt;/p&gt;
+
+&lt;p&gt;Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &amp;ldquo;Software&amp;rdquo;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:&lt;/p&gt;
+
+&lt;p&gt;The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.&lt;/p&gt;
+
+&lt;p&gt;THE SOFTWARE IS PROVIDED &amp;ldquo;AS IS&amp;rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.&lt;/p&gt;
 </description>
     </item>
     
@@ -148,7 +172,7 @@ SOFTWARE.&lt;/p&gt;
 &lt;p&gt;&lt;a href=&#34;./info/licenses/&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/license-MIT-blue.svg?style=flat&#34; alt=&#34;MIT License&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://travis-ci.org/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://travis-ci.org/jkawamoto/loci.svg?branch=master&#34; alt=&#34;Build Status&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://codeclimate.com/github/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg&#34; alt=&#34;Code Climate&#34; /&gt;&lt;/a&gt;
-&lt;a href=&#34;https://github.com/jkawamoto/loci/releases/tag/v0.3.5&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/release-0.3.5-brightgreen.svg&#34; alt=&#34;Release&#34; /&gt;&lt;/a&gt;
+&lt;a href=&#34;https://github.com/jkawamoto/loci/releases/tag/v0.4.0&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/release-0.4.0-brightgreen.svg&#34; alt=&#34;Release&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;http://qiita.com/jkawamoto/items/a409dd9cd6e63034aa28&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/qiita-%E6%97%A5%E6%9C%AC%E8%AA%9E-brightgreen.svg&#34; alt=&#34;Japanese&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Loci runs CI tests locally to make sure your commits will pass such tests
