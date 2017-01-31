@@ -14,7 +14,7 @@
 # steps in this order. If any parameters are given, execute the parameters
 # instead. For example, to debug this script, run this with `bash` as the
 # parameter and get a shell access.
-set -eu
+set -e
 {{block "env" .}}
 {{end}}
 if [[ $# != 0 ]]; then
