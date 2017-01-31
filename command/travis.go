@@ -104,8 +104,8 @@ func NewTravis(filename string) (res *Travis, err error) {
 func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
 
 	switch t.Language {
-	// case "python":
-	// 	res, err = t.argumentSetPython()
+	case "python":
+		res, err = t.argumentSetPython()
 	case "go":
 		res, err = t.argumentSetGo()
 	default:

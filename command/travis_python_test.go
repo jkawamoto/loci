@@ -9,14 +9,7 @@
 //
 package command
 
-import (
-	"io/ioutil"
-	"os"
-	"path"
-	"testing"
-
-	"gopkg.in/yaml.v2"
-)
+import "testing"
 
 // PythonCase defines a case of matrix evaluation for python projects.
 type PythonCase struct {
@@ -27,32 +20,20 @@ type PythonCase struct {
 func TestPythonMatrixInclude(t *testing.T) {
 
 	var err error
-	temp := os.TempDir()
-	target := path.Join(temp, "sample.yml")
-
-	t.Logf("Creating a configuration file: %s", target)
-	sample, err := yaml.Marshal(&Travis{
+	travis, err := storeAndLoadTravis(&Travis{
 		Language: "python",
 		Matrix: Matrix{
 			Include: []interface{}{
 				PythonCase{
 					Python: "2.7",
-					Env:    "FOO=BAR",
+					Env:    "FOO=bar",
 				}, PythonCase{
 					Python: "3.5",
-					Env:    "FOO=FUGA",
+					Env:    "FOO=fuga",
 				},
 			},
 		},
 	})
-	if err != nil {
-		t.Fatal(err.Error())
-	}
-	if err = ioutil.WriteFile(target, sample, 0644); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	travis, err := NewTravis(target)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -69,10 +50,14 @@ func TestPythonMatrixInclude(t *testing.T) {
 	if len(res) != 2 {
 		t.Fatal("Generated arguments are wrong:", res)
 	}
-	if res[0].Version != "2.7" || res[1].Version != "3.5" {
+	if set, ok := res["2.7"]; !ok {
 		t.Error("Version is wrong:", res)
+	} else if len(set) != 1 || len(set[0]) != 1 || set[0][0] != "FOO=bar" {
+		t.Error("Env has wrong values:", res)
 	}
-	if res[0].Env != "FOO=BAR" || res[1].Env != "FOO=FUGA" {
+	if set, ok := res["3.5"]; !ok {
+		t.Error("Version is wrong:", res)
+	} else if len(set) != 1 || len(set[0]) != 1 || set[0][0] != "FOO=fuga" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -81,33 +66,21 @@ func TestPythonMatrixInclude(t *testing.T) {
 func TestPythonMatrixExclude(t *testing.T) {
 
 	var err error
-	temp := os.TempDir()
-	target := path.Join(temp, "sample.yml")
-
-	t.Logf("Creating a configuration file: %s", target)
-	sample, err := yaml.Marshal(&Travis{
+	travis, err := storeAndLoadTravis(&Travis{
 		Language: "python",
 		Python:   []string{"2.7", "3.5"},
-		Env:      []string{"FOO=BAR", "FOO=FUGA"},
+		RawEnv:   []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
 		Matrix: Matrix{
 			Exclude: []interface{}{
 				PythonCase{
 					Python: "3.5",
-					Env:    "FOO=BAR",
+					Env:    "FOO=bar BAR=foo",
 				},
 			},
 		},
 	})
 	if err != nil {
 		t.Fatal(err.Error())
-	}
-	if err = ioutil.WriteFile(target, sample, 0644); err != nil {
-		t.Fatal(err.Error())
-	}
-
-	travis, err := NewTravis(target)
-	if err != nil {
-		t.Error(err.Error())
 	}
 	if len(travis.Matrix.Exclude) != 1 {
 		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Exclude)
@@ -119,14 +92,30 @@ func TestPythonMatrixExclude(t *testing.T) {
 	}
 
 	t.Log("Arguments:", res)
-	if len(res) != 3 {
+	if len(res) != 2 {
 		t.Fatal("Generated arguments are wrong:", res)
 	}
-	if res[0].Version != "2.7" || res[1].Version != "2.7" || res[2].Version != "3.5" {
+
+	if set, ok := res["2.7"]; !ok {
 		t.Error("Version is wrong:", res)
-	}
-	if res[0].Env != "FOO=BAR" || res[1].Env != "FOO=FUGA" || res[2].Env != "FOO=FUGA" {
+	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
+	} else {
+		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+			t.Error("Env has wrong values:", res)
+		}
+		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+			t.Error("Env has wrong values:", res)
+		}
+	}
+	if set, ok := res["3.5"]; !ok {
+		t.Error("Version is wrong:", res)
+	} else if len(set) != 1 {
+		t.Error("Env has wrong values:", res)
+	} else {
+		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+			t.Error("Env has wrong values:", res)
+		}
 	}
 
 }
@@ -134,35 +123,19 @@ func TestPythonMatrixExclude(t *testing.T) {
 // TestPythonArgumentSet tests ArgumentSet method returns correct argument sets.
 func TestPythonArgumentSet(t *testing.T) {
 
-	var v *Travis
-	var res []Arguments
-	var err error
+	var (
+		travis *Travis
+		res    TestCaseSet
+		err    error
+	)
 
-	v = &Travis{
+	travis, err = storeAndLoadTravis(&Travis{
 		Language: "python",
-	}
-
-	res, err = v.ArgumentSet()
+	})
 	if err != nil {
-		t.Error(err.Error())
+		t.Fatal(err.Error())
 	}
-
-	t.Log("Arguments:", res)
-	if len(res) != 1 {
-		t.Error("Generated arguments are wrong:", res)
-	}
-	if res[0].Version != "2.7" {
-		t.Error("Version is wrong:", res[0].Version)
-	}
-	if res[0].Env != "" {
-		t.Error("Env has wrong values:", res[0].Env)
-	}
-
-	v = &Travis{
-		Language: "python",
-		Env:      []string{"FOO=BAR"},
-	}
-	res, err = v.ArgumentSet()
+	res, err = travis.ArgumentSet()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -170,18 +143,48 @@ func TestPythonArgumentSet(t *testing.T) {
 	if len(res) != 1 {
 		t.Error("Generated arguments are wrong:", res)
 	}
-	if res[0].Version != "2.7" {
+	if set, ok := res["2.7"]; !ok {
 		t.Error("Version is wrong:", res)
-	}
-	if res[0].Env != "FOO=BAR" {
+	} else if len(set) != 1 || len(set[0]) != 0 {
 		t.Error("Env has wrong values:", res)
 	}
 
-	v = &Travis{
+	travis, err = storeAndLoadTravis(&Travis{
+		Language: "python",
+		RawEnv:   []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
+	})
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	res, err = travis.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	t.Log("Arguments:", res)
+	if len(res) != 1 {
+		t.Error("Generated arguments are wrong:", res)
+	}
+	if set, ok := res["2.7"]; !ok {
+		t.Error("Version is wrong:", res)
+	} else if len(set) != 2 {
+		t.Error("Env has wrong values:", res)
+	} else {
+		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+			t.Error("Env has wrong values:", res)
+		}
+		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+			t.Error("Env has wrong values:", res)
+		}
+	}
+
+	travis, err = storeAndLoadTravis(&Travis{
 		Language: "python",
 		Python:   []string{"2.7", "3.5"},
+	})
+	if err != nil {
+		t.Fatal(err.Error())
 	}
-	res, err = v.ArgumentSet()
+	res, err = travis.ArgumentSet()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -189,40 +192,107 @@ func TestPythonArgumentSet(t *testing.T) {
 	if len(res) != 2 {
 		t.Error("Generated arguments are wrong:", res)
 	}
-	if res[0].Version != "2.7" || res[1].Version != "3.5" {
+	if set, ok := res["2.7"]; !ok {
 		t.Error("Version is wrong:", res)
+	} else if len(set) != 1 || len(set[0]) != 0 {
+		t.Error("Env has wrong values:", res)
 	}
-	if res[0].Env != "" || res[1].Env != "" {
+	if set, ok := res["3.5"]; !ok {
+		t.Error("Version is wrong:", res)
+	} else if len(set) != 1 || len(set[0]) != 0 {
 		t.Error("Env has wrong values:", res)
 	}
 
-	v = &Travis{
+	travis, err = storeAndLoadTravis(&Travis{
 		Language: "python",
 		Python:   []string{"2.7", "3.5"},
-		Env:      []string{"FOO=BAR", "FOO=FUGA"},
+		RawEnv:   []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
+	})
+	if err != nil {
+		t.Fatal(err.Error())
 	}
-	res, err = v.ArgumentSet()
+	res, err = travis.ArgumentSet()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	t.Log("Arguments:", res)
-	if len(res) != 4 {
+	if len(res) != 2 {
 		t.Error("Generated arguments are wrong:", res)
 	}
-	if res[0].Version != "2.7" || res[1].Version != "2.7" || res[2].Version != "3.5" || res[3].Version != "3.5" {
+	if set, ok := res["2.7"]; !ok {
 		t.Error("Version is wrong:", res)
-	}
-	if res[0].Env != "FOO=BAR" {
+	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
+	} else {
+		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+			t.Error("Env has wrong values:", res)
+		}
+		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+			t.Error("Env has wrong values:", res)
+		}
 	}
-	if res[1].Env != "FOO=FUGA" {
+	if set, ok := res["3.5"]; !ok {
+		t.Error("Version is wrong:", res)
+	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
+	} else {
+		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+			t.Error("Env has wrong values:", res)
+		}
+		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+			t.Error("Env has wrong values:", res)
+		}
 	}
-	if res[2].Env != "FOO=BAR" {
-		t.Error("Env has wrong values:", res)
+
+}
+
+func TestPythonArgumentSetWithFullDescriptions(t *testing.T) {
+
+	travis, err := storeAndLoadTravis(&Travis{
+		Language: "python",
+		Python:   []string{"2.7", "3.5"},
+		RawEnv: struct {
+			Global []string
+			Matrix []string
+		}{
+			Global: []string{"GLOBAL=global"},
+			Matrix: []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err.Error())
 	}
-	if res[3].Env != "FOO=FUGA" {
+	res, err := travis.ArgumentSet()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	t.Log("Arguments:", res)
+	if len(res) != 2 {
+		t.Error("Generated arguments are wrong:", res)
+	}
+	if set, ok := res["2.7"]; !ok {
+		t.Error("Version is wrong:", res)
+	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
+	} else {
+		if len(set[0]) != 3 || set[0][0] != "GLOBAL=global" || set[0][1] != "FOO=foo" || set[0][2] != "BAR=bar" {
+			t.Error("Env has wrong values:", res)
+		}
+		if len(set[1]) != 3 || set[1][0] != "GLOBAL=global" || set[1][1] != "FOO=bar" || set[1][2] != "BAR=foo" {
+			t.Error("Env has wrong values:", res)
+		}
+	}
+	if set, ok := res["3.5"]; !ok {
+		t.Error("Version is wrong:", res)
+	} else if len(set) != 2 {
+		t.Error("Env has wrong values:", res)
+	} else {
+		if len(set[0]) != 3 || set[0][0] != "GLOBAL=global" || set[0][1] != "FOO=foo" || set[0][2] != "BAR=bar" {
+			t.Error("Env has wrong values:", res)
+		}
+		if len(set[1]) != 3 || set[1][0] != "GLOBAL=global" || set[1][1] != "FOO=bar" || set[1][2] != "BAR=foo" {
+			t.Error("Env has wrong values:", res)
+		}
 	}
 
 }

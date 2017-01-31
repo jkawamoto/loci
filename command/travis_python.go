@@ -10,73 +10,76 @@
 
 package command
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // argumentSetPython returns a set of arguments to run entrypoint based on a build
 // matrix for python projects.
-func (t *Travis) argumentSetPython() (res []Arguments, err error) {
+func (t *Travis) argumentSetPython() (res TestCaseSet, err error) {
 
-	if len(t.Matrix.Include) != 0 {
-		res = make([]Arguments, len(t.Matrix.Include))
-		for i, v := range t.Matrix.Include {
-			args, err := newPythonArguments(v)
-			if err != nil {
-				return nil, err
-			}
-			res[i] = args
-		}
-		return
-	}
+	res = make(TestCaseSet)
 
-	exclude := make(map[string]struct{})
-	for _, v := range t.Matrix.Exclude {
-		args, err := newPythonArguments(v)
+	// Parse Matrix.Include.
+	for _, v := range t.Matrix.Include {
+		version, env, err := parseMatrixPython(v)
 		if err != nil {
 			return nil, err
 		}
-		exclude[args.String()] = struct{}{}
-	}
-
-	if len(t.Python) == 0 {
-
-		if len(t.Env) == 0 {
-			res = []Arguments{
-				Arguments{
-					Version: "2.7",
-				},
-			}
-			return
+		if res[version] == nil {
+			res[version] = [][]string{env}
+		} else {
+			res[version] = append(res[version], env)
 		}
-
-		res = make([]Arguments, len(t.Env))
-		for i, env := range t.Env {
-			res[i] = Arguments{
-				Version: "2.7",
-				Env:     env,
-			}
-		}
-		return
 
 	}
 
-	if len(t.Env) == 0 {
-		res = make([]Arguments, len(t.Python))
-		for i, ver := range t.Python {
-			res[i] = Arguments{
-				Version: ver,
+	if len(t.Python) == 0 && len(res) == 0 {
+		t.Python = []string{"2.7"}
+	}
+	for _, version := range t.Python {
+
+		if len(t.Env.Matrix) == 0 {
+			res[version] = [][]string{t.Env.Global}
+
+		} else {
+			res[version] = [][]string{}
+			for _, m := range t.Env.Matrix {
+				envs := t.Env.Global
+				for _, pair := range strings.Split(strings.TrimSpace(m), " ") {
+					envs = append(envs, pair)
+				}
+				res[version] = append(res[version], envs)
 			}
+
 		}
-		return
+
 	}
 
-	for _, ver := range t.Python {
-		for _, env := range t.Env {
-			args := Arguments{
-				Version: ver,
-				Env:     env,
-			}
-			if _, exist := exclude[args.String()]; !exist {
-				res = append(res, args)
+	// Parse Matrix.Exclude.
+	for _, v := range t.Matrix.Exclude {
+		version, env, err := parseMatrixPython(v)
+		if err != nil {
+			return nil, err
+		}
+		excludes := make(map[string]struct{})
+		for _, e := range env {
+			excludes[e] = struct{}{}
+		}
+		if set, ok := res[version]; ok {
+			res[version] = [][]string{}
+			for _, item := range set {
+				skip := false
+				for _, pair := range item {
+					if _, exist := excludes[pair]; exist {
+						skip = true
+						break
+					}
+				}
+				if !skip {
+					res[version] = append(res[version], item)
+				}
 			}
 		}
 	}
@@ -85,9 +88,9 @@ func (t *Travis) argumentSetPython() (res []Arguments, err error) {
 
 }
 
-// newPythonArguments parses a given item v in an include/exclude list.
+// parseMatrixPython parses a given item v in an include/exclude list.
 // v must be castable to map[interface{}]interface{}.
-func newPythonArguments(v interface{}) (res Arguments, err error) {
+func parseMatrixPython(v interface{}) (version string, env []string, err error) {
 
 	m, ok := v.(map[interface{}]interface{})
 	if !ok {
@@ -95,17 +98,18 @@ func newPythonArguments(v interface{}) (res Arguments, err error) {
 		return
 	}
 
-	res.Version, ok = m["python"].(string)
+	version, ok = m["python"].(string)
 	if !ok {
 		err = fmt.Errorf("Python version of the given item is broken.")
 		return
 	}
 
-	res.Env, ok = m["env"].(string)
+	variables, ok := m["env"].(string)
 	if !ok {
 		err = fmt.Errorf("Env of the given item is broken.")
 		return
 	}
+	env = strings.Split(strings.TrimSpace(variables), " ")
 
 	return
 
