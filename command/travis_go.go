@@ -10,81 +10,85 @@
 
 package command
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // argumentSetGo returns a set of arguments to run entrypoint based on a build
 // matrix for Go projects.
-func (t *Travis) argumentSetGo() (res []Arguments, err error) {
+func (t *Travis) argumentSetGo() (res TestCaseSet, err error) {
 
-	if len(t.Matrix.Include) != 0 {
-		res = make([]Arguments, len(t.Matrix.Include))
-		for i, v := range t.Matrix.Include {
-			args, err := newGoArguments(v)
-			if err != nil {
-				return nil, err
-			}
-			res[i] = args
-		}
-		return
-	}
+	res = make(TestCaseSet)
 
-	exclude := make(map[string]struct{})
-	for _, v := range t.Matrix.Exclude {
-		args, err := newGoArguments(v)
+	// Parse Matrix.Include.
+	for _, v := range t.Matrix.Include {
+		version, env, err := parseMatrixGo(v)
 		if err != nil {
 			return nil, err
 		}
-		exclude[args.String()] = struct{}{}
+		if res[version] == nil {
+			res[version] = [][]string{env}
+		} else {
+			res[version] = append(res[version], env)
+		}
+
 	}
 
-	if len(t.Go) == 0 {
+	if len(t.Go) == 0 && len(res) == 0 {
+		t.Go = []string{"any"}
+	}
+	for _, version := range t.Go {
 
-		if len(t.Env) == 0 {
-			res = []Arguments{
-				Arguments{
-					Version: "any",
-				},
-			}
+		if len(t.Env.Matrix) == 0 {
+			res[version] = [][]string{t.Env.Global}
+
 		} else {
-			res = make([]Arguments, len(t.Env))
-			for i, env := range t.Env {
-				res[i] = Arguments{
-					Version: "any",
-					Env:     env,
+			res[version] = [][]string{}
+			for _, m := range t.Env.Matrix {
+				envs := t.Env.Global
+				for _, pair := range strings.Split(strings.TrimSpace(m), " ") {
+					envs = append(envs, pair)
+				}
+				res[version] = append(res[version], envs)
+			}
+
+		}
+
+	}
+
+	// Parse Matrix.Exclude.
+	for _, v := range t.Matrix.Exclude {
+		version, env, err := parseMatrixGo(v)
+		if err != nil {
+			return nil, err
+		}
+		excludes := make(map[string]struct{})
+		for _, e := range env {
+			excludes[e] = struct{}{}
+		}
+		if set, ok := res[version]; ok {
+			res[version] = [][]string{}
+			for _, item := range set {
+				skip := false
+				for _, pair := range item {
+					if _, exist := excludes[pair]; exist {
+						skip = true
+						break
+					}
+				}
+				if !skip {
+					res[version] = append(res[version], item)
 				}
 			}
 		}
-		return
 	}
 
-	if len(t.Env) == 0 {
-		res = make([]Arguments, len(t.Go))
-		for i, ver := range t.Go {
-			res[i] = Arguments{
-				Version: ver,
-			}
-		}
-		return
-	}
-
-	for _, ver := range t.Go {
-		for _, env := range t.Env {
-			args := Arguments{
-				Version: ver,
-				Env:     env,
-			}
-			if _, exist := exclude[args.String()]; !exist {
-				res = append(res, args)
-			}
-		}
-	}
 	return
 
 }
 
-// newGoArguments parses a given item v in an include/exclude list.
-// v must be castable to map[interface{}]interface{}.
-func newGoArguments(v interface{}) (res Arguments, err error) {
+func parseMatrixGo(v interface{}) (version string, env []string, err error) {
 
 	m, ok := v.(map[interface{}]interface{})
 	if !ok {
@@ -92,17 +96,18 @@ func newGoArguments(v interface{}) (res Arguments, err error) {
 		return
 	}
 
-	res.Version, ok = m["go"].(string)
+	version, ok = m["go"].(string)
 	if !ok {
 		err = fmt.Errorf("Go version of the given item is broken.")
 		return
 	}
 
-	res.Env, ok = m["env"].(string)
+	variables, ok := m["env"].(string)
 	if !ok {
 		err = fmt.Errorf("Env of the given item is broken.")
 		return
 	}
+	env = strings.Split(strings.TrimSpace(variables), " ")
 
 	return
 
