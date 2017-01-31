@@ -7,7 +7,7 @@
 #
 # http://opensource.org/licenses/mit-license.php
 #
-{{define "apt"}}
+{{define "package"}}
 RUN apt-get update && \
     apt-get install -y apt-utils golang git curl wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
     apt-get upgrade -y && apt-get clean && \
@@ -21,6 +21,12 @@ RUN mkdir -p $GOPATH/bin && \
     chmod +x $GOPATH/bin/gimme
 {{end}}
 
+{{define "version"}}
+# Install a specific version of Go
+RUN PATH="$GOPATH/bin/:$PATH" && \
+    [ $VERSION = "any" ] || eval "$(GIMME_GO_VERSION=$VERSION gimme)"
+{{end}}
+
 {{define "source"}}
 {{if .Travis.GoImportPath}}
 ADD {{.Archive}} $GOPATH/src/{{.Travis.GoImportPath}}
@@ -28,10 +34,4 @@ ADD {{.Archive}} $GOPATH/src/{{.Travis.GoImportPath}}
 ADD {{.Archive}} $GOPATH/src/{{.Repository}}
 {{end}}
 WORKDIR $GOPATH/src/{{.Repository}}
-
-# Before Install Steps.
-{{range .Travis.BeforeInstall}}
-RUN {{.}}
-{{end}}
-
 {{end}}

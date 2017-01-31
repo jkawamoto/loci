@@ -1,4 +1,4 @@
-#!/bin/bash -eu
+#!/bin/bash
 #
 # entrypoint-python
 #
@@ -8,25 +8,24 @@
 #
 # http://opensource.org/licenses/mit-license.php
 #
+
+# Run before install steps, install steps, before script steps, and script
+# steps in this order. This entry point script focuses on running tests for
+# Python applications. If any parameters are given, execute the parameters
+# instead. For example, to debug this script, run this with `bash` as the
+# parameter and get a shell access.
+{{define "env"}}
 PATH="/root/.pyenv/bin:$PATH"
-declare -x PYTHON_BUILD_ARIA2_OPTS="-x 10 -k 1M"
 eval "$(pyenv init -)" && \
 eval "$(pyenv virtualenv-init -)"
+{{end}}
 
-if [[ $# = 0 ]]; then
-  exec bash
-fi
+{{define "prepare"}}
+TERM=xterm
+readonly PYVERSION=$(pyenv local)
+{{end}}
 
-readonly PYVERSION=$(pyenv install -l | sed "s/ //g" | grep -E "^$1($|[^-])" | tail -1)
-echo "Set Python version: $PYVERSION"
-pyenv install $PYVERSION
-pyenv local $PYVERSION
-
-for e in ${@:2:($#-1)}; do
-  echo "Set environment: $e"
-  declare -x $e
-done
-
+{{define "install"}}
 echo "Install Steps:"
 if [[ -e requirements.txt ]]; then
   pip install -r requirements.txt
@@ -35,15 +34,4 @@ fi
 echo "{{.}}"
 {{.}}
 {{end}}
-
-echo "Before Script Steps:"
-{{range .BeforeScript}}
-echo "{{.}}"
-{{.}}
-{{end}}
-
-echo "Script Steps:"
-{{range .Script}}
-echo "{{.}}"
-{{.}}
 {{end}}

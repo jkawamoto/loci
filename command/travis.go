@@ -14,6 +14,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
+
+	"github.com/mitchellh/mapstructure"
 
 	"gopkg.in/yaml.v2"
 )
@@ -30,16 +33,23 @@ type Travis struct {
 	} `yaml:"addons,omitempty"`
 	// List of commands run before install steps.
 	BeforeInstall []string `yaml:"before_install,omitempty"`
+
 	// TODO: The Install section can be a string not a list.
+	// -> Use interface{} at first and case it to some other variables.
 	// List of commands used to install packages.
 	Install []string `yaml:"install,omitempty"`
 	// List of commands run before main scripts.
 	BeforeScript []string `yaml:"before_script,omitempty"`
 	// TODO: The Script section can be a string instead of a list.
+	// Use RasScript interface{} to recieve items then parse to and store here.
 	// List of scripts.
 	Script []string `yaml:"script,omitempty"`
+
+	// RawEnv defines a temporary space to store env attribute for parseEnv.
+	RawEnv interface{} `yaml:"env,omitempty"`
 	// List of environment variables.
-	Env []string `yaml:"env,omitempty"`
+	Env Env `yaml:"_env,omitempty"`
+
 	// Configuration for matrix build.
 	Matrix Matrix `yaml:"matrix,omitempty"`
 
@@ -52,6 +62,12 @@ type Travis struct {
 	GoImportPath string `yaml:"go_import_path,omitempty"`
 	// Build args for go project. (used only in go)
 	GoBuildArgs string `yaml:"gobuild_args,omitempty"`
+}
+
+// Env defines the full structure of a definition of environment variables.
+type Env struct {
+	Global []string `yaml:"global,omitempty"`
+	Matrix []string `yaml:"matrix,omitempty"`
 }
 
 // Matrix defines the structure of matrix element in .travis.yml.
@@ -78,13 +94,14 @@ func NewTravis(filename string) (res *Travis, err error) {
 	if err = yaml.Unmarshal(buf, res); err != nil {
 		return
 	}
+	err = res.parseEnv()
 	return
 
 }
 
 // ArgumentSet returns a set of arguments to run entrypoint based on a build
 // matrix.
-func (t *Travis) ArgumentSet() (res []Arguments, err error) {
+func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
 
 	switch t.Language {
 	case "python":
@@ -92,22 +109,45 @@ func (t *Travis) ArgumentSet() (res []Arguments, err error) {
 	case "go":
 		res, err = t.argumentSetGo()
 	default:
-		res = []Arguments{
-			Arguments{},
-		}
+		res = make(TestCaseSet)
+		res[""] = [][]string{}
 	}
 
 	return
 
 }
 
-// Arguments defines a set of arguments for build matrix.
-type Arguments struct {
-	Version string
-	Env     string
+func (t *Travis) parseEnv() (err error) {
+
+	switch raw := t.RawEnv.(type) {
+	case []interface{}:
+		if len(raw) == 0 {
+			return
+		}
+		value := make([]string, len(raw))
+		for i, r := range raw {
+			v, ok := r.(string)
+			if !ok {
+				return fmt.Errorf("An item in evn cannot be converted to a string: %v", t.RawEnv)
+			}
+			value[i] = v
+		}
+		if len(strings.Split(strings.TrimSpace(value[0]), " ")) == 1 {
+			t.Env.Global = value
+		} else {
+			t.Env.Matrix = value
+		}
+
+	case map[interface{}]interface{}:
+		if err := mapstructure.Decode(raw, &t.Env); err != nil {
+			return err
+		}
+
+	}
+
+	return
+
 }
 
-// String method returns a string format of an Arguments.
-func (a Arguments) String() string {
-	return fmt.Sprintf("%s %s", a.Version, a.Env)
-}
+// TestCaseSet defines a set of arguments for build matrix.
+type TestCaseSet map[string][][]string

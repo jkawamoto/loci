@@ -28,6 +28,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	client "github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 // DockerfileAsset defines a asset name for Dockerfile.
@@ -117,7 +118,7 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 
 // Build builds a docker image from a directory. The built image named tag.
 // The directory must have Dockerfile.
-func Build(ctx context.Context, dir, tag string) (err error) {
+func Build(ctx context.Context, dir, tag, version string) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -139,6 +140,9 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 	res, err := cli.ImageBuild(ctx, reader, types.ImageBuildOptions{
 		Tags:   []string{tag},
 		Remove: true,
+		BuildArgs: map[string]*string{
+			"VERSION": &version,
+		},
 	})
 	if err != nil {
 		return
@@ -181,8 +185,13 @@ func Build(ctx context.Context, dir, tag string) (err error) {
 
 }
 
-// Start runs a container to run tests.
-func Start(ctx context.Context, tag, name string, args ...string) (err error) {
+// Start runs a container to run tests with a given context.
+// This function creates a container from the image of the given tag name,
+// and the created container has the given name. If the given name is empty,
+// the container will have a random temporary name and be deleted after
+// after all steps end. env is a list of environment variables to be passed
+// to the created container.
+func Start(ctx context.Context, tag, name string, env []string) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -194,7 +203,7 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 	// Create a docker container.
 	config := container.Config{
 		Image: tag,
-		Cmd:   args,
+		Env:   env,
 	}
 	container, err := cli.ContainerCreate(ctx, &config, nil, nil, name)
 	if err != nil {
@@ -207,27 +216,17 @@ func Start(ctx context.Context, tag, name string, args ...string) (err error) {
 		defer cli.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})
 	}
 
-	// Attach stdout of the container.
-	stdout, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
+	// Attach stdout and stderr of the container.
+	stream, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
 		Stream: true,
 		Stdout: true,
-	})
-	if err != nil {
-		return
-	}
-	defer stdout.Close()
-	go io.Copy(os.Stdout, stdout.Reader)
-
-	// Attach stderr of the container.
-	stderr, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
-		Stream: true,
 		Stderr: true,
 	})
 	if err != nil {
 		return
 	}
-	defer stderr.Close()
-	go io.Copy(os.Stderr, stderr.Reader)
+	defer stream.Close()
+	go stdcopy.StdCopy(os.Stdout, os.Stderr, stream.Reader)
 
 	// Start the container.
 	options := types.ContainerStartOptions{}

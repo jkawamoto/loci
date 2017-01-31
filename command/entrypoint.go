@@ -22,27 +22,40 @@ const EntrypointAsset = "assets/entrypoint"
 // Entrypoint creates an entrypoint.sh from an instance of Travis.
 func Entrypoint(travis *Travis) (res []byte, err error) {
 
-	var data []byte
+	var (
+		data []byte
+		temp *template.Template
+	)
+
+	// Loading the base template.
+	data, err = Asset(EntrypointAsset)
+	if err != nil {
+		return
+	}
+	base, err := template.New("").Parse(string(data))
+	if err != nil {
+		return
+	}
+
+	// Loading a child template.
 	name := fmt.Sprintf("%s-%s", EntrypointAsset, travis.Language)
 	data, err = Asset(name)
-	if err != nil {
-		data, err = Asset(fmt.Sprintf("%s", EntrypointAsset))
+	if err == nil {
+		temp, err = base.Parse(string(data))
 		if err != nil {
 			return
 		}
+	} else {
+		temp = base
 	}
 
-	temp, err := template.New("").Parse(string(data))
-	if err != nil {
-		return
-	}
-
+	// Creating an entrypont.
 	buf := bytes.Buffer{}
-	if err = temp.Execute(&buf, travis); err != nil {
+	if err = temp.ExecuteTemplate(&buf, "base", travis); err != nil {
 		return
 	}
-
 	res = buf.Bytes()
+
 	return
 
 }
