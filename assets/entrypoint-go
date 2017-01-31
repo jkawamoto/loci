@@ -16,6 +16,10 @@
 # parameter and get a shell access.
 set -eu
 PATH="$GOPATH/bin:$PATH"
+declare -x GIMME_GO_VERSION=$(gimme -l)
+if [[ -n "$GIMME_GO_VERSION" ]]; then
+  eval "$(gimme)"
+fi
 readonly TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
 
 if [[ $# != 0 ]]; then
