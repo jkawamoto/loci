@@ -23,7 +23,6 @@ import (
 	"syscall"
 
 	gitconfig "github.com/tcnksm/go-gitconfig"
-	"github.com/ttacon/chalk"
 	"github.com/urfave/cli"
 )
 
@@ -44,6 +43,8 @@ type RunOpt struct {
 	Verbose bool
 	// If true, not using cache during buidling a docker image.
 	NoCache bool
+	// If true, omit printing color codes.
+	NoColor bool
 }
 
 // Run implements the action of this command.
@@ -63,6 +64,7 @@ func Run(c *cli.Context) error {
 		Tag:      c.String("tag"),
 		Verbose:  c.Bool("verbose"),
 		NoCache:  c.Bool("no-cache"),
+		NoColor:  c.Bool("no-color"),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -71,6 +73,13 @@ func Run(c *cli.Context) error {
 }
 
 func run(opt *RunOpt) (err error) {
+
+	var decorator *TextDecorator
+	if opt.NoColor {
+		decorator = NewNoopDecorator()
+	} else {
+		decorator = NewDecorator()
+	}
 
 	// Prepare to be canceled.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -113,7 +122,7 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println(chalk.Bold.TextStyle("Creating archive of source codes."))
+	fmt.Println(decorator.Bold("Creating archive of source codes."))
 	var dstout io.Writer
 	if opt.Verbose {
 		dstout = os.Stdout
@@ -125,7 +134,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Create Dockerfile.
-	fmt.Println(chalk.Bold.TextStyle("Creating Dockerfile"))
+	fmt.Println(decorator.Bold("Creating Dockerfile"))
 	docker, err := Dockerfile(travis, opt.DockerfileOpt, SourceArchive)
 	if err != nil {
 		return
@@ -138,7 +147,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Create entrypoint.sh.
-	fmt.Println(chalk.Bold.TextStyle("Creating entrypoint."))
+	fmt.Println(decorator.Bold("Creating entrypoint."))
 	entry, err := Entrypoint(travis)
 	if err != nil {
 		return
@@ -159,7 +168,7 @@ func run(opt *RunOpt) (err error) {
 		// TODO: parallel build and run.
 
 		// Build the container image.
-		fmt.Printf(chalk.Bold.TextStyle("Building a image for %v\n"), version)
+		fmt.Printf(decorator.Bold("Building a image for %v\n"), version)
 		tag := fmt.Sprintf("%v/%v", opt.Tag, version)
 		err = Build(ctx, tempDir, tag, version, opt.NoCache)
 		if err != nil {
@@ -169,7 +178,7 @@ func run(opt *RunOpt) (err error) {
 		for _, envs := range set {
 
 			// Run tests in sandboxes.
-			fmt.Printf(chalk.Bold.TextStyle("Start CI (%v: %v)\n"), version, envs)
+			fmt.Printf(decorator.Bold("Start CI (%v: %v)\n"), version, envs)
 			os.Stdout.Sync()
 
 			name := opt.Name

@@ -1,7 +1,7 @@
 //
 // commands.go
 //
-// Copyright (c) 2016 Junpei Kawamoto
+// Copyright (c) 2016-2017 Junpei Kawamoto
 //
 // This software is released under the MIT License.
 //
@@ -14,14 +14,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ttacon/chalk"
 	"github.com/urfave/cli"
 )
 
 // GlobalFlags defines global flags.
 var GlobalFlags = []cli.Flag{
 	// TODO: Remote docker host.
-	// TODO: no-colour option.
 	// TODO: delete name option because lots of containers will be created.
 	cli.StringFlag{
 		Name: "name, n",
@@ -70,6 +68,10 @@ var GlobalFlags = []cli.Flag{
 		Name:  "no-build-cache",
 		Usage: "Do not use cache when building the image",
 	},
+	cli.BoolFlag{
+		Name:  "no-color",
+		Usage: "Omit to print color codes.",
+	},
 }
 
 // Commands defines sub-commands.
@@ -78,7 +80,7 @@ var Commands = []cli.Command{}
 // CommandNotFound prints an error message when a given command is not supported.
 func CommandNotFound(c *cli.Context, command string) {
 	fmt.Fprintf(
-		os.Stderr, chalk.Red.Color("%s: '%s' is not a %s command. See '%s --help'."),
+		os.Stderr, "%s: '%s' is not a %s command. See '%s --help'.",
 		c.App.Name, command, c.App.Name, c.App.Name)
 	os.Exit(2)
 }
