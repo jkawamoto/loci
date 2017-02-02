@@ -66,24 +66,23 @@ func TestPythonMatrixInclude(t *testing.T) {
 func TestPythonMatrixExclude(t *testing.T) {
 
 	var err error
-	travis, err := storeAndLoadTravis(&Travis{
-		Language: "python",
-		Python:   []string{"2.7", "3.5"},
-		RawEnv:   []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
-		Matrix: Matrix{
-			Exclude: []interface{}{
-				PythonCase{
-					Python: "3.5",
-					Env:    "FOO=bar BAR=foo",
-				},
-			},
-		},
-	})
+	travis, err := NewTravis([]byte(`language: "python"
+python:
+  - 2.7
+  - 3.5
+env:
+  - FOO=foo BAR=bar
+  - FOO=bar BAR=foo
+matrix:
+  exclude:
+    - python: 3.5
+      env: FOO=bar BAR=foo
+`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 	if len(travis.Matrix.Exclude) != 1 {
-		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Exclude)
+		t.Error("Size of items in matrix.exclude is wrong:", travis.Matrix.Exclude)
 	}
 
 	res, err := travis.ArgumentSet()
@@ -149,10 +148,12 @@ func TestPythonArgumentSet(t *testing.T) {
 		t.Error("Env has wrong values:", res)
 	}
 
-	travis, err = storeAndLoadTravis(&Travis{
-		Language: "python",
-		RawEnv:   []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
-	})
+	travis, err = NewTravis([]byte(`language: "python"
+env:
+  - FOO=foo BAR=bar
+  - FOO=bar BAR=foo
+`))
+
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -203,11 +204,14 @@ func TestPythonArgumentSet(t *testing.T) {
 		t.Error("Env has wrong values:", res)
 	}
 
-	travis, err = storeAndLoadTravis(&Travis{
-		Language: "python",
-		Python:   []string{"2.7", "3.5"},
-		RawEnv:   []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
-	})
+	travis, err = NewTravis([]byte(`language: "python"
+python:
+  - 2.7
+  - 3.5
+env:
+  - FOO=foo BAR=bar
+  - FOO=bar BAR=foo
+`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -251,10 +255,7 @@ func TestPythonArgumentSetWithFullDescriptions(t *testing.T) {
 	travis, err := storeAndLoadTravis(&Travis{
 		Language: "python",
 		Python:   []string{"2.7", "3.5"},
-		RawEnv: struct {
-			Global []string
-			Matrix []string
-		}{
+		Env: Env{
 			Global: []string{"GLOBAL=global"},
 			Matrix: []string{"FOO=foo BAR=bar", "FOO=bar BAR=foo"},
 		},

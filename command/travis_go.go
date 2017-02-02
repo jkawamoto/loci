@@ -96,11 +96,7 @@ func parseMatrixGo(v interface{}) (version string, env []string, err error) {
 		return
 	}
 
-	version, ok = m["go"].(string)
-	if !ok {
-		err = fmt.Errorf("Go version of the given item is broken.")
-		return
-	}
+	version = fmt.Sprint(m["go"])
 
 	variables, ok := m["env"].(string)
 	if !ok {

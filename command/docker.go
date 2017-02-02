@@ -118,7 +118,7 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 
 // Build builds a docker image from a directory. The built image named tag.
 // The directory must have Dockerfile.
-func Build(ctx context.Context, dir, tag, version string) (err error) {
+func Build(ctx context.Context, dir, tag, version string, noCache bool) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -143,6 +143,7 @@ func Build(ctx context.Context, dir, tag, version string) (err error) {
 		BuildArgs: map[string]*string{
 			"VERSION": &version,
 		},
+		NoCache: noCache,
 	})
 	if err != nil {
 		return
