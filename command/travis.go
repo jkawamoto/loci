@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -33,30 +32,20 @@ type Travis struct {
 		} `yaml:"apt,omitempty"`
 	} `yaml:"addons,omitempty"`
 
-	// RawBeforeInstall defines a temporary space to store before_install attribute for parseRawField.
-	RawBeforeInstall interface{} `yaml:"before_install,omitempty"`
 	// List of commands run before install steps.
-	BeforeInstall []string `yaml:"_before_install,omitempty"`
+	BeforeInstall ListOrString `yaml:"before_install,omitempty"`
 
-	// RawInstall defines a temporary space to store install attribute for parseRawField.
-	RawInstall interface{} `yaml:"install,omitempty"`
 	// List of commands used to install packages.
-	Install []string `yaml:"_install,omitempty"`
+	Install ListOrString `yaml:"install,omitempty"`
 
-	// RawBeforeScript defines a temporary space to store before_script attribute for parseRawField.
-	RawBeforeScript interface{} `yaml:"before_script,omitempty"`
 	// List of commands run before main scripts.
-	BeforeScript []string `yaml:"_before_script,omitempty"`
+	BeforeScript ListOrString `yaml:"before_script,omitempty"`
 
-	// RawScript defines a temporary space to store script attribute for parseRawField.
-	RawScript interface{} `yaml:"script,omitempty"`
 	// List of scripts.
-	Script []string `yaml:"_script,omitempty"`
+	Script ListOrString `yaml:"script,omitempty"`
 
-	// RawEnv defines a temporary space to store env attribute for parseEnv.
-	RawEnv interface{} `yaml:"env,omitempty"`
 	// List of environment variables.
-	Env Env `yaml:"_env,omitempty"`
+	Env Env `yaml:"env,omitempty"`
 
 	// Configuration for matrix build.
 	Matrix Matrix `yaml:"matrix,omitempty"`
@@ -84,8 +73,22 @@ type Matrix struct {
 	Exclude []interface{} `yaml:"exclude,omitempty"`
 }
 
-// NewTravis loads a .travis.yaml file and creates a structure instance.
-func NewTravis(filename string) (res *Travis, err error) {
+// TestCaseSet defines a set of arguments for build matrix.
+type TestCaseSet map[string][][]string
+
+// NewTravis creates a Travis object from a byte array.
+func NewTravis(buf []byte) (res *Travis, err error) {
+
+	res = &Travis{}
+	if err = yaml.Unmarshal(buf, res); err != nil {
+		return
+	}
+	return
+
+}
+
+// NewTravisFromFile creates a Travis object from a file.
+func NewTravisFromFile(filename string) (res *Travis, err error) {
 
 	fp, err := os.Open(filename)
 	if err != nil {
@@ -97,19 +100,7 @@ func NewTravis(filename string) (res *Travis, err error) {
 	if err != nil {
 		return
 	}
-
-	res = &Travis{}
-	if err = yaml.Unmarshal(buf, res); err != nil {
-		return
-	}
-	for _, name := range []string{"BeforeInstall", "Install", "BeforeScript", "Script"} {
-		err = res.parseRawField(name)
-		if err != nil {
-			return
-		}
-	}
-	err = res.parseEnv()
-	return
+	return NewTravis(buf)
 
 }
 
@@ -131,34 +122,15 @@ func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
 
 }
 
-func (t *Travis) parseRawField(name string) (err error) {
+// UnmarshalYAML defines a way to unmarshal variables of Env.
+func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 
-	r := reflect.Indirect(reflect.ValueOf(t))
-	src := r.FieldByName(fmt.Sprintf("Raw%s", name))
-	dest := r.FieldByName(name)
-
-	switch raw := src.Interface().(type) {
-	case string:
-		dest.Set(reflect.ValueOf([]string{raw}))
-
-	case []interface{}:
-		list := make([]string, len(raw))
-		for i, r := range raw {
-			v, ok := r.(string)
-			if !ok {
-				return fmt.Errorf("An item in evn cannot be converted to a string: %v", src)
-			}
-			list[i] = v
-		}
-		dest.Set(reflect.ValueOf(list))
-
+	var aux interface{}
+	if err = unmarshal(&aux); err != nil {
+		return
 	}
-	return
-}
 
-func (t *Travis) parseEnv() (err error) {
-
-	switch raw := t.RawEnv.(type) {
+	switch raw := aux.(type) {
 	case []interface{}:
 		if len(raw) == 0 {
 			return
@@ -167,18 +139,18 @@ func (t *Travis) parseEnv() (err error) {
 		for i, r := range raw {
 			v, ok := r.(string)
 			if !ok {
-				return fmt.Errorf("An item in evn cannot be converted to a string: %v", t.RawEnv)
+				return fmt.Errorf("An item in evn cannot be converted to a string: %v", aux)
 			}
 			value[i] = v
 		}
 		if len(strings.Split(strings.TrimSpace(value[0]), " ")) == 1 {
-			t.Env.Global = value
+			e.Global = value
 		} else {
-			t.Env.Matrix = value
+			e.Matrix = value
 		}
 
 	case map[interface{}]interface{}:
-		if err := mapstructure.Decode(raw, &t.Env); err != nil {
+		if err = mapstructure.Decode(raw, e); err != nil {
 			return err
 		}
 
@@ -187,6 +159,3 @@ func (t *Travis) parseEnv() (err error) {
 	return
 
 }
-
-// TestCaseSet defines a set of arguments for build matrix.
-type TestCaseSet map[string][][]string

@@ -30,7 +30,7 @@ func storeAndLoadTravis(src *Travis) (res *Travis, err error) {
 		return
 	}
 	defer os.Remove(target)
-	return NewTravis(target)
+	return NewTravisFromFile(target)
 }
 
 func TestParseBeforeInstallWithNoValues(t *testing.T) {
@@ -44,9 +44,8 @@ func TestParseBeforeInstallWithNoValues(t *testing.T) {
 }
 
 func TestParseBeforeInstallWithString(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawBeforeInstall: "install 1",
-	})
+	travis, err := NewTravis([]byte(`language: ""
+before_install: install 1`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -56,9 +55,9 @@ func TestParseBeforeInstallWithString(t *testing.T) {
 }
 
 func TestParseBeforeInstallWithList(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawBeforeInstall: []string{"install 1"},
-	})
+	travis, err := NewTravis([]byte(`language: ""
+before_install:
+  - install 1`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -78,9 +77,8 @@ func TestParseInstallWithNoValues(t *testing.T) {
 }
 
 func TestParseInstallWithString(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawInstall: "install 1",
-	})
+	travis, err := NewTravis([]byte(`language: ""
+install: install 1`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -90,9 +88,10 @@ func TestParseInstallWithString(t *testing.T) {
 }
 
 func TestParseInstallWithList(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawInstall: []string{"install 1"},
-	})
+	travis, err := NewTravis([]byte(`language: ""
+install:
+  - install 1`))
+
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -112,9 +111,8 @@ func TestParseBeforeScriptWithNoValues(t *testing.T) {
 }
 
 func TestParseBeforeScriptWithString(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawBeforeScript: "python setup.py test",
-	})
+	travis, err := NewTravis([]byte(`language: ""
+before_script: python setup.py test`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -124,9 +122,9 @@ func TestParseBeforeScriptWithString(t *testing.T) {
 }
 
 func TestParseBeforeScriptWithList(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawBeforeScript: []string{"python setup.py test"},
-	})
+	travis, err := NewTravis([]byte(`language: ""
+before_script:
+  - python setup.py test`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -146,9 +144,8 @@ func TestParseScriptWithNoValues(t *testing.T) {
 }
 
 func TestParseScriptWithString(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawScript: "python setup.py test",
-	})
+	travis, err := NewTravis([]byte(`language: ""
+script: python setup.py test`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -158,9 +155,9 @@ func TestParseScriptWithString(t *testing.T) {
 }
 
 func TestParseScriptWithList(t *testing.T) {
-	travis, err := storeAndLoadTravis(&Travis{
-		RawScript: []string{"python setup.py test"},
-	})
+	travis, err := NewTravis([]byte(`language: ""
+script:
+  - python setup.py test`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -191,9 +188,12 @@ func TestParseEnvWithGlobalsList(t *testing.T) {
 		"SH=bash",
 		"PACKAGE_VERSION=\"1.0.*\"",
 	}
-	travis, err := storeAndLoadTravis(&Travis{
-		RawEnv: globals,
-	})
+	travis, err := NewTravis([]byte(`language: ""
+env:
+  - DB=postgres
+  - SH=bash
+  - PACKAGE_VERSION="1.0.*"
+`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -218,9 +218,12 @@ func TestParseEnvWithMultipleVariablesList(t *testing.T) {
 		"FOO=foo BAR=bar",
 		"FOO=bar BAR=foo",
 	}
-	travis, err := storeAndLoadTravis(&Travis{
-		RawEnv: matrix,
-	})
+	travis, err := NewTravis([]byte(`language: ""
+env:
+  - FOO=foo BAR=bar
+  - FOO=bar BAR=foo
+`))
+
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -246,13 +249,13 @@ func TestParseEnvWithSpecificGlobals(t *testing.T) {
 		"SH=bash",
 		"PACKAGE_VERSION=\"1.0.*\"",
 	}
-	travis, err := storeAndLoadTravis(&Travis{
-		RawEnv: struct {
-			Global []string
-		}{
-			Global: globals,
-		},
-	})
+	travis, err := NewTravis([]byte(`language: "go"
+env:
+  global:
+    - DB=postgres
+    - SH=bash
+    - PACKAGE_VERSION="1.0.*"
+`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -277,13 +280,12 @@ func TestParseEnvWithSpecificMatrixVariables(t *testing.T) {
 		"FOO=foo BAR=bar",
 		"FOO=bar BAR=foo",
 	}
-	travis, err := storeAndLoadTravis(&Travis{
-		RawEnv: struct {
-			Matrix []string
-		}{
-			Matrix: matrix,
-		},
-	})
+	travis, err := NewTravis([]byte(`language: go
+env:
+  matrix:
+    - FOO=foo BAR=bar
+    - FOO=bar BAR=foo
+`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -313,15 +315,16 @@ func TestParseEnv(t *testing.T) {
 		"FOO=foo BAR=bar",
 		"FOO=bar BAR=foo",
 	}
-	travis, err := storeAndLoadTravis(&Travis{
-		RawEnv: struct {
-			Global []string
-			Matrix []string
-		}{
-			Global: globals,
-			Matrix: matrix,
-		},
-	})
+	travis, err := NewTravis([]byte(`language: go
+env:
+  global:
+    - DB=postgres
+    - SH=bash
+    - PACKAGE_VERSION="1.0.*"
+  matrix:
+    - FOO=foo BAR=bar
+    - FOO=bar BAR=foo
+`))
 	if err != nil {
 		t.Fatal(err.Error())
 	}

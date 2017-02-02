@@ -95,7 +95,7 @@ func run(opt *RunOpt) (err error) {
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
 	}
-	travis, err := NewTravis(opt.Filename)
+	travis, err := NewTravisFromFile(opt.Filename)
 	if err != nil {
 		return
 	}

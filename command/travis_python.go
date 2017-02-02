@@ -98,11 +98,7 @@ func parseMatrixPython(v interface{}) (version string, env []string, err error) 
 		return
 	}
 
-	version, ok = m["python"].(string)
-	if !ok {
-		err = fmt.Errorf("Python version of the given item is broken.")
-		return
-	}
+	version = fmt.Sprint(m["python"])
 
 	variables, ok := m["env"].(string)
 	if !ok {
