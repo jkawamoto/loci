@@ -4,13 +4,13 @@ description: >-
   Loci runs CI tests locally to make sure your commits will pass such tests
   before pushing to a remote repository.
 date: 2016-12-14
-lastmod: 2017-01-31
+lastmod: 2017-02-01
 slug: readme
 ---
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./info/licenses/)
 [![Build Status](https://travis-ci.org/jkawamoto/loci.svg?branch=master)](https://travis-ci.org/jkawamoto/loci)
 [![Code Climate](https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg)](https://codeclimate.com/github/jkawamoto/loci)
-[![Release](https://img.shields.io/badge/release-0.4.1-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.4.1)
+[![Release](https://img.shields.io/badge/release-0.4.2-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.4.2)
 [![Japanese](https://img.shields.io/badge/qiita-%E6%97%A5%E6%9C%AC%E8%AA%9E-brightgreen.svg)](http://qiita.com/jkawamoto/items/a409dd9cd6e63034aa28)
 
 Loci runs CI tests locally to make sure your commits will pass such tests
@@ -47,6 +47,8 @@ GLOBAL OPTIONS:
    --https-proxy URL     URL for a https proxy server. [$HTTPS_PROXY]
    --no-proxy LIST       Comma separated URL LIST for which proxies won't
                          be used. [$NO_PROXY]
+   --no-build-cache      Do not use cache when building the image.
+   --no-color            Omit to print color codes.
    --help, -h            show help
    --version, -v         print the version
 ~~~

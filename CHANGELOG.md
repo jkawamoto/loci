@@ -1,3 +1,11 @@
+## 0.4.2 (2017-02-01)
+### Added
+* Support no-color and no-build-cache options.
+
+### Fixed
+- before_install, install, before_script, and script attributes support both a single string and a list of strings.
+
+
 ## 0.4.1 (2017-01-31)
 ### Update
 - Allow unbounded variables in Travis's scripts.

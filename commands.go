@@ -66,7 +66,7 @@ var GlobalFlags = []cli.Flag{
 	},
 	cli.BoolFlag{
 		Name:  "no-build-cache",
-		Usage: "Do not use cache when building the image",
+		Usage: "Do not use cache when building the image.",
 	},
 	cli.BoolFlag{
 		Name:  "no-color",
