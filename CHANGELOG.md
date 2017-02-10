@@ -1,6 +1,14 @@
+## 0.4.3 (2017-02-10)
+### Added
+- Install sudo command to support old style Travis's configuration files.
+
+### Fixed
+- Parsing quoted environment variables.
+
+
 ## 0.4.2 (2017-02-01)
 ### Added
-* Support no-color and no-build-cache options.
+- Support no-color and no-build-cache options.
 
 ### Fixed
 - before_install, install, before_script, and script attributes support both a single string and a list of strings.
