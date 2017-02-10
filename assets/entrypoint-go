@@ -25,6 +25,7 @@ readonly TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
 
 {{define "install"}}
 echo "Install Steps:"
+git config --global http.https://gopkg.in.followRedirects true
 {{if .Install}}
 {{range .Install}}
 echo "{{.}}"
