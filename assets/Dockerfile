@@ -34,8 +34,18 @@ RUN PYPI_PROXY={{.}} && \
     echo "[global]\nindex-url=$PYPI_PROXY/root/pypi\ntrusted-host=${IPPORT%:*}" >> ~/.pip/pip.conf
 {{end}}
 
+# Install Common APT packages.
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y apt-utils git curl wget sudo
+# Install language specific packages.
 {{block "package" .}}
 {{end}}
+# Install required packages.
+{{range .Travis.Addons.Apt.Packages}}
+RUN apt-get install -y {{.}}
+{{end}}
+
 
 ARG VERSION
 {{block "version" .}}

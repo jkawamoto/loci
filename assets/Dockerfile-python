@@ -9,16 +9,11 @@
 #
 {{define "package"}}
 # Install apt packages.
-RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -y apt-utils python python-pip aria2 curl wget git \
-                       zlib1g-dev libreadline6-dev libbz2-dev libsqlite3-dev libssl-dev
-{{range .Travis.Addons.Apt.Packages}}
-RUN apt-get install -y {{.}}
-{{end}}
-
+RUN apt-get install -y python python-pip aria2 \
+                       zlib1g-dev libreadline6-dev \
+                       libbz2-dev libsqlite3-dev libssl-dev
 # Update pip
 RUN pip install --upgrade pip
-
 # Install pyenv
 RUN curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
 {{end}}

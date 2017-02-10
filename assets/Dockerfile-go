@@ -8,12 +8,8 @@
 # http://opensource.org/licenses/mit-license.php
 #
 {{define "package"}}
-RUN apt-get update && \
-    apt-get install -y apt-utils golang git curl wget {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
-    apt-get upgrade -y && apt-get clean && \
-    rm -rf /var/cache/apt/archives/* /var/lib/apt/lists/
-
 ENV GOPATH /data
+RUN apt-get install -y golang
 
 # Install gimme
 RUN mkdir -p $GOPATH/bin && \
