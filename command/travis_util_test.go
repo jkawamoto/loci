@@ -12,7 +12,7 @@ package command
 
 import "testing"
 
-func TestParseEnv(t *testing.T) {
+func TestParseEnvStrings(t *testing.T) {
 
 	var res []string
 	res = parseEnv("FOO=bar")
