@@ -147,7 +147,13 @@ func TestDockerfileGo(t *testing.T) {
 	}
 	dockerfile := string(res)
 
-	if !strings.Contains(dockerfile, "wget  package1  package2") {
+	if !strings.Contains(dockerfile, "wget") {
+		t.Error("Dockerfile doesn't install required packages:", dockerfile)
+	}
+	if !strings.Contains(dockerfile, "package1") {
+		t.Error("Dockerfile doesn't install required packages:", dockerfile)
+	}
+	if !strings.Contains(dockerfile, "package2") {
 		t.Error("Dockerfile doesn't install required packages:", dockerfile)
 	}
 
