@@ -105,7 +105,7 @@ func parseMatrixPython(v interface{}) (version string, env []string, err error) 
 		err = fmt.Errorf("Env of the given item is broken.")
 		return
 	}
-	env = strings.Split(strings.TrimSpace(variables), " ")
+	env = parseEnv(variables)
 
 	return
 
