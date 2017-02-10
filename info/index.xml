@@ -2,7 +2,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Infos on Loci</title>
-    <link>https://jkawamoto.github.io/loci/info/</link>
+    <link>https://jkawamoto.github.io/loci/info/index.xml</link>
     <description>Recent content in Infos on Loci</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
@@ -42,11 +42,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;h2 id=&#34;notices-for-libraries:066a44a3ef946eeb40375cef0248ec8a&#34;&gt;Notices for libraries&lt;/h2&gt;
+&lt;h2 id=&#34;notices-for-libraries&#34;&gt;Notices for libraries&lt;/h2&gt;
 
 &lt;p&gt;This software uses the following open source libraries.&lt;/p&gt;
 
-&lt;h2 id=&#34;docker-https-github-com-docker-docker:066a44a3ef946eeb40375cef0248ec8a&#34;&gt;&lt;a href=&#34;https://github.com/docker/docker&#34;&gt;docker&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&#34;docker-https-github-com-docker-docker&#34;&gt;&lt;a href=&#34;https://github.com/docker/docker&#34;&gt;docker&lt;/a&gt;&lt;/h2&gt;
 
 &lt;p&gt;Copyright 2013-2016 Docker, Inc.&lt;/p&gt;
 
@@ -62,7 +62,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.&lt;/p&gt;
 
-&lt;h3 id=&#34;go-gitconfig-https-github-com-tcnksm-go-gitconfig:066a44a3ef946eeb40375cef0248ec8a&#34;&gt;&lt;a href=&#34;https://github.com/tcnksm/go-gitconfig&#34;&gt;go-gitconfig&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id=&#34;go-gitconfig-https-github-com-tcnksm-go-gitconfig&#34;&gt;&lt;a href=&#34;https://github.com/tcnksm/go-gitconfig&#34;&gt;go-gitconfig&lt;/a&gt;&lt;/h3&gt;
 
 &lt;p&gt;Copyright &amp;copy; 2014 tcnksm&lt;/p&gt;
 
@@ -87,7 +87,7 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.&lt;/p&gt;
 
-&lt;h3 id=&#34;chalk-https-github-com-ttacon-chalk:066a44a3ef946eeb40375cef0248ec8a&#34;&gt;&lt;a href=&#34;https://github.com/ttacon/chalk&#34;&gt;chalk&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id=&#34;chalk-https-github-com-ttacon-chalk&#34;&gt;&lt;a href=&#34;https://github.com/ttacon/chalk&#34;&gt;chalk&lt;/a&gt;&lt;/h3&gt;
 
 &lt;p&gt;Copyright &amp;copy; 2014 Trey Tacon&lt;/p&gt;
 
@@ -111,7 +111,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.&lt;/p&gt;
 
-&lt;h3 id=&#34;cli-https-github-com-urfave-cli:066a44a3ef946eeb40375cef0248ec8a&#34;&gt;&lt;a href=&#34;https://github.com/urfave/cli&#34;&gt;cli&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id=&#34;cli-https-github-com-urfave-cli&#34;&gt;&lt;a href=&#34;https://github.com/urfave/cli&#34;&gt;cli&lt;/a&gt;&lt;/h3&gt;
 
 &lt;p&gt;Copyright &amp;copy; 2016 Jeremy Saenz &amp;amp; Contributors&lt;/p&gt;
 
@@ -135,7 +135,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.&lt;/p&gt;
 
-&lt;h1 id=&#34;mapstructure-https-github-com-mitchellh-mapstructure:066a44a3ef946eeb40375cef0248ec8a&#34;&gt;&lt;a href=&#34;https://github.com/mitchellh/mapstructure&#34;&gt;mapstructure&lt;/a&gt;&lt;/h1&gt;
+&lt;h1 id=&#34;mapstructure-https-github-com-mitchellh-mapstructure&#34;&gt;&lt;a href=&#34;https://github.com/mitchellh/mapstructure&#34;&gt;mapstructure&lt;/a&gt;&lt;/h1&gt;
 
 &lt;p&gt;Copyright &amp;copy; 2013 Mitchell Hashimoto&lt;/p&gt;
 
