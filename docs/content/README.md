@@ -20,6 +20,7 @@ Loci currently supports [Travis](https://travis-ci.org/)'s CI scripts
 for [Python](https://www.python.org/) and [Go](https://golang.org/) projects.
 Loci also requires [Docker](https://www.docker.com/) to run tests in a sandbox.
 
+<script data-gratipay-username="jkawamoto" src="//grtp.co/v1.js"></script>
 
 ### Usage
 If your current directory has `.travis.yml`, run just `loci`.

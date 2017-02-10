@@ -11,14 +11,16 @@
 					<h1>{{ .Site.Title }}</h1>
 					<h3>{{ .Site.Params.SubTitle }}</h3>
 
-					{{ if (isset .Site.Params "GithubOrg") }}
+					{{ if (isset .Site.Params "githuborg") }}
 					{{ $org := .Site.Params.GithubOrg }}
 					{{ $repo := .Site.Params.GithubRepo }}
-
-					<iframe class="github-btn" src="https://ghbtns.com/github-btn.html?user={{ $org }}&amp;repo={{ $repo }}&amp;type=star&amp;count=true&amp;size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
-                    <iframe class="github-btn" src="https://ghbtns.com/github-btn.html?user={{ $org }}&amp;repo={{ $repo }}&amp;type=fork&amp;count=true&amp;size=large" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+					<iframe class="github-btn"
+					 	src="https://ghbtns.com/github-btn.html?user={{ $org }}&amp;repo={{ $repo }}&amp;type=star&amp;count=true&amp;size=large"
+						frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+          <iframe class="github-btn"
+						src="https://ghbtns.com/github-btn.html?user={{ $org }}&amp;repo={{ $repo }}&amp;type=fork&amp;count=true&amp;size=large"
+						frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
 					{{ end }}
-
 					<hr class="intro-divider">
 				</div>
 			</div>
