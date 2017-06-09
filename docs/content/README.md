@@ -16,9 +16,22 @@ slug: readme
 Loci runs CI tests locally to make sure your commits will pass such tests
 *before* pushing to a remote repository.
 
-Loci currently supports [Travis](https://travis-ci.org/)'s CI scripts
+Loci currently supports [Travis CI](https://travis-ci.org/)'s scripts
 for [Python](https://www.python.org/) and [Go](https://golang.org/) projects.
+
+<a href="https://travis-ci.org/">
+  <img class="logo" src="img/travis-ci-small.png" alt="TravisCI" />
+</a>
+<a href="https://www.python.org/">
+  <img class="logo" src="img/python.png" alt="Python" />
+</a>
+<a href="https://golang.org/">
+  <img class="logo" src="img/gopher.png" alt="Go" />
+</a>
+
 Loci also requires [Docker](https://www.docker.com/) to run tests in a sandbox.
+
+[![Docker logo](img/small_h-trans.png)](https://www.docker.com/)
 
 ### Usage
 If your current directory has `.travis.yml`, run just `loci`.
@@ -65,27 +78,25 @@ If you want to keep the container,
 give a container name with `--name` or `-n` flag.
 
 
-### Requirements
+### Installation
 Loci works with [docker](https://www.docker.com/).
-
-[![docker logo](img/small_h-trans.png)](https://www.docker.com/)
-
 If your environment doesn't have docker, install it first.
 
+To build the newest version of Loci, use `go get` command:
 
-### Installation
 ```shell
 $ go get github.com/jkawamoto/loci
 ```
 
-or if you're a [Homebrew](http://brew.sh/) user,
+If you're a [Homebrew](http://brew.sh/) user, you can install Loci by
+the following commands:
 
 ```shell
 $ brew tap jkawamoto/loci
 $ brew install loci
 ```
 
-Compiled binaries are also available in
+Otherwise, compiled binaries are also available in
 [Github](https://github.com/jkawamoto/loci/releases).
 
 
