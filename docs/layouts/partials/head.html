@@ -1,48 +1,45 @@
-<!DOCTYPE html>
-<html>
-  <head prefix="og: http://ogp.me/ns#">
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <base href="{{ .Site.BaseURL }}"/>
-    <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <title>{{ .Title }}: {{ .Site.Params.SubTitle }}</title>
+<head prefix="og: http://ogp.me/ns#">
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <base href="{{ .Site.BaseURL }}"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>{{ .Title }}: {{ .Site.Params.SubTitle }}</title>
 
-    <meta name="author" content="{{ with .Site.Params.AuthorName }}{{ . }}{{ end }}"/>
-    {{ if isset .Params "description" }}
-		<meta name="description" content="{{ .Params.description }}"/>
-		{{ else }}
-		<meta name="description" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}"/>
-		{{ end }}
+  <meta name="author" content="{{ with .Site.Params.AuthorName }}{{ . }}{{ end }}"/>
+  {{ if isset .Params "description" }}
+	<meta name="description" content="{{ .Params.description }}"/>
+	{{ else }}
+	<meta name="description" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}"/>
+	{{ end }}
 
-    <meta property="og:type" content="article" />
-		<meta property="og:title" content="{{ .Title }}: {{ .Site.Params.SubTitle }}" />
-		{{ if isset .Params "description" }}
-		<meta name="og:description" content="{{ .Params.description }}" />
-		{{ else }}
-		<meta name="og:description" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}" />
-		{{ end }}
-		<meta property="og:image" content="{{ .Site.BaseURL }}img/image.png" />
-		<meta property="og:site_name"  content="{{ .Title }}: {{ .Site.Params.SubTitle }}" />
+  <meta property="og:type" content="article" />
+	<meta property="og:title" content="{{ .Title }}: {{ .Site.Params.SubTitle }}" />
+	{{ if isset .Params "description" }}
+	<meta name="og:description" content="{{ .Params.description }}" />
+	{{ else }}
+	<meta name="og:description" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}" />
+	{{ end }}
+	<meta property="og:image" content="{{ .Site.BaseURL }}img/image.png" />
+	<meta property="og:site_name"  content="{{ .Title }}: {{ .Site.Params.SubTitle }}" />
 
-		{{ if isset .Params "description" }}
-		<meta name="twitter:card" content="{{ .Params.description }}" />
-		{{ else }}
-		<meta name="twitter:card" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}" />
-		{{ end }}
-		<meta name="twitter:site" content="@junkawamoto" />
+	{{ if isset .Params "description" }}
+	<meta name="twitter:card" content="{{ .Params.description }}" />
+	{{ else }}
+	<meta name="twitter:card" content="{{ with .Site.Params.Description }}{{ . }}{{ end }}" />
+	{{ end }}
+	<meta name="twitter:site" content="@junkawamoto" />
 
-    <!-- Bootstrap Core CSS -->
-    <link href="{{ .Site.BaseURL }}css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Core CSS -->
+  <link href="{{ .Site.BaseURL }}css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom CSS -->
-    <link href="{{ .Site.BaseURL }}css/landing-page.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link href="{{ .Site.BaseURL }}css/landing-page.css" rel="stylesheet">
 
-    <!-- Custom Fonts -->
-    <link href="//fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
+  <!-- Custom Fonts -->
+  <link href="//fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic,700italic" rel="stylesheet" type="text/css">
 
-    <style>
-    {{ printf "%v" (partial "template.css" . ) | safeCSS  }}
-    </style>
+  <style>
+  {{ printf "%v" (partial "template.css" . ) | safeCSS  }}
+  </style>
 
-  </head>
-<body>
+</head>
