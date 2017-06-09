@@ -19,7 +19,7 @@
 
 &lt;p&gt;This software is released under the MIT License.&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;The MIT License (MIT)
+&lt;pre&gt;&lt;code class=&#34;language-txt&#34;&gt;The MIT License (MIT)
 
 Copyright (c) 2016-2017 Junpei Kawamoto
 
@@ -172,17 +172,28 @@ THE SOFTWARE.&lt;/p&gt;
 &lt;p&gt;&lt;a href=&#34;./info/licenses/&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/license-MIT-blue.svg?style=flat&#34; alt=&#34;MIT License&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://travis-ci.org/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://travis-ci.org/jkawamoto/loci.svg?branch=master&#34; alt=&#34;Build Status&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;https://codeclimate.com/github/jkawamoto/loci&#34;&gt;&lt;img src=&#34;https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg&#34; alt=&#34;Code Climate&#34; /&gt;&lt;/a&gt;
-&lt;a href=&#34;https://github.com/jkawamoto/loci/releases/tag/v0.4.2&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/release-0.4.2-brightgreen.svg&#34; alt=&#34;Release&#34; /&gt;&lt;/a&gt;
+&lt;a href=&#34;https://github.com/jkawamoto/loci/releases/tag/v0.4.3&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/release-0.4.3-brightgreen.svg&#34; alt=&#34;Release&#34; /&gt;&lt;/a&gt;
 &lt;a href=&#34;http://qiita.com/jkawamoto/items/a409dd9cd6e63034aa28&#34;&gt;&lt;img src=&#34;https://img.shields.io/badge/qiita-%E6%97%A5%E6%9C%AC%E8%AA%9E-brightgreen.svg&#34; alt=&#34;Japanese&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Loci runs CI tests locally to make sure your commits will pass such tests
 &lt;em&gt;before&lt;/em&gt; pushing to a remote repository.&lt;/p&gt;
 
-&lt;p&gt;Loci currently supports &lt;a href=&#34;https://travis-ci.org/&#34;&gt;Travis&lt;/a&gt;&amp;rsquo;s CI scripts
-for &lt;a href=&#34;https://www.python.org/&#34;&gt;Python&lt;/a&gt; and &lt;a href=&#34;https://golang.org/&#34;&gt;Go&lt;/a&gt; projects.
-Loci also requires &lt;a href=&#34;https://www.docker.com/&#34;&gt;Docker&lt;/a&gt; to run tests in a sandbox.&lt;/p&gt;
+&lt;p&gt;Loci currently supports &lt;a href=&#34;https://travis-ci.org/&#34;&gt;Travis CI&lt;/a&gt;&amp;rsquo;s scripts
+for &lt;a href=&#34;https://www.python.org/&#34;&gt;Python&lt;/a&gt; and &lt;a href=&#34;https://golang.org/&#34;&gt;Go&lt;/a&gt; projects.&lt;/p&gt;
 
-&lt;script data-gratipay-username=&#34;jkawamoto&#34; src=&#34;//grtp.co/v1.js&#34;&gt;&lt;/script&gt;
+&lt;p&gt;&lt;a href=&#34;https://travis-ci.org/&#34;&gt;
+  &lt;img class=&#34;logo&#34; src=&#34;img/travis-ci-small.png&#34; alt=&#34;TravisCI&#34; /&gt;
+&lt;/a&gt;
+&lt;a href=&#34;https://www.python.org/&#34;&gt;
+  &lt;img class=&#34;logo&#34; src=&#34;img/python.png&#34; alt=&#34;Python&#34; /&gt;
+&lt;/a&gt;
+&lt;a href=&#34;https://golang.org/&#34;&gt;
+  &lt;img class=&#34;logo&#34; src=&#34;img/gopher.png&#34; alt=&#34;Go&#34; /&gt;
+&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Loci also requires &lt;a href=&#34;https://www.docker.com/&#34;&gt;Docker&lt;/a&gt; to run tests in a sandbox.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://www.docker.com/&#34;&gt;&lt;img src=&#34;img/small_h-trans.png&#34; alt=&#34;Docker logo&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
 
 &lt;h3 id=&#34;usage&#34;&gt;Usage&lt;/h3&gt;
 
@@ -190,7 +201,7 @@ Loci also requires &lt;a href=&#34;https://www.docker.com/&#34;&gt;Docker&lt;/a&
 
 &lt;p&gt;Here is the help text of the &lt;code&gt;loci&lt;/code&gt; command:&lt;/p&gt;
 
-&lt;pre&gt;&lt;code&gt;loci [global options] [script file]
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;loci [global options] [script file]
 
   If script file isn&#39;t given, .travis.yml will be used.
 
@@ -228,26 +239,24 @@ and then deletes it after the test set ends.
 If you want to keep the container,
 give a container name with &lt;code&gt;--name&lt;/code&gt; or &lt;code&gt;-n&lt;/code&gt; flag.&lt;/p&gt;
 
-&lt;h3 id=&#34;requirements&#34;&gt;Requirements&lt;/h3&gt;
-
-&lt;p&gt;Loci works with &lt;a href=&#34;https://www.docker.com/&#34;&gt;docker&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&#34;https://www.docker.com/&#34;&gt;&lt;img src=&#34;img/small_h-trans.png&#34; alt=&#34;docker logo&#34; /&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;If your environment doesn&amp;rsquo;t have docker, install it first.&lt;/p&gt;
-
 &lt;h3 id=&#34;installation&#34;&gt;Installation&lt;/h3&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ go get github.com/jkawamoto/loci
+&lt;p&gt;Loci works with &lt;a href=&#34;https://www.docker.com/&#34;&gt;docker&lt;/a&gt;.
+If your environment doesn&amp;rsquo;t have docker, install it first.&lt;/p&gt;
+
+&lt;p&gt;To build the newest version of Loci, use &lt;code&gt;go get&lt;/code&gt; command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ go get github.com/jkawamoto/loci
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;or if you&amp;rsquo;re a &lt;a href=&#34;http://brew.sh/&#34;&gt;Homebrew&lt;/a&gt; user,&lt;/p&gt;
+&lt;p&gt;If you&amp;rsquo;re a &lt;a href=&#34;http://brew.sh/&#34;&gt;Homebrew&lt;/a&gt; user, you can install Loci by
+the following commands:&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class=&#34;language-sh&#34;&gt;$ brew tap jkawamoto/loci
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ brew tap jkawamoto/loci
 $ brew install loci
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Compiled binaries are also available in
+&lt;p&gt;Otherwise, compiled binaries are also available in
 &lt;a href=&#34;https://github.com/jkawamoto/loci/releases&#34;&gt;Github&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id=&#34;license&#34;&gt;License&lt;/h3&gt;
