@@ -206,7 +206,7 @@ func Start(ctx context.Context, tag, name string, env []string) (err error) {
 		Image: tag,
 		Env:   env,
 	}
-	container, err := cli.ContainerCreate(ctx, &config, nil, nil, name)
+	c, err := cli.ContainerCreate(ctx, &config, nil, nil, name)
 	if err != nil {
 		return
 	}
@@ -214,11 +214,11 @@ func Start(ctx context.Context, tag, name string, env []string) (err error) {
 		// If any container name isn't given, remove the container.
 		// Note that, the context ctx may be canceled before removing the container,
 		// and use another context here.
-		defer cli.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{})
+		defer cli.ContainerRemove(context.Background(), c.ID, types.ContainerRemoveOptions{})
 	}
 
 	// Attach stdout and stderr of the container.
-	stream, err := cli.ContainerAttach(ctx, container.ID, types.ContainerAttachOptions{
+	stream, err := cli.ContainerAttach(ctx, c.ID, types.ContainerAttachOptions{
 		Stream: true,
 		Stdout: true,
 		Stderr: true,
@@ -231,30 +231,27 @@ func Start(ctx context.Context, tag, name string, env []string) (err error) {
 
 	// Start the container.
 	options := types.ContainerStartOptions{}
-	if err = cli.ContainerStart(ctx, container.ID, options); err != nil {
+	if err = cli.ContainerStart(ctx, c.ID, options); err != nil {
 		return
 	}
 
 	// Wait until the container ends.
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-
-		var exit int64
-		exit, err = cli.ContainerWait(ctx, container.ID)
-		if exit != 0 {
-			err = fmt.Errorf("Testing container returns an error:", exit)
-		}
-
-	}()
-
+	exit, errCh := cli.ContainerWait(ctx, c.ID, container.WaitConditionNotRunning)
 	select {
 	case <-ctx.Done():
 		// Kill the running container when the context is canceled.
 		// The context ctx has been canceled already, use another context here.
-		cli.ContainerKill(context.Background(), container.ID, "")
+		cli.ContainerKill(context.Background(), c.ID, "")
 		return ctx.Err()
-	case <-done:
+	case err = <-errCh:
+		// Kill the running container when ContainerWait returns an error.
+		// The context ctx has been canceled already, use another context here.
+		cli.ContainerKill(context.Background(), c.ID, "")
+		return
+	case status := <-exit:
+		if status.StatusCode != 0 {
+			err = fmt.Errorf("Testing container returns an error: %v", status.StatusCode)
+		}
 		return
 	}
 
