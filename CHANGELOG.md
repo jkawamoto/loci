@@ -1,3 +1,12 @@
+## 0.4.4 (2017-06-09)
+### Update
+- To follow the update of docker client library.
+
+### Fixed
+- Provide sudo command in travis scripts.
+- Parse quoted env.
+
+
 ## 0.4.3 (2017-02-10)
 ### Added
 - Install sudo command to support old style Travis's configuration files.
