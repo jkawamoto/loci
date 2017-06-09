@@ -1,7 +1,7 @@
 # Loci: Testing remote CI scripts locally
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 [![Build Status](https://travis-ci.org/jkawamoto/loci.svg?branch=master)](https://travis-ci.org/jkawamoto/loci)
-[![Code Climate](https://codeclimate.com/github/jkawamoto/loci/badges/gpa.svg)](https://codeclimate.com/github/jkawamoto/loci)
+[![wercker status](https://app.wercker.com/status/25b462a013ed96bf51254862938e7659/s/master "wercker status")](https://app.wercker.com/project/byKey/25b462a013ed96bf51254862938e7659)
 [![Release](https://img.shields.io/badge/release-0.4.3-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.4.3)
 [![Japanese](https://img.shields.io/badge/qiita-%E6%97%A5%E6%9C%AC%E8%AA%9E-brightgreen.svg)](http://qiita.com/jkawamoto/items/a409dd9cd6e63034aa28)
 
@@ -52,17 +52,24 @@ if the associated option value isn't given.
 
 
 ## Installation
-```sh
+Loci works with [docker](https://www.docker.com/).
+If your environment doesn't have docker, install it first.
+
+To build the newest version of Loci, use `go get` command:
+
+```shell
 $ go get github.com/jkawamoto/loci
 ```
-or if you're a [Homebrew](http://brew.sh/) user,
 
-```sh
+If you're a [Homebrew](http://brew.sh/) user, you can install Loci by
+the following commands:
+
+```shell
 $ brew tap jkawamoto/loci
 $ brew install loci
 ```
 
-Compiled binaries are also available on
+Otherwise, compiled binaries are also available in
 [Github](https://github.com/jkawamoto/loci/releases).
 
 
