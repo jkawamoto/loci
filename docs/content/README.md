@@ -27,7 +27,7 @@ If your current directory has `.travis.yml`, run just `loci`.
 
 Here is the help text of the `loci` command:
 
-~~~
+~~~shell
 loci [global options] [script file]
 
   If script file isn't given, .travis.yml will be used.
@@ -76,12 +76,13 @@ If your environment doesn't have docker, install it first.
 
 
 ### Installation
-```sh
+```shell
 $ go get github.com/jkawamoto/loci
 ```
+
 or if you're a [Homebrew](http://brew.sh/) user,
 
-```sh
+```shell
 $ brew tap jkawamoto/loci
 $ brew install loci
 ```

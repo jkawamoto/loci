@@ -7,7 +7,7 @@ slug: licenses
 ---
 This software is released under the MIT License.
 
-~~~
+```txt
 The MIT License (MIT)
 
 Copyright (c) 2016-2017 Junpei Kawamoto
@@ -29,7 +29,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-~~~
+```
 
 ## Notices for libraries
 This software uses the following open source libraries.
