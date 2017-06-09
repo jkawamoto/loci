@@ -60,6 +60,7 @@ func Archive(ctx context.Context, dir string, filename string, dstout, dsterr io
 
 	// Listing up and write to a tarball.
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	ch, errCh := parallelListup(ctx, listupGitSources, listupGitRepository)
 	doneTB := make(chan error)
@@ -68,7 +69,6 @@ func Archive(ctx context.Context, dir string, filename string, dstout, dsterr io
 	go tarballing(tarWriter, ch, doneTB, dstout, dsterr)
 	err = <-doneTB
 	if err != nil {
-		cancel()
 		return
 	}
 
