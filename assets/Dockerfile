@@ -37,18 +37,17 @@ RUN PYPI_PROXY={{.}} && \
 # Install Common APT packages.
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y apt-utils git curl wget sudo
+    apt-get install -y apt-utils git curl wget sudo unzip
 # Install language specific packages.
 {{block "package" .}}
+{{end}}
+# Install runtimes to be used in tests.
+ARG VERSION
+{{block "version" .}}
 {{end}}
 # Install required packages.
 {{range .Travis.Addons.Apt.Packages}}
 RUN apt-get install -y {{.}}
-{{end}}
-
-
-ARG VERSION
-{{block "version" .}}
 {{end}}
 
 {{block "source" .}}

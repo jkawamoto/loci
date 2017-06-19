@@ -27,7 +27,7 @@ fi
 echo "Before Install Steps:"
 {{range .BeforeInstall}}
 echo "{{.}}"
-{{.}}
+({{.}})
 {{end}}
 {{end}}
 
@@ -35,7 +35,7 @@ echo "{{.}}"
 echo "Install Steps:"
 {{range .Install}}
 echo "{{.}}"
-{{.}}
+({{.}})
 {{end}}
 {{end}}
 
@@ -43,7 +43,7 @@ echo "{{.}}"
 echo "Before Script Steps:"
 {{range .BeforeScript}}
 echo "{{.}}"
-{{.}}
+({{.}})
 {{end}}
 {{end}}
 
@@ -51,7 +51,7 @@ echo "{{.}}"
 echo "Script Steps:"
 {{range .Script}}
 echo "{{.}}"
-{{.}}
+({{.}})
 {{end}}
 {{end}}
 

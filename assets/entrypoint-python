@@ -32,6 +32,6 @@ if [[ -e requirements.txt ]]; then
 fi
 {{range .Install}}
 echo "{{.}}"
-{{.}}
+({{.}})
 {{end}}
 {{end}}
