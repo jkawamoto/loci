@@ -1,6 +1,6 @@
 language: go
 go:
-- 1.7.4
+- 1.8.3
 env:
 - TEST_ENV=true TEST_ENV2=false
 - TEST_ENV=false TEST_ENV2=true
@@ -8,4 +8,7 @@ install:
 - make get-deps
 script:
 - echo $TEST_ENV
-- "if [[ $TEST_ENV = true ]]; then make test; fi"
+- if [[ $TEST_ENV = true ]]; then make test; fi
+notifications:
+  slack:
+    secure: JGVcOt3k+ehYGgtmpRtSeTFNV+y5nnJzKAlt4KXctE0vfQZbvTXnkYYzVVbPCqcx8JaGkuNHMdNBiELAmzYoQfFjo6u6kVKYv+1kzHwVmhwDpr0zXLDWnoRslNVsyIxEzBXi0UwXHEDyG/g2IyUsSu3jX0HExIZkN0aMUI0mPZ38FtHgd997kPN9nW8CaPVWJNH3xIIZc5wKgP6IpzczmR85r3yugHIB6XODzX1C0Xjx5ZZYYib9Fj1n3u35bVSaLaID2JZ+IbvSl05ljo04d+tOSLvzoB0SvlAY4+tftMANjzC0UfjkzcmZEL9F8NDxOzR0PMnnMWiQwQz7ivI+q4JQf/QwpQKMmMOsnIPTZZ0H1vwr33aDuI8SJFQaaQSQG2dX/JxZcMvQe/1IH+n4Js0G4WxUJg//V2uMjj7/y9zrhirozwC5McMJG94NNsDbKNsymYh5PVOoA/QILbABa8w1uqF52uar5q0hj6NG/lHW1AADCl0Uq0pbJFTjP0zoQwsSdS4hIlZCvWUlyNAKZGp2lnO/7T4Zd8ay1zi8j0QiruyuDOLIl5nS5XMime2Av+1qiHlrIPx9ev/IAkWfOj60ODnIeOmIoqyRbyC9+u7hwTMFQlysxN1ykaQ790I914deVcBhBRwoQy9N+5NuNQqiy31LdhobR8bcGmjwEYc=
