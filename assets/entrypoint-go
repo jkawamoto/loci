@@ -29,7 +29,7 @@ git config --global http.https://gopkg.in.followRedirects true
 {{if .Install}}
 {{range .Install}}
 echo "{{.}}"
-{{.}}
+({{.}})
 {{end}}
 {{else}}
 echo "go get -t ./..."
@@ -39,11 +39,11 @@ go get -t ./...
 
 {{define "script"}}
 echo "Script Steps:"
-{{/* if script isn't givenm use make or the default golang test command. */}}
+{{/* "if script isn't given, use make or the default golang test command." */}}
 {{if .Script}}
 {{range .Script}}
 echo "{{.}}"
-{{.}}
+({{.}})
 {{end}}
 {{else}}
 if [[ -e GNUMakefile ]] || [[ -e Makefile ]] || [[ -e BSDmakefile ]] || [[ -e makefile ]]; then
