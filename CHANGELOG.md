@@ -1,3 +1,9 @@
+## 0.4.5 (2017-06-19)
+### Update
+- Improve test preparation time.
+- Use sub shell to execute each command.
+
+
 ## 0.4.4 (2017-06-09)
 ### Update
 - To follow the update of docker client library.
