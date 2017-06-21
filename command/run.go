@@ -169,6 +169,8 @@ func run(opt *RunOpt) (err error) {
 		return
 	}
 
+	// Start testing with goroutines.
+	fmt.Println(decorator.Bold("Start testing."))
 	wg, ctx := errgroup.WithContext(ctx)
 	semaphore := make(chan struct{}, opt.Processors)
 	display, err := NewDisplay()
@@ -180,9 +182,9 @@ func run(opt *RunOpt) (err error) {
 	var i int
 	for version, set := range argset {
 
-		semaphore <- struct{}{}
 		func(version string, set [][]string) {
 			wg.Go(func() (err error) {
+				semaphore <- struct{}{}
 				defer func() {
 					<-semaphore
 				}()
@@ -201,9 +203,9 @@ func run(opt *RunOpt) (err error) {
 
 				for _, envs := range set {
 
-					semaphore <- struct{}{}
 					func(envs []string) {
 						wg.Go(func() (err error) {
+							semaphore <- struct{}{}
 							defer func() {
 								<-semaphore
 							}()
