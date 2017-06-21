@@ -12,7 +12,6 @@ package command
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io"
 	"sort"
@@ -67,12 +66,12 @@ type Display struct {
 	HeaderBackground termbox.Attribute
 	BodyForeground   termbox.Attribute
 	BodyBackground   termbox.Attribute
+	Width            int
+	Height           int
 	mutex            sync.Mutex
-	width            int
-	height           int
 	sections         []*Section
-	eventCh          chan termbox.Event
 	closed           bool
+	done             chan error
 }
 
 // NewDisplay creates a new display.
@@ -84,23 +83,32 @@ func NewDisplay() (display *Display, err error) {
 	}
 
 	width, height := termbox.Size()
-	ch := make(chan termbox.Event)
 	display = &Display{
 		HeaderForeground: termbox.ColorDefault,
 		HeaderBackground: termbox.ColorDefault,
 		BodyForeground:   termbox.ColorDefault,
 		BodyBackground:   termbox.ColorDefault,
-		width:            width,
-		height:           height,
-		eventCh:          ch,
+		Width:            width,
+		Height:           height,
+		done:             make(chan error),
 	}
 
 	go func() {
 		for {
 			e := termbox.PollEvent()
-			ch <- e
-			if e.Type == termbox.EventError {
+			switch e.Type {
+			case termbox.EventError:
+				display.done <- e.Err
 				return
+			case termbox.EventKey:
+				if e.Key == termbox.KeyCtrlC {
+					display.done <- fmt.Errorf("Canceled")
+					return
+				}
+			case termbox.EventResize:
+				display.Width = e.Width
+				display.Height = e.Height
+				display.Refresh()
 			}
 		}
 	}()
@@ -111,33 +119,12 @@ func NewDisplay() (display *Display, err error) {
 
 // Close closes this display.
 func (d *Display) Close() {
+
 	if !d.closed {
 		termbox.Close()
 		d.closed = true
-
-		hOffset := d.height / len(d.sections)
-		hExtra := d.height - hOffset*len(d.sections) - 1
-		for i, s := range d.sections {
-
-			// Print header.
-			fmt.Printf("─ %v %v\n", s.Header, strings.Repeat("─", d.width-len(s.Header)-3))
-
-			// Print body.
-			if i < len(d.sections)-1 && len(s.Body) > hOffset-1 {
-				s.Body = s.Body[len(s.Body)-hOffset+1:]
-			} else if len(s.Body) > hOffset+hExtra-1 {
-				s.Body = s.Body[len(s.Body)-hOffset-hExtra+1:]
-			}
-			for _, line := range s.Body {
-				if len(line) > d.width {
-					line = line[:d.width]
-				}
-				fmt.Println(line)
-			}
-
-		}
-
 	}
+
 }
 
 // AddSection adds a new section to this display.
@@ -181,13 +168,12 @@ func (d *Display) Refresh() error {
 
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
-
 	if d.closed {
 		return fmt.Errorf("Display has been closed already")
 	}
 
-	hOffset := d.height / len(d.sections)
-	hExtra := d.height - hOffset*len(d.sections)
+	hOffset := d.Height / len(d.sections)
+	hExtra := d.Height - hOffset*len(d.sections)
 
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 	for i, s := range d.sections {
@@ -205,7 +191,7 @@ func (d *Display) Refresh() error {
 			termbox.SetCell(x, i*hOffset, c, d.HeaderForeground|termbox.AttrBold, d.HeaderBackground)
 			x++
 		}
-		for _, c := range []rune(fmt.Sprintf(" %v", strings.Repeat("─", d.width-x-1))) {
+		for _, c := range []rune(fmt.Sprintf(" %v", strings.Repeat("─", d.Width-x-1))) {
 			termbox.SetCell(x, i*hOffset, c, d.HeaderForeground, d.HeaderBackground)
 			x++
 		}
@@ -228,26 +214,8 @@ func (d *Display) Refresh() error {
 }
 
 // Wait blocks until the given context will be canceled.
-func (d *Display) Wait(ctx context.Context) error {
+func (d *Display) Wait() error {
 
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case e := <-d.eventCh:
-			switch e.Type {
-			case termbox.EventError:
-				return e.Err
-			case termbox.EventKey:
-				if e.Key == termbox.KeyCtrlC {
-					return fmt.Errorf("Canceled")
-				}
-			case termbox.EventResize:
-				d.width = e.Width
-				d.height = e.Height
-				d.Refresh()
-			}
-		}
-	}
+	return <-d.done
 
 }

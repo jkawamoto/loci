@@ -177,7 +177,6 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
-	defer display.Close()
 
 	var i int
 	for version, set := range argset {
@@ -257,6 +256,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	err = wg.Wait()
+	display.Close()
 	if err == nil {
 		fmt.Println(decorator.Bold("All tests have been passed."))
 	}
