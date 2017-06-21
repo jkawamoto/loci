@@ -189,17 +189,24 @@ func run(opt *RunOpt) (err error) {
 					<-semaphore
 				}()
 
-				// Build the container image.
-				sec := display.AddSection(fmt.Sprintf("Building a image for v%v", version))
-				output := sec.Writer()
-
-				tag := fmt.Sprintf("%v/%v", opt.Tag, version)
-				err = Build(ctx, tempDir, tag, version, opt.NoCache, output)
-				output.Close()
+				// Build a container image.
+				fp, err := os.OpenFile(fmt.Sprintf("loci-build-v%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 				if err != nil {
 					return
 				}
-				display.DeleteSection(sec)
+				defer fp.Close()
+
+				sec := display.AddSection(fmt.Sprintf("Building a image for v%v", version))
+				defer display.DeleteSection(sec)
+
+				output := sec.Writer()
+				defer output.Close()
+
+				tag := fmt.Sprintf("%v/%v", opt.Tag, version)
+				err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(fp, output))
+				if err != nil {
+					return
+				}
 
 				for _, envs := range set {
 
@@ -210,8 +217,18 @@ func run(opt *RunOpt) (err error) {
 								<-semaphore
 							}()
 
-							// Run tests in sandboxes.
+							// Run tests in a sandbox.
+							fp, err := os.OpenFile(
+								fmt.Sprintf("loci-v%v.log", strings.Join(append([]string{version}, envs...), "-")),
+								os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+							if err != nil {
+								return
+							}
+							defer fp.Close()
+
 							sec := display.AddSection(fmt.Sprintf("Running tests (v%v: %v)", version, envs))
+							defer display.DeleteSection(sec)
+
 							output := sec.Writer()
 							defer output.Close()
 
@@ -220,7 +237,10 @@ func run(opt *RunOpt) (err error) {
 								i++
 								name = fmt.Sprintf("%s-%d", name, i)
 							}
-							return Start(ctx, tag, name, envs, output)
+
+							err = Start(ctx, tag, name, envs, io.MultiWriter(fp, output))
+							return
+
 						})
 					}(envs)
 
@@ -234,6 +254,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	return wg.Wait()
+	err = wg.Wait()
 }
 
 // getRepository returns the repository path from a given remote URL of
