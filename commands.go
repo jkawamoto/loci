@@ -13,6 +13,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/urfave/cli"
 )
@@ -29,6 +30,11 @@ var GlobalFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "tag, t",
 		Usage: "specify a `TAG` name of the docker image to be build.",
+	},
+	cli.IntFlag{
+		Name:  "max-processors",
+		Usage: "Max processors used to run tests.",
+		Value: runtime.NumCPU() - 2,
 	},
 	cli.StringFlag{
 		Name:  "base, b",

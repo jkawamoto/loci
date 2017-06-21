@@ -41,6 +41,8 @@ type RunOpt struct {
 	Name string
 	// Image tag.
 	Tag string
+	// Max processors to be used.
+	Processors int
 	// If true, print Dockerfile and entrypoint.sh.
 	Verbose bool
 	// If true, not using cache during buidling a docker image.
@@ -61,12 +63,13 @@ func Run(c *cli.Context) error {
 			HTTPSProxy: c.String("https-proxy"),
 			NoProxy:    c.String("no-proxy"),
 		},
-		Filename: c.Args().First(),
-		Name:     c.String("name"),
-		Tag:      c.String("tag"),
-		Verbose:  c.Bool("verbose"),
-		NoCache:  c.Bool("no-cache"),
-		NoColor:  c.Bool("no-color"),
+		Filename:   c.Args().First(),
+		Name:       c.String("name"),
+		Tag:        c.String("tag"),
+		Processors: c.Int("max-processors"),
+		Verbose:    c.Bool("verbose"),
+		NoCache:    c.Bool("no-cache"),
+		NoColor:    c.Bool("no-color"),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -167,7 +170,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	wg, ctx := errgroup.WithContext(ctx)
-	semaphore := make(chan struct{}, 4)
+	semaphore := make(chan struct{}, opt.Processors)
 	display, err := NewDisplay()
 	if err != nil {
 		return
