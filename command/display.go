@@ -20,6 +20,7 @@ import (
 	"sync"
 
 	termbox "github.com/nsf/termbox-go"
+	"github.com/ttacon/chalk"
 )
 
 // Section represents a section in a display. Each section has a header text and
@@ -46,6 +47,17 @@ func (s *Section) Writer() io.WriteCloser {
 		}
 	}(s)
 	return writer
+
+}
+
+// String returns a string representing this section.
+func (s *Section) String() string {
+
+	return fmt.Sprintf(
+		"─ %v %v\n%v",
+		chalk.Bold.TextStyle(s.Header),
+		strings.Repeat("─", s.display.Width-len(s.Header)-3),
+		strings.Join(s.Body, "\n"))
 
 }
 

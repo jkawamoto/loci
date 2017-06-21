@@ -240,7 +240,7 @@ func Start(ctx context.Context, tag, name string, env []string, output io.Writer
 		return
 	case status := <-exit:
 		if status.StatusCode != 0 {
-			err = fmt.Errorf("Testing container returns an error: %v", status.StatusCode)
+			err = fmt.Errorf("Testing container returns an error (status code: %v)", status.StatusCode)
 		}
 		return
 	}

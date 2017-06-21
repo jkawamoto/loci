@@ -239,6 +239,9 @@ func run(opt *RunOpt) (err error) {
 							}
 
 							err = Start(ctx, tag, name, envs, io.MultiWriter(fp, output))
+							if err != nil {
+								return fmt.Errorf("%s\n%s", err, sec.String())
+							}
 							return
 
 						})
@@ -253,8 +256,12 @@ func run(opt *RunOpt) (err error) {
 
 	}
 
-	return wg.Wait()
 	err = wg.Wait()
+	if err == nil {
+		fmt.Println(decorator.Bold("All tests have been passed."))
+	}
+	return
+
 }
 
 // getRepository returns the repository path from a given remote URL of
