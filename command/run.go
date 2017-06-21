@@ -22,6 +22,8 @@ import (
 	"strings"
 	"syscall"
 
+	"golang.org/x/sync/errgroup"
+
 	gitconfig "github.com/tcnksm/go-gitconfig"
 	"github.com/urfave/cli"
 )
@@ -163,38 +165,70 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
+
+	wg, ctx := errgroup.WithContext(ctx)
+	semaphore := make(chan struct{}, 4)
+	display, err := NewDisplay()
+	if err != nil {
+		return
+	}
+	defer display.Close()
+
 	var i int
 	for version, set := range argset {
-		// TODO: parallel build and run.
 
-		// Build the container image.
-		fmt.Printf(decorator.Bold("Building a image for %v\n"), version)
-		tag := fmt.Sprintf("%v/%v", opt.Tag, version)
-		err = Build(ctx, tempDir, tag, version, opt.NoCache)
-		if err != nil {
-			return
-		}
+		semaphore <- struct{}{}
+		func(version string, set [][]string) {
+			wg.Go(func() (err error) {
+				defer func() {
+					<-semaphore
+				}()
 
-		for _, envs := range set {
+				// Build the container image.
+				sec := display.AddSection(fmt.Sprintf("Building a image for v%v", version))
+				output := sec.Writer()
 
-			// Run tests in sandboxes.
-			fmt.Printf(decorator.Bold("Start CI (%v: %v)\n"), version, envs)
-			os.Stdout.Sync()
+				tag := fmt.Sprintf("%v/%v", opt.Tag, version)
+				err = Build(ctx, tempDir, tag, version, opt.NoCache, output)
+				output.Close()
+				if err != nil {
+					return
+				}
+				display.DeleteSection(sec)
 
-			name := opt.Name
-			if name != "" {
-				i++
-				name = fmt.Sprintf("%s-%d", name, i)
-			}
-			err := Start(ctx, tag, name, envs)
-			if err != nil {
-				return err
-			}
-		}
+				for _, envs := range set {
+
+					semaphore <- struct{}{}
+					func(envs []string) {
+						wg.Go(func() (err error) {
+							defer func() {
+								<-semaphore
+							}()
+
+							// Run tests in sandboxes.
+							sec := display.AddSection(fmt.Sprintf("Running tests (v%v: %v)", version, envs))
+							output := sec.Writer()
+							defer output.Close()
+
+							name := opt.Name
+							if name != "" {
+								i++
+								name = fmt.Sprintf("%s-%d", name, i)
+							}
+							return Start(ctx, tag, name, envs, output)
+						})
+					}(envs)
+
+				}
+
+				return
+
+			})
+		}(version, set)
 
 	}
 
-	return nil
+	return wg.Wait()
 }
 
 // getRepository returns the repository path from a given remote URL of

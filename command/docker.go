@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -118,7 +117,7 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 
 // Build builds a docker image from a directory. The built image named tag.
 // The directory must have Dockerfile.
-func Build(ctx context.Context, dir, tag, version string, noCache bool) (err error) {
+func Build(ctx context.Context, dir, tag, version string, noCache bool, output io.Writer) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -132,8 +131,8 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool) (err err
 
 	// Send the build context.
 	go func() {
+		defer writer.Close()
 		archiveContext(ctx, dir, writer)
-		writer.Close()
 	}()
 
 	// Start to build an image.
@@ -154,25 +153,16 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool) (err err
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		defer os.Stdout.Sync()
 
 		s := bufio.NewScanner(res.Body)
 		for s.Scan() {
-			select {
-			case <-ctx.Done():
-				err = ctx.Err()
-				return
-			default:
-				e := s.Text()
-
-				var log buildLog
-				if json.Unmarshal([]byte(e), &log) == nil {
-					if log.Error != "" {
-						err = fmt.Errorf(log.Error)
-						return
-					}
-					os.Stdout.WriteString(log.Stream)
+			var log buildLog
+			if json.Unmarshal(s.Bytes(), &log) == nil {
+				if log.Error != "" {
+					err = fmt.Errorf(log.Error)
+					return
 				}
+				io.WriteString(output, log.Stream)
 			}
 		}
 	}()
@@ -192,7 +182,7 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool) (err err
 // the container will have a random temporary name and be deleted after
 // after all steps end. env is a list of environment variables to be passed
 // to the created container.
-func Start(ctx context.Context, tag, name string, env []string) (err error) {
+func Start(ctx context.Context, tag, name string, env []string, output io.Writer) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -227,7 +217,7 @@ func Start(ctx context.Context, tag, name string, env []string) (err error) {
 		return
 	}
 	defer stream.Close()
-	go stdcopy.StdCopy(os.Stdout, os.Stderr, stream.Reader)
+	go stdcopy.StdCopy(output, output, stream.Reader)
 
 	// Start the container.
 	options := types.ContainerStartOptions{}
