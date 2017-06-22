@@ -28,6 +28,10 @@ var GlobalFlags = []cli.Flag{
 			"If name is given, container will not be deleted.",
 	},
 	cli.StringFlag{
+		Name:  "select, s",
+		Usage: "select specific runtime `VERSION` where tests running on.",
+	},
+	cli.StringFlag{
 		Name:  "tag, t",
 		Usage: "specify a `TAG` name of the docker image to be build.",
 	},

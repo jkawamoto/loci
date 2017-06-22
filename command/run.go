@@ -40,6 +40,8 @@ type RunOpt struct {
 	Filename string
 	// Container name.
 	Name string
+	// Runtime version to which only versions matching will be run.
+	Version string
 	// Image tag.
 	Tag string
 	// Max processors to be used.
@@ -66,6 +68,7 @@ func Run(c *cli.Context) error {
 		},
 		Filename:   c.Args().First(),
 		Name:       c.String("name"),
+		Version:    c.String("select"),
 		Tag:        c.String("tag"),
 		Processors: c.Int("max-processors"),
 		Verbose:    c.Bool("verbose"),
@@ -180,6 +183,10 @@ func run(opt *RunOpt) (err error) {
 	semaphore := make(chan struct{}, opt.Processors)
 	errs := NewErrorSet()
 	for version, set := range argset {
+
+		if opt.Version != "" && version != opt.Version {
+			continue
+		}
 
 		wg.Add(1)
 		go func(version string, set [][]string) (err error) {
