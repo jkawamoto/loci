@@ -9,8 +9,7 @@
 #
 {{define "package"}}
 # Install apt packages.
-RUN apt-get install -y python python-pip aria2 \
-                       zlib1g-dev libreadline6-dev \
+RUN apt-get install -y python python-pip aria2 zlib1g-dev libreadline6-dev \
                        libbz2-dev libsqlite3-dev libssl-dev
 # Update pip
 RUN pip install --upgrade pip

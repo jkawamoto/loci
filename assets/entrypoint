@@ -24,7 +24,7 @@ fi
 {{end}}
 
 {{block "before_install" .}}
-echo "Before Install Steps:"
+echo -e "\e[33mBefore Install Steps:\e[m"
 {{range .BeforeInstall}}
 echo "{{.}}"
 ({{.}})
@@ -32,7 +32,7 @@ echo "{{.}}"
 {{end}}
 
 {{block "install" .}}
-echo "Install Steps:"
+echo -e "\e[33mInstall Steps:\e[m"
 {{range .Install}}
 echo "{{.}}"
 ({{.}})
@@ -40,7 +40,7 @@ echo "{{.}}"
 {{end}}
 
 {{block "before_script" .}}
-echo "Before Script Steps:"
+echo -e "\e[33mBefore Script Steps:\e[m"
 {{range .BeforeScript}}
 echo "{{.}}"
 ({{.}})
@@ -48,7 +48,7 @@ echo "{{.}}"
 {{end}}
 
 {{block "script" .}}
-echo "Script Steps:"
+echo -e "\e[33mScript Steps:\e[m"
 {{range .Script}}
 echo "{{.}}"
 ({{.}})
