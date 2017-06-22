@@ -24,7 +24,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	colorable "github.com/mattn/go-colorable"
 	gitconfig "github.com/tcnksm/go-gitconfig"
+	"github.com/ttacon/chalk"
 	"github.com/urfave/cli"
 )
 
@@ -79,11 +81,18 @@ func Run(c *cli.Context) error {
 
 func run(opt *RunOpt) (err error) {
 
-	var decorator *TextDecorator
+	var stdout io.Writer
 	if opt.NoColor {
-		decorator = NewNoopDecorator()
+		stdout = colorable.NewNonColorable(os.Stdout)
 	} else {
-		decorator = NewDecorator()
+		stdout = colorable.NewColorableStdout()
+	}
+
+	var dstout io.Writer
+	if opt.Verbose {
+		dstout = stdout
+	} else {
+		dstout = ioutil.Discard
 	}
 
 	// Prepare to be canceled.
@@ -127,19 +136,14 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println(decorator.Bold("Creating archive of source codes."))
-	var dstout io.Writer
-	if opt.Verbose {
-		dstout = os.Stdout
-	} else {
-		dstout = ioutil.Discard
-	}
+
+	fmt.Fprintln(dstout, chalk.Yellow.Color("Creating an archive of source codes."))
 	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), dstout, os.Stderr); err != nil {
 		return
 	}
 
 	// Create Dockerfile.
-	fmt.Println(decorator.Bold("Creating Dockerfile"))
+	fmt.Fprintln(dstout, chalk.Yellow.Color("Creating Dockerfile"))
 	docker, err := Dockerfile(travis, opt.DockerfileOpt, SourceArchive)
 	if err != nil {
 		return
@@ -147,12 +151,10 @@ func run(opt *RunOpt) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "Dockerfile"), docker, 0644); err != nil {
 		return
 	}
-	if opt.Verbose {
-		fmt.Println(string(docker))
-	}
+	fmt.Fprintln(dstout, string(docker))
 
 	// Create entrypoint.sh.
-	fmt.Println(decorator.Bold("Creating entrypoint."))
+	fmt.Fprintln(dstout, chalk.Yellow.Color("Creating entrypoint.sh"))
 	entry, err := Entrypoint(travis)
 	if err != nil {
 		return
@@ -160,9 +162,7 @@ func run(opt *RunOpt) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "entrypoint.sh"), entry, 0644); err != nil {
 		return
 	}
-	if opt.Verbose {
-		fmt.Println(string(entry))
-	}
+	fmt.Fprintln(dstout, string(entry))
 
 	argset, err := travis.ArgumentSet()
 	if err != nil {
@@ -170,7 +170,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Start testing with goroutines.
-	fmt.Println(decorator.Bold("Start testing."))
+	fmt.Fprintln(dstout, chalk.Yellow.Color("Start testing."))
 	wg, ctx := errgroup.WithContext(ctx)
 	semaphore := make(chan struct{}, opt.Processors)
 	display, err := NewDisplay()
@@ -202,7 +202,7 @@ func run(opt *RunOpt) (err error) {
 				defer output.Close()
 
 				tag := fmt.Sprintf("%v/%v", opt.Tag, version)
-				err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(fp, output))
+				err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(output, colorable.NewColorable(fp)))
 				if err != nil {
 					return
 				}
@@ -237,9 +237,9 @@ func run(opt *RunOpt) (err error) {
 								name = fmt.Sprintf("%s-%d", name, i)
 							}
 
-							err = Start(ctx, tag, name, envs, io.MultiWriter(fp, output))
+							err = Start(ctx, tag, name, envs, io.MultiWriter(output, colorable.NewColorable(fp)))
 							if err != nil {
-								return fmt.Errorf("%s\n%s", err, sec.String())
+								return fmt.Errorf("%s\n%s", chalk.Red.Color(err.Error()), sec.String())
 							}
 							return
 
@@ -258,7 +258,7 @@ func run(opt *RunOpt) (err error) {
 	err = wg.Wait()
 	display.Close()
 	if err == nil {
-		fmt.Println(decorator.Bold("All tests have been passed."))
+		fmt.Fprintln(stdout, chalk.Green.Color("All tests have been passed."))
 	}
 	return
 
