@@ -12,6 +12,7 @@ package command
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"sort"
@@ -74,8 +75,10 @@ type Display struct {
 	done             chan error
 }
 
-// NewDisplay creates a new display.
-func NewDisplay() (display *Display, err error) {
+// NewDisplay creates a new display. The new display hooks any key inputs
+// including SIGINT, if it receives that signal, the given cancel function
+// will be called.
+func NewDisplay(cencel context.CancelFunc) (display *Display, err error) {
 
 	err = termbox.Init()
 	if err != nil {
@@ -102,6 +105,7 @@ func NewDisplay() (display *Display, err error) {
 				return
 			case termbox.EventKey:
 				if e.Key == termbox.KeyCtrlC {
+					cencel()
 					display.done <- fmt.Errorf("Canceled")
 					return
 				}

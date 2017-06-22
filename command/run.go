@@ -173,7 +173,7 @@ func run(opt *RunOpt) (err error) {
 	fmt.Fprintln(dstout, chalk.Yellow.Color("Start testing."))
 	wg, ctx := errgroup.WithContext(ctx)
 	semaphore := make(chan struct{}, opt.Processors)
-	display, err := NewDisplay()
+	display, err := NewDisplay(cancel)
 	if err != nil {
 		return
 	}
