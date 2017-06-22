@@ -20,9 +20,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
-
-	"golang.org/x/sync/errgroup"
 
 	colorable "github.com/mattn/go-colorable"
 	gitconfig "github.com/tcnksm/go-gitconfig"
@@ -171,94 +170,103 @@ func run(opt *RunOpt) (err error) {
 
 	// Start testing with goroutines.
 	fmt.Fprintln(dstout, chalk.Yellow.Color("Start testing."))
-	wg, ctx := errgroup.WithContext(ctx)
-	semaphore := make(chan struct{}, opt.Processors)
 	display, err := NewDisplay(cancel)
 	if err != nil {
 		return
 	}
 
 	var i int
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, opt.Processors)
+	errs := NewErrorSet()
 	for version, set := range argset {
 
-		func(version string, set [][]string) {
-			wg.Go(func() (err error) {
-				semaphore <- struct{}{}
-				defer func() {
-					<-semaphore
-				}()
+		wg.Add(1)
+		go func(version string, set [][]string) (err error) {
+			semaphore <- struct{}{}
+			defer func() {
+				<-semaphore
+				wg.Done()
+			}()
 
-				// Build a container image.
-				fp, err := os.OpenFile(fmt.Sprintf("loci-build-v%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-				if err != nil {
-					return
-				}
-				defer fp.Close()
-
-				sec := display.AddSection(fmt.Sprintf("Building a image for v%v", version))
-				defer display.DeleteSection(sec)
-
-				output := sec.Writer()
-				defer output.Close()
-
-				tag := fmt.Sprintf("%v/%v", opt.Tag, version)
-				err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(output, colorable.NewColorable(fp)))
-				if err != nil {
-					return
-				}
-
-				for _, envs := range set {
-
-					func(envs []string) {
-						wg.Go(func() (err error) {
-							semaphore <- struct{}{}
-							defer func() {
-								<-semaphore
-							}()
-
-							// Run tests in a sandbox.
-							fp, err := os.OpenFile(
-								fmt.Sprintf("loci-v%v.log", strings.Join(append([]string{version}, envs...), "-")),
-								os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-							if err != nil {
-								return
-							}
-							defer fp.Close()
-
-							sec := display.AddSection(fmt.Sprintf("Running tests (v%v: %v)", version, envs))
-							defer display.DeleteSection(sec)
-
-							output := sec.Writer()
-							defer output.Close()
-
-							name := opt.Name
-							if name != "" {
-								i++
-								name = fmt.Sprintf("%s-%d", name, i)
-							}
-
-							err = Start(ctx, tag, name, envs, io.MultiWriter(output, colorable.NewColorable(fp)))
-							if err != nil {
-								return fmt.Errorf("%s\n%s", chalk.Red.Color(err.Error()), sec.String())
-							}
-							return
-
-						})
-					}(envs)
-
-				}
-
+			// Build a container image.
+			fp, err := os.OpenFile(fmt.Sprintf("loci-build-v%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+			if err != nil {
+				errs.Add(version, err)
 				return
+			}
+			defer fp.Close()
 
-			})
+			sec := display.AddSection(fmt.Sprintf("Building a image for v%v", version))
+			defer display.DeleteSection(sec)
+
+			output := sec.Writer()
+			defer output.Close()
+
+			tag := fmt.Sprintf("%v/%v", opt.Tag, version)
+			err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(output, colorable.NewColorable(fp)))
+			if err != nil {
+				errs.Add(version, err)
+				return
+			}
+
+			for _, envs := range set {
+
+				wg.Add(1)
+				go func(envs []string) {
+					semaphore <- struct{}{}
+					defer func() {
+						<-semaphore
+						wg.Done()
+					}()
+
+					// Run tests in a sandbox.
+					fp, err := os.OpenFile(
+						fmt.Sprintf("loci-v%v.log", strings.Join(append([]string{version}, envs...), "-")),
+						os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+					if err != nil {
+						errs.Add(fmt.Sprintf("%v:%v", version, envs), err)
+						return
+					}
+					defer fp.Close()
+
+					sec := display.AddSection(fmt.Sprintf("Running tests (v%v: %v)", version, envs))
+					defer display.DeleteSection(sec)
+
+					output := sec.Writer()
+					defer output.Close()
+
+					name := opt.Name
+					if name != "" {
+						i++
+						name = fmt.Sprintf("%s-%d", name, i)
+					}
+
+					err = Start(ctx, tag, name, envs, io.MultiWriter(output, colorable.NewColorable(fp)))
+					if err == context.Canceled {
+						errs.Add(fmt.Sprintf("%v:%v", version, envs), fmt.Errorf(sec.String()))
+					} else if err != nil {
+						errs.Add(fmt.Sprintf("%v:%v", version, envs), fmt.Errorf("%s\n%s", chalk.Red.Color(err.Error()), sec.String()))
+					}
+					return
+
+				}(envs)
+
+			}
+
+			return
+
 		}(version, set)
 
 	}
 
-	err = wg.Wait()
+	wg.Wait()
 	display.Close()
-	if err == nil {
+
+	if errs.Size() == 0 {
 		fmt.Fprintln(stdout, chalk.Green.Color("All tests have been passed."))
+	} else {
+		err = cli.NewMultiError(errs.GetList()...)
 	}
 	return
 
