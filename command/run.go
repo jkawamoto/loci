@@ -108,16 +108,24 @@ func run(opt *RunOpt) (err error) {
 		cancel()
 	}()
 
+	// Prepare interface.
+	display, ctx, err := NewDisplay(ctx, opt.Processors)
+	if err != nil {
+		return
+	}
+
 	// Load a Travis's script file.
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
 	}
+	display.header.Println(chalk.Yellow.Color("Loading .travis.yml"))
 	travis, err := NewTravisFromFile(opt.Filename)
 	if err != nil {
 		return
 	}
 
 	// Get repository information.
+	display.header.Println(chalk.Yellow.Color("Checking repository information"))
 	origin, err := gitconfig.OriginURL()
 	if err != nil {
 		return
@@ -135,18 +143,17 @@ func run(opt *RunOpt) (err error) {
 	defer os.RemoveAll(tempDir)
 
 	// Archive source files.
+	display.header.Println(chalk.Yellow.Color("Archiving source codes"))
 	pwd, err := os.Getwd()
 	if err != nil {
 		return
 	}
-
-	fmt.Fprintln(dstout, chalk.Yellow.Color("Creating an archive of source codes."))
 	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), dstout, os.Stderr); err != nil {
 		return
 	}
 
 	// Create Dockerfile.
-	fmt.Fprintln(dstout, chalk.Yellow.Color("Creating Dockerfile"))
+	display.header.Println(chalk.Yellow.Color("Creating Dockerfile"))
 	docker, err := Dockerfile(travis, opt.DockerfileOpt, SourceArchive)
 	if err != nil {
 		return
@@ -157,7 +164,7 @@ func run(opt *RunOpt) (err error) {
 	fmt.Fprintln(dstout, string(docker))
 
 	// Create entrypoint.sh.
-	fmt.Fprintln(dstout, chalk.Yellow.Color("Creating entrypoint.sh"))
+	display.header.Println(chalk.Yellow.Color("Creating entrypoint.sh"))
 	entry, err := Entrypoint(travis)
 	if err != nil {
 		return
@@ -173,12 +180,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Start testing with goroutines.
-	fmt.Fprintln(dstout, chalk.Yellow.Color("Start testing."))
-	display, ctx, err := NewDisplay(ctx)
-	if err != nil {
-		return
-	}
-
+	display.header.Println(chalk.Yellow.Color("Start testing"))
 	var i int
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, opt.Processors)
@@ -228,6 +230,8 @@ func run(opt *RunOpt) (err error) {
 				return
 			}
 
+			display.header.Println(chalk.Green.Color(fmt.Sprintf("Built a image for %v", version)))
+
 			for _, envs := range set {
 
 				wg.Add(1)
@@ -270,6 +274,9 @@ func run(opt *RunOpt) (err error) {
 						errs.Add("", err)
 					} else if err != nil {
 						errs.Add(fmt.Sprintf("%v:%v", version, envs), fmt.Errorf("%s\n%s", chalk.Red.Color(err.Error()), sec.String()))
+						display.header.Println(chalk.Red.Color(fmt.Sprintf("Failed tests (%v: %v) ", version, envs)))
+					} else {
+						display.header.Println(chalk.Green.Color(fmt.Sprintf("Passed tests (%v: %v) ", version, envs)))
 					}
 					return
 

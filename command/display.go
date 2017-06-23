@@ -23,6 +23,37 @@ import (
 	"github.com/ttacon/chalk"
 )
 
+const (
+	headerHeight = 6
+)
+
+// Header represents a header space in a display.
+type Header struct {
+	body    []string
+	mutex   sync.Mutex
+	display *Display
+}
+
+// Println prints a new line to this header space.
+func (h *Header) Println(msg string) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	h.body = append(h.body, msg)
+	h.display.gui.Execute(func(g *gocui.Gui) (err error) {
+		v, err := g.View("header")
+		if err != nil {
+			return
+		}
+		v.Clear()
+		for _, line := range h.body {
+			fmt.Fprintln(v, line)
+		}
+		return
+	})
+
+}
+
 // Section represents a section in a display. Each section has a header text and
 // several strings as the body.
 type Section struct {
@@ -82,7 +113,10 @@ func (s *Section) String() string {
 
 // Display represents a display which consists of several sections.
 type Display struct {
+	MaxSection int
+
 	mutex    sync.Mutex
+	header   *Header
 	sections []*Section
 	closed   bool
 	done     chan error
@@ -90,7 +124,7 @@ type Display struct {
 }
 
 // NewDisplay creates a new display.
-func NewDisplay(ctx context.Context) (display *Display, nctx context.Context, err error) {
+func NewDisplay(ctx context.Context, maxSection int) (display *Display, nctx context.Context, err error) {
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -98,8 +132,12 @@ func NewDisplay(ctx context.Context) (display *Display, nctx context.Context, er
 	}
 
 	display = &Display{
-		gui:  g,
-		done: make(chan error),
+		MaxSection: maxSection,
+		gui:        g,
+		done:       make(chan error),
+	}
+	display.header = &Header{
+		display: display,
 	}
 	g.SetManager(display)
 
@@ -128,23 +166,34 @@ func NewDisplay(ctx context.Context) (display *Display, nctx context.Context, er
 // Layout is called every time the GUI is redrawn, it must contain the
 // base views and its initializations.
 func (d *Display) Layout(g *gocui.Gui) error {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-
-	if len(d.sections) == 0 {
-		return nil
-	}
 	if d.closed {
 		return fmt.Errorf("Display has been closed already")
 	}
 
-	width, height := g.Size()
-	hOffset := height / len(d.sections)
-	// hExtra := height - hOffset*len(d.sections)
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 
+	width, height := g.Size()
+	if v, err := g.SetView("root", 0, 0, width-1, height-1); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = "Loci v0.x.x"
+		v.Frame = true
+	}
+
+	if v, err := g.SetView("header", 0, 0, width-2, headerHeight+1); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Frame = false
+		v.Autoscroll = true
+	}
+
+	sectionHeight := (height - headerHeight - 2) / d.MaxSection
 	for i, s := range d.sections {
 
-		v, err := g.SetView(s.Header, 0, i*hOffset, width-1, (i+1)*hOffset-1)
+		v, err := g.SetView(s.Header, 1, i*sectionHeight+headerHeight+1, width-2, (i+1)*sectionHeight+headerHeight)
 		if err != nil {
 			if err != gocui.ErrUnknownView {
 				return err
