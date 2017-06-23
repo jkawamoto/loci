@@ -40,6 +40,10 @@ var GlobalFlags = []cli.Flag{
 		Usage: "Max processors used to run tests.",
 		Value: runtime.NumCPU() - 2,
 	},
+	cli.BoolFlag{
+		Name:  "log, l",
+		Usage: "store logging information to files.",
+	},
 	cli.StringFlag{
 		Name:  "base, b",
 		Usage: "use image `TAG` as the base image.",

@@ -46,6 +46,8 @@ type RunOpt struct {
 	Tag string
 	// Max processors to be used.
 	Processors int
+	// If true, logging information to be stored to files.
+	OutputLog bool
 	// If true, not using cache during buidling a docker image.
 	NoCache bool
 	// If true, omit printing color codes.
@@ -71,6 +73,7 @@ func Run(c *cli.Context) error {
 		Version:    c.String("select"),
 		Tag:        c.String("tag"),
 		Processors: c.Int("max-processors"),
+		OutputLog:  c.Bool("log"),
 		NoCache:    c.Bool("no-cache"),
 		NoColor:    c.Bool("no-color"),
 		Title:      fmt.Sprintf("%v %v", c.App.Name, c.App.Version),
@@ -194,13 +197,6 @@ func run(opt *RunOpt) (err error) {
 			}()
 
 			// Build a container image.
-			fp, err := os.OpenFile(fmt.Sprintf("loci-build-%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-			if err != nil {
-				errs.Add(version, err)
-				return
-			}
-			defer fp.Close()
-
 			sec := display.AddSection(fmt.Sprintf("Building a image for %v", version))
 			defer display.DeleteSection(sec)
 
@@ -212,8 +208,19 @@ func run(opt *RunOpt) (err error) {
 				output = colorable.NewNonColorable(output)
 			}
 
+			if opt.OutputLog {
+				var fp *os.File
+				fp, err = os.OpenFile(fmt.Sprintf("loci-build-%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+				if err != nil {
+					errs.Add(version, err)
+					return
+				}
+				defer fp.Close()
+				output = io.MultiWriter(output, colorable.NewColorable(fp))
+			}
+
 			tag := fmt.Sprintf("%v/%v", opt.Tag, version)
-			err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(output, colorable.NewColorable(fp)))
+			err = Build(ctx, tempDir, tag, version, opt.NoCache, output)
 			if err == context.Canceled {
 				errs.Add("", err)
 				return
@@ -238,15 +245,6 @@ func run(opt *RunOpt) (err error) {
 					}()
 
 					// Run tests in a sandbox.
-					fp, err := os.OpenFile(
-						fmt.Sprintf("loci-%v.log", strings.Join(append([]string{version}, envs...), "-")),
-						os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-					if err != nil {
-						errs.Add(fmt.Sprintf("%v:%v", version, envs), err)
-						return
-					}
-					defer fp.Close()
-
 					sec := display.AddSection(fmt.Sprintf("Running tests (%v: %v)", version, envs))
 					defer display.DeleteSection(sec)
 
@@ -258,13 +256,26 @@ func run(opt *RunOpt) (err error) {
 						output = colorable.NewNonColorable(output)
 					}
 
+					if opt.OutputLog {
+						var fp *os.File
+						fp, err = os.OpenFile(
+							fmt.Sprintf("loci-%v.log", strings.Join(append([]string{version}, envs...), "-")),
+							os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+						if err != nil {
+							errs.Add(fmt.Sprintf("%v:%v", version, envs), err)
+							return
+						}
+						defer fp.Close()
+						output = io.MultiWriter(output, colorable.NewColorable(fp))
+					}
+
 					name := opt.Name
 					if name != "" {
 						i++
 						name = fmt.Sprintf("%s-%d", name, i)
 					}
 
-					err = Start(ctx, tag, name, envs, io.MultiWriter(output, colorable.NewColorable(fp)))
+					err = Start(ctx, tag, name, envs, output)
 					if err == context.Canceled {
 						errs.Add("", err)
 					} else if err != nil {
