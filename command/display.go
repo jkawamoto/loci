@@ -30,27 +30,31 @@ const (
 // Header represents a header space in a display.
 type Header struct {
 	body   []string
-	mutex  sync.Mutex
-	update DisplayUpdateFunc
+	Logger io.Writer
 }
 
-func newHeader(update DisplayUpdateFunc) *Header {
-	return &Header{
-		update: update,
-	}
-}
+func newHeader(update DisplayUpdateFunc) (header *Header) {
 
-// Println prints a new line to this header space.
-func (h *Header) Println(msg string) {
-	h.mutex.Lock()
-	defer h.mutex.Unlock()
+	header = new(Header)
+	reader, writer := io.Pipe()
+	go func() {
+		defer reader.Close()
 
-	h.body = append(h.body, msg)
-	h.update(func(writer io.Writer) {
-		for _, line := range h.body {
-			fmt.Fprintln(writer, line)
+		scanner := bufio.NewScanner(reader)
+		for scanner.Scan() {
+
+			header.body = append(header.body, scanner.Text())
+			update(func(writer io.Writer) {
+				for _, line := range header.body {
+					fmt.Fprintln(writer, line)
+				}
+			})
+
 		}
-	})
+	}()
+
+	header.Logger = writer
+	return
 
 }
 
@@ -109,8 +113,8 @@ func (s *Section) String() string {
 type Display struct {
 	MaxSection int
 	Title      string
+	Header     *Header
 	mutex      sync.Mutex
-	header     *Header
 	sections   []*Section
 	closed     bool
 	done       chan error
@@ -137,7 +141,7 @@ func NewDisplay(ctx context.Context, title string, maxSection int) (display *Dis
 		Title:      title,
 		gui:        g,
 		done:       make(chan error),
-		header: newHeader(func(handler DisplayUpdateHandler) {
+		Header: newHeader(func(handler DisplayUpdateHandler) {
 			g.Execute(func(g *gocui.Gui) (err error) {
 				v, err := g.View("header")
 				if err != nil {

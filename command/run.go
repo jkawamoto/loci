@@ -86,21 +86,6 @@ func Run(c *cli.Context) error {
 
 func run(opt *RunOpt) (err error) {
 
-	var stdout io.Writer
-	if opt.NoColor {
-		stdout = colorable.NewNonColorable(os.Stdout)
-		cli.ErrWriter = colorable.NewNonColorable(cli.ErrWriter)
-	} else {
-		stdout = colorable.NewColorableStdout()
-	}
-
-	var dstout io.Writer
-	if opt.Verbose {
-		dstout = stdout
-	} else {
-		dstout = ioutil.Discard
-	}
-
 	// Prepare to be canceled.
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -116,19 +101,37 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
+	logger := display.Header.Logger
+
+	var stdout io.Writer
+	if opt.NoColor {
+		stdout = colorable.NewNonColorable(os.Stdout)
+		logger = colorable.NewNonColorable(logger)
+		cli.ErrWriter = colorable.NewNonColorable(cli.ErrWriter)
+	} else {
+		stdout = colorable.NewColorableStdout()
+	}
+
+	var dstout io.Writer
+	if opt.Verbose {
+		dstout = stdout
+	} else {
+		dstout = ioutil.Discard
+	}
 
 	// Load a Travis's script file.
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
 	}
-	display.header.Println(chalk.Yellow.Color("Loading .travis.yml"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Loading .travis.yml"))
+
 	travis, err := NewTravisFromFile(opt.Filename)
 	if err != nil {
 		return
 	}
 
 	// Get repository information.
-	display.header.Println(chalk.Yellow.Color("Checking repository information"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Checking repository information"))
 	origin, err := gitconfig.OriginURL()
 	if err != nil {
 		return
@@ -146,7 +149,7 @@ func run(opt *RunOpt) (err error) {
 	defer os.RemoveAll(tempDir)
 
 	// Archive source files.
-	display.header.Println(chalk.Yellow.Color("Archiving source codes"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Archiving source codes"))
 	pwd, err := os.Getwd()
 	if err != nil {
 		return
@@ -156,7 +159,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Create Dockerfile.
-	display.header.Println(chalk.Yellow.Color("Creating Dockerfile"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Creating Dockerfile"))
 	docker, err := Dockerfile(travis, opt.DockerfileOpt, SourceArchive)
 	if err != nil {
 		return
@@ -167,7 +170,7 @@ func run(opt *RunOpt) (err error) {
 	fmt.Fprintln(dstout, string(docker))
 
 	// Create entrypoint.sh.
-	display.header.Println(chalk.Yellow.Color("Creating entrypoint.sh"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Creating entrypoint.sh"))
 	entry, err := Entrypoint(travis)
 	if err != nil {
 		return
@@ -183,7 +186,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Start testing with goroutines.
-	display.header.Println(chalk.Yellow.Color("Start testing"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Start testing"))
 	var i int
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, opt.Processors)
@@ -227,13 +230,14 @@ func run(opt *RunOpt) (err error) {
 				errs.Add("", err)
 				return
 			} else if err != nil {
+				msg := fmt.Sprintf(chalk.Red.Color("Faild to build a docker image for %v"), version)
 				errs.Add(
 					version,
-					fmt.Errorf("%v\n%v", fmt.Sprintf(chalk.Red.Color("Faild to build a docker image for %v"), version), err.Error()))
+					fmt.Errorf("%v\n%v", msg, err.Error()))
+				fmt.Fprintln(logger, msg)
 				return
 			}
-
-			display.header.Println(chalk.Green.Color(fmt.Sprintf("Built a image for %v", version)))
+			fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Built a image for %v", version)))
 
 			for _, envs := range set {
 
@@ -277,9 +281,9 @@ func run(opt *RunOpt) (err error) {
 						errs.Add("", err)
 					} else if err != nil {
 						errs.Add(fmt.Sprintf("%v:%v", version, envs), fmt.Errorf("%s\n%s", chalk.Red.Color(err.Error()), sec.String()))
-						display.header.Println(chalk.Red.Color(fmt.Sprintf("Failed tests (%v: %v) ", version, envs)))
+						fmt.Fprintln(logger, chalk.Red.Color(fmt.Sprintf("Failed tests (%v: %v) ", version, envs)))
 					} else {
-						display.header.Println(chalk.Green.Color(fmt.Sprintf("Passed tests (%v: %v) ", version, envs)))
+						fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Passed tests (%v: %v) ", version, envs)))
 					}
 					return
 
