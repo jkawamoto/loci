@@ -45,10 +45,6 @@ var GlobalFlags = []cli.Flag{
 		Usage: "use image `TAG` as the base image.",
 		Value: "ubuntu:latest",
 	},
-	cli.BoolFlag{
-		Name:  "verbose",
-		Usage: "verbose mode, which prints Dockerfile and entrypoint.sh.",
-	},
 	cli.StringFlag{
 		Name:   "apt-proxy",
 		Usage:  "`URL` for a proxy server of apt repository.",

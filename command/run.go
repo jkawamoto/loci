@@ -46,8 +46,6 @@ type RunOpt struct {
 	Tag string
 	// Max processors to be used.
 	Processors int
-	// If true, print Dockerfile and entrypoint.sh.
-	Verbose bool
 	// If true, not using cache during buidling a docker image.
 	NoCache bool
 	// If true, omit printing color codes.
@@ -73,7 +71,6 @@ func Run(c *cli.Context) error {
 		Version:    c.String("select"),
 		Tag:        c.String("tag"),
 		Processors: c.Int("max-processors"),
-		Verbose:    c.Bool("verbose"),
 		NoCache:    c.Bool("no-cache"),
 		NoColor:    c.Bool("no-color"),
 		Title:      fmt.Sprintf("%v %v", c.App.Name, c.App.Version),
@@ -112,13 +109,6 @@ func run(opt *RunOpt) (err error) {
 		stdout = colorable.NewColorableStdout()
 	}
 
-	var dstout io.Writer
-	if opt.Verbose {
-		dstout = stdout
-	} else {
-		dstout = ioutil.Discard
-	}
-
 	// Load a Travis's script file.
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
@@ -154,7 +144,7 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
-	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), dstout, os.Stderr); err != nil {
+	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), logger, os.Stderr); err != nil {
 		return
 	}
 
@@ -167,7 +157,6 @@ func run(opt *RunOpt) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "Dockerfile"), docker, 0644); err != nil {
 		return
 	}
-	fmt.Fprintln(dstout, string(docker))
 
 	// Create entrypoint.sh.
 	fmt.Fprintln(logger, chalk.Yellow.Color("Creating entrypoint.sh"))
@@ -178,7 +167,6 @@ func run(opt *RunOpt) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "entrypoint.sh"), entry, 0644); err != nil {
 		return
 	}
-	fmt.Fprintln(dstout, string(entry))
 
 	argset, err := travis.ArgumentSet()
 	if err != nil {
