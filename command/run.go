@@ -52,6 +52,8 @@ type RunOpt struct {
 	NoCache bool
 	// If true, omit printing color codes.
 	NoColor bool
+	// Printed on the header.
+	Title string
 }
 
 // Run implements the action of this command.
@@ -74,6 +76,7 @@ func Run(c *cli.Context) error {
 		Verbose:    c.Bool("verbose"),
 		NoCache:    c.Bool("no-cache"),
 		NoColor:    c.Bool("no-color"),
+		Title:      fmt.Sprintf("%v %v", c.App.Name, c.App.Version),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -109,7 +112,7 @@ func run(opt *RunOpt) (err error) {
 	}()
 
 	// Prepare interface.
-	display, ctx, err := NewDisplay(ctx, opt.Processors)
+	display, ctx, err := NewDisplay(ctx, opt.Title, opt.Processors)
 	if err != nil {
 		return
 	}

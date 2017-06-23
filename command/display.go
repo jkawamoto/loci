@@ -108,13 +108,13 @@ func (s *Section) String() string {
 // Display represents a display which consists of several sections.
 type Display struct {
 	MaxSection int
-
-	mutex    sync.Mutex
-	header   *Header
-	sections []*Section
-	closed   bool
-	done     chan error
-	gui      *gocui.Gui
+	Title      string
+	mutex      sync.Mutex
+	header     *Header
+	sections   []*Section
+	closed     bool
+	done       chan error
+	gui        *gocui.Gui
 }
 
 // DisplayUpdateHandler defines a handler function to update section body.
@@ -125,7 +125,7 @@ type DisplayUpdateHandler func(writer io.Writer)
 type DisplayUpdateFunc func(handler DisplayUpdateHandler)
 
 // NewDisplay creates a new display.
-func NewDisplay(ctx context.Context, maxSection int) (display *Display, nctx context.Context, err error) {
+func NewDisplay(ctx context.Context, title string, maxSection int) (display *Display, nctx context.Context, err error) {
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -134,6 +134,7 @@ func NewDisplay(ctx context.Context, maxSection int) (display *Display, nctx con
 
 	display = &Display{
 		MaxSection: maxSection,
+		Title:      title,
 		gui:        g,
 		done:       make(chan error),
 		header: newHeader(func(handler DisplayUpdateHandler) {
@@ -187,7 +188,7 @@ func (d *Display) Layout(g *gocui.Gui) error {
 		if err != gocui.ErrUnknownView {
 			return err
 		}
-		v.Title = "Loci v0.x.x"
+		v.Title = d.Title
 		v.Frame = true
 	}
 
