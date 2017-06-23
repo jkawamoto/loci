@@ -198,14 +198,14 @@ func run(opt *RunOpt) (err error) {
 			}()
 
 			// Build a container image.
-			fp, err := os.OpenFile(fmt.Sprintf("loci-build-v%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+			fp, err := os.OpenFile(fmt.Sprintf("loci-build-%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 			if err != nil {
 				errs.Add(version, err)
 				return
 			}
 			defer fp.Close()
 
-			sec := display.AddSection(fmt.Sprintf("Building a image for v%v", version))
+			sec := display.AddSection(fmt.Sprintf("Building a image for %v", version))
 			defer display.DeleteSection(sec)
 
 			var output io.Writer
@@ -235,7 +235,7 @@ func run(opt *RunOpt) (err error) {
 
 					// Run tests in a sandbox.
 					fp, err := os.OpenFile(
-						fmt.Sprintf("loci-v%v.log", strings.Join(append([]string{version}, envs...), "-")),
+						fmt.Sprintf("loci-%v.log", strings.Join(append([]string{version}, envs...), "-")),
 						os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 					if err != nil {
 						errs.Add(fmt.Sprintf("%v:%v", version, envs), err)
@@ -243,7 +243,7 @@ func run(opt *RunOpt) (err error) {
 					}
 					defer fp.Close()
 
-					sec := display.AddSection(fmt.Sprintf("Running tests (v%v: %v)", version, envs))
+					sec := display.AddSection(fmt.Sprintf("Running tests (%v: %v)", version, envs))
 					defer display.DeleteSection(sec)
 
 					var output io.Writer
