@@ -86,6 +86,7 @@ func run(opt *RunOpt) (err error) {
 	var stdout io.Writer
 	if opt.NoColor {
 		stdout = colorable.NewNonColorable(os.Stdout)
+		cli.ErrWriter = colorable.NewNonColorable(cli.ErrWriter)
 	} else {
 		stdout = colorable.NewColorableStdout()
 	}
@@ -207,8 +208,13 @@ func run(opt *RunOpt) (err error) {
 			sec := display.AddSection(fmt.Sprintf("Building a image for v%v", version))
 			defer display.DeleteSection(sec)
 
-			output := sec.Writer()
-			defer output.Close()
+			var output io.Writer
+			writer := sec.Writer()
+			defer writer.Close()
+			output = writer
+			if opt.NoColor {
+				output = colorable.NewNonColorable(output)
+			}
 
 			tag := fmt.Sprintf("%v/%v", opt.Tag, version)
 			err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(output, colorable.NewColorable(fp)))
@@ -240,8 +246,13 @@ func run(opt *RunOpt) (err error) {
 					sec := display.AddSection(fmt.Sprintf("Running tests (v%v: %v)", version, envs))
 					defer display.DeleteSection(sec)
 
-					output := sec.Writer()
-					defer output.Close()
+					var output io.Writer
+					writer := sec.Writer()
+					defer writer.Close()
+					output = writer
+					if opt.NoColor {
+						output = colorable.NewNonColorable(output)
+					}
 
 					name := opt.Name
 					if name != "" {
