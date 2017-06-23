@@ -29,9 +29,15 @@ const (
 
 // Header represents a header space in a display.
 type Header struct {
-	body    []string
-	mutex   sync.Mutex
-	display *Display
+	body   []string
+	mutex  sync.Mutex
+	update DisplayUpdateFunc
+}
+
+func newHeader(update DisplayUpdateFunc) *Header {
+	return &Header{
+		update: update,
+	}
 }
 
 // Println prints a new line to this header space.
@@ -40,16 +46,10 @@ func (h *Header) Println(msg string) {
 	defer h.mutex.Unlock()
 
 	h.body = append(h.body, msg)
-	h.display.gui.Execute(func(g *gocui.Gui) (err error) {
-		v, err := g.View("header")
-		if err != nil {
-			return
-		}
-		v.Clear()
+	h.update(func(writer io.Writer) {
 		for _, line := range h.body {
-			fmt.Fprintln(v, line)
+			fmt.Fprintln(writer, line)
 		}
-		return
 	})
 
 }
@@ -57,16 +57,16 @@ func (h *Header) Println(msg string) {
 // Section represents a section in a display. Each section has a header text and
 // several strings as the body.
 type Section struct {
-	Header  string
-	Body    []string
-	display *Display
+	Header string
+	Body   []string
+	update DisplayUpdateFunc
 }
 
-func newSection(display *Display, header string) *Section {
+func newSection(header string, update DisplayUpdateFunc) *Section {
 
 	return &Section{
-		Header:  header,
-		display: display,
+		Header: header,
+		update: update,
 	}
 
 }
@@ -82,16 +82,10 @@ func (s *Section) Writer() io.WriteCloser {
 		scanner := bufio.NewScanner(reader)
 		for scanner.Scan() {
 			s.Body = append(s.Body, scanner.Text())
-			s.display.gui.Execute(func(g *gocui.Gui) (err error) {
-				v, err := g.View(s.Header)
-				if err != nil {
-					return
-				}
-				v.Clear()
+			s.update(func(writer io.Writer) {
 				for _, line := range s.Body {
-					fmt.Fprintln(v, line)
+					fmt.Fprintln(writer, line)
 				}
-				return
 			})
 		}
 
@@ -123,6 +117,13 @@ type Display struct {
 	gui      *gocui.Gui
 }
 
+// DisplayUpdateHandler defines a handler function to update section body.
+type DisplayUpdateHandler func(writer io.Writer)
+
+// DisplayUpdateFunc is a function which a section calls to update the section
+// body.
+type DisplayUpdateFunc func(handler DisplayUpdateHandler)
+
 // NewDisplay creates a new display.
 func NewDisplay(ctx context.Context, maxSection int) (display *Display, nctx context.Context, err error) {
 
@@ -135,9 +136,17 @@ func NewDisplay(ctx context.Context, maxSection int) (display *Display, nctx con
 		MaxSection: maxSection,
 		gui:        g,
 		done:       make(chan error),
-	}
-	display.header = &Header{
-		display: display,
+		header: newHeader(func(handler DisplayUpdateHandler) {
+			g.Execute(func(g *gocui.Gui) (err error) {
+				v, err := g.View("header")
+				if err != nil {
+					return
+				}
+				v.Clear()
+				handler(v)
+				return
+			})
+		}),
 	}
 	g.SetManager(display)
 
@@ -223,7 +232,18 @@ func (d *Display) AddSection(header string) *Section {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	s := newSection(d, header)
+	s := newSection(header, func(handler DisplayUpdateHandler) {
+		d.gui.Execute(func(g *gocui.Gui) (err error) {
+			v, err := g.View(header)
+			if err != nil {
+				return
+			}
+			v.Clear()
+			handler(v)
+			return
+		})
+	})
+
 	d.sections = append(d.sections, s)
 	sort.Slice(d.sections, func(i int, j int) bool {
 		return d.sections[i].Header < d.sections[j].Header
