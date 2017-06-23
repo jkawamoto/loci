@@ -89,10 +89,8 @@ type Display struct {
 	gui      *gocui.Gui
 }
 
-// NewDisplay creates a new display. The new display hooks any key inputs
-// including SIGINT, if it receives that signal, the given cancel function
-// will be called.
-func NewDisplay(cancel context.CancelFunc) (display *Display, err error) {
+// NewDisplay creates a new display.
+func NewDisplay(ctx context.Context) (display *Display, nctx context.Context, err error) {
 
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
@@ -106,7 +104,6 @@ func NewDisplay(cancel context.CancelFunc) (display *Display, err error) {
 	g.SetManager(display)
 
 	err = g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, func(g *gocui.Gui, v *gocui.View) error {
-		cancel()
 		return gocui.ErrQuit
 	})
 	if err != nil {
@@ -114,11 +111,13 @@ func NewDisplay(cancel context.CancelFunc) (display *Display, err error) {
 		return
 	}
 
+	nctx, cancel := context.WithCancel(ctx)
 	go func() {
 		err := g.MainLoop()
 		if err == gocui.ErrQuit {
 			err = nil
 		}
+		cancel()
 		display.done <- err
 	}()
 

@@ -174,7 +174,7 @@ func run(opt *RunOpt) (err error) {
 
 	// Start testing with goroutines.
 	fmt.Fprintln(dstout, chalk.Yellow.Color("Start testing."))
-	display, err := NewDisplay(cancel)
+	display, ctx, err := NewDisplay(ctx)
 	if err != nil {
 		return
 	}
