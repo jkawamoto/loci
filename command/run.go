@@ -218,8 +218,13 @@ func run(opt *RunOpt) (err error) {
 
 			tag := fmt.Sprintf("%v/%v", opt.Tag, version)
 			err = Build(ctx, tempDir, tag, version, opt.NoCache, io.MultiWriter(output, colorable.NewColorable(fp)))
-			if err != nil {
-				errs.Add(version, err)
+			if err == context.Canceled {
+				errs.Add("", err)
+				return
+			} else if err != nil {
+				errs.Add(
+					version,
+					fmt.Errorf("%v\n%v", fmt.Sprintf(chalk.Red.Color("Faild to build a docker image for %v"), version), err.Error()))
 				return
 			}
 
@@ -262,7 +267,7 @@ func run(opt *RunOpt) (err error) {
 
 					err = Start(ctx, tag, name, envs, io.MultiWriter(output, colorable.NewColorable(fp)))
 					if err == context.Canceled {
-						errs.Add(fmt.Sprintf("%v:%v", version, envs), fmt.Errorf(sec.String()))
+						errs.Add("", err)
 					} else if err != nil {
 						errs.Add(fmt.Sprintf("%v:%v", version, envs), fmt.Errorf("%s\n%s", chalk.Red.Color(err.Error()), sec.String()))
 					}
@@ -284,7 +289,12 @@ func run(opt *RunOpt) (err error) {
 	if errs.Size() == 0 {
 		fmt.Fprintln(stdout, chalk.Green.Color("All tests have been passed."))
 	} else {
-		err = cli.NewMultiError(errs.GetList()...)
+		errList := errs.GetList()
+		if errList[0] == context.Canceled {
+			err = cli.NewExitError("canceled", 1)
+		} else {
+			err = cli.NewMultiError(errList...)
+		}
 	}
 	return
 
