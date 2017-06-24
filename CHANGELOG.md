@@ -1,3 +1,13 @@
+## 0.5.0 (2017-06-24)
+### Update
+- Support parallel running tests.
+- Support `--select`/`-s` flag to specify a runtime version tests will run on.
+- Delete `--verbose` flag but add `--log` flag to store logging information to files.
+
+### Fixed
+- no-color mode.
+
+
 ## 0.4.5 (2017-06-19)
 ### Update
 - Improve test preparation time.
