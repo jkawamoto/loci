@@ -326,7 +326,6 @@ func archiveContext(ctx context.Context, root string, writer io.Writer) (err err
 			// Write a file header.
 			header, err := tar.FileInfoHeader(info, info.Name())
 			if err != nil {
-				fmt.Println(err.Error())
 				return err
 			}
 			tarWriter.WriteHeader(header)
