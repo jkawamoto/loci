@@ -149,12 +149,13 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Archive source files.
-	fmt.Fprintln(logger, chalk.Yellow.Color("Archiving source codes"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Archiving source code"))
 	pwd, err := os.Getwd()
 	if err != nil {
 		return
 	}
-	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), logger, os.Stderr); err != nil {
+	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), ioutil.Discard, os.Stderr); err != nil {
+		// if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), logger, os.Stderr); err != nil {
 		return
 	}
 
