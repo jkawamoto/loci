@@ -18,6 +18,14 @@ import (
 	"github.com/urfave/cli"
 )
 
+// max returns the bigger value of the given two integers.
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 // GlobalFlags defines global flags.
 var GlobalFlags = []cli.Flag{
 	// TODO: Remote docker host.
@@ -36,9 +44,9 @@ var GlobalFlags = []cli.Flag{
 		Usage: "specify a `TAG` name of the docker image to be build.",
 	},
 	cli.IntFlag{
-		Name:  "max-processors",
-		Usage: "Max processors used to run tests.",
-		Value: runtime.NumCPU() - 2,
+		Name:  "max-processors, p",
+		Usage: "max processors used to run tests.",
+		Value: max(runtime.NumCPU()-2, 1),
 	},
 	cli.BoolFlag{
 		Name:  "log, l",
