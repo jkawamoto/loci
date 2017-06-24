@@ -32,8 +32,8 @@ var GlobalFlags = []cli.Flag{
 	// TODO: delete name option because lots of containers will be created.
 	cli.StringFlag{
 		Name: "name, n",
-		Usage: "creating a container named `NAME` to run tests. " +
-			"If name is given, container will not be deleted.",
+		Usage: "base `NAME` of containers running tests. " +
+			"If not given, containers will be deleted.",
 	},
 	cli.StringFlag{
 		Name:  "select, s",

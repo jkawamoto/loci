@@ -23,7 +23,7 @@ func main() {
 	app.Name = Name
 	app.Version = Version
 	app.Author = "Junpei Kawamoto"
-	app.Email = "kawamoto.junpei@gmail.com"
+	app.Email = "junpei.kawamoto@acm.org"
 	app.Usage = "Run a cloud CI script locally."
 	app.UsageText = `loci [global options] [script file]
 
@@ -32,7 +32,7 @@ func main() {
 	app.Flags = GlobalFlags
 	app.Commands = Commands
 	app.CommandNotFound = CommandNotFound
-	app.Copyright = `Copyright (c) 2016-2017 Junpei Kawamoto <junpei.kawamoto@acm.org>
+	app.Copyright = `Copyright (c) 2016-2017 Junpei Kawamoto
 
    This software is released under the MIT License.
    See https://jkawamoto.github.io/loci/info/licenses/ for more information.`
