@@ -20,9 +20,12 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 
+	colorable "github.com/mattn/go-colorable"
 	gitconfig "github.com/tcnksm/go-gitconfig"
+	"github.com/ttacon/chalk"
 	"github.com/urfave/cli"
 )
 
@@ -37,14 +40,20 @@ type RunOpt struct {
 	Filename string
 	// Container name.
 	Name string
+	// Runtime version to which only versions matching will be run.
+	Version string
 	// Image tag.
 	Tag string
-	// If true, print Dockerfile and entrypoint.sh.
-	Verbose bool
+	// Max processors to be used.
+	Processors int
+	// If true, logging information to be stored to files.
+	OutputLog bool
 	// If true, not using cache during buidling a docker image.
 	NoCache bool
 	// If true, omit printing color codes.
 	NoColor bool
+	// Printed on the header.
+	Title string
 }
 
 // Run implements the action of this command.
@@ -59,12 +68,15 @@ func Run(c *cli.Context) error {
 			HTTPSProxy: c.String("https-proxy"),
 			NoProxy:    c.String("no-proxy"),
 		},
-		Filename: c.Args().First(),
-		Name:     c.String("name"),
-		Tag:      c.String("tag"),
-		Verbose:  c.Bool("verbose"),
-		NoCache:  c.Bool("no-cache"),
-		NoColor:  c.Bool("no-color"),
+		Filename:   c.Args().First(),
+		Name:       c.String("name"),
+		Version:    c.String("select"),
+		Tag:        c.String("tag"),
+		Processors: c.Int("max-processors"),
+		OutputLog:  c.Bool("log"),
+		NoCache:    c.Bool("no-cache"),
+		NoColor:    c.Bool("no-color"),
+		Title:      fmt.Sprintf("%v %v", c.App.Name, c.App.Version),
 	}
 	if err := run(&opt); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -73,13 +85,6 @@ func Run(c *cli.Context) error {
 }
 
 func run(opt *RunOpt) (err error) {
-
-	var decorator *TextDecorator
-	if opt.NoColor {
-		decorator = NewNoopDecorator()
-	} else {
-		decorator = NewDecorator()
-	}
 
 	// Prepare to be canceled.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -91,16 +96,35 @@ func run(opt *RunOpt) (err error) {
 		cancel()
 	}()
 
+	// Prepare interface.
+	display, ctx, err := NewDisplay(ctx, opt.Title, opt.Processors)
+	if err != nil {
+		return
+	}
+	logger := display.Header.Logger
+
+	var stdout io.Writer
+	if opt.NoColor {
+		stdout = colorable.NewNonColorable(os.Stdout)
+		logger = colorable.NewNonColorable(logger)
+		cli.ErrWriter = colorable.NewNonColorable(cli.ErrWriter)
+	} else {
+		stdout = colorable.NewColorableStdout()
+	}
+
 	// Load a Travis's script file.
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
 	}
+	fmt.Fprintln(logger, chalk.Yellow.Color("Loading .travis.yml"))
+
 	travis, err := NewTravisFromFile(opt.Filename)
 	if err != nil {
 		return
 	}
 
 	// Get repository information.
+	fmt.Fprintln(logger, chalk.Yellow.Color("Checking repository information"))
 	origin, err := gitconfig.OriginURL()
 	if err != nil {
 		return
@@ -117,24 +141,26 @@ func run(opt *RunOpt) (err error) {
 	}
 	defer os.RemoveAll(tempDir)
 
+	// Prepare docker images.
+	fmt.Fprintln(logger, chalk.Yellow.Color("Preparing docker images for sandbox containers"))
+	err = PrepareBaseImage(ctx, opt.BaseImage, logger)
+	if err != nil {
+		return
+	}
+
 	// Archive source files.
+	fmt.Fprintln(logger, chalk.Yellow.Color("Archiving source code"))
 	pwd, err := os.Getwd()
 	if err != nil {
 		return
 	}
-	fmt.Println(decorator.Bold("Creating archive of source codes."))
-	var dstout io.Writer
-	if opt.Verbose {
-		dstout = os.Stdout
-	} else {
-		dstout = ioutil.Discard
-	}
-	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), dstout, os.Stderr); err != nil {
+	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), ioutil.Discard, os.Stderr); err != nil {
+		// if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), logger, os.Stderr); err != nil {
 		return
 	}
 
 	// Create Dockerfile.
-	fmt.Println(decorator.Bold("Creating Dockerfile"))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Creating Dockerfile"))
 	docker, err := Dockerfile(travis, opt.DockerfileOpt, SourceArchive)
 	if err != nil {
 		return
@@ -142,12 +168,9 @@ func run(opt *RunOpt) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "Dockerfile"), docker, 0644); err != nil {
 		return
 	}
-	if opt.Verbose {
-		fmt.Println(string(docker))
-	}
 
 	// Create entrypoint.sh.
-	fmt.Println(decorator.Bold("Creating entrypoint."))
+	fmt.Fprintln(logger, chalk.Yellow.Color("Creating entrypoint.sh"))
 	entry, err := Entrypoint(travis)
 	if err != nil {
 		return
@@ -155,46 +178,147 @@ func run(opt *RunOpt) (err error) {
 	if err = ioutil.WriteFile(filepath.Join(tempDir, "entrypoint.sh"), entry, 0644); err != nil {
 		return
 	}
-	if opt.Verbose {
-		fmt.Println(string(entry))
-	}
 
 	argset, err := travis.ArgumentSet()
 	if err != nil {
 		return
 	}
+
+	// Start testing with goroutines.
+	fmt.Fprintln(logger, chalk.Yellow.Color("Start testing"))
 	var i int
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, opt.Processors)
+	errs := NewErrorSet()
 	for version, set := range argset {
-		// TODO: parallel build and run.
 
-		// Build the container image.
-		fmt.Printf(decorator.Bold("Building a image for %v\n"), version)
-		tag := fmt.Sprintf("%v/%v", opt.Tag, version)
-		err = Build(ctx, tempDir, tag, version, opt.NoCache)
-		if err != nil {
+		if opt.Version != "" && version != opt.Version {
+			continue
+		}
+
+		wg.Add(1)
+		go func(version string, set [][]string) (err error) {
+			semaphore <- struct{}{}
+			defer func() {
+				<-semaphore
+				wg.Done()
+			}()
+
+			// Build a container image.
+			sec := display.AddSection(fmt.Sprintf("Building a image for %v", version))
+			defer display.DeleteSection(sec)
+
+			var output io.Writer
+			writer := sec.Writer()
+			defer writer.Close()
+			output = writer
+			if opt.NoColor {
+				output = colorable.NewNonColorable(output)
+			}
+
+			if opt.OutputLog {
+				var fp *os.File
+				fp, err = os.OpenFile(fmt.Sprintf("loci-build-%v.log", version), os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+				if err != nil {
+					errs.Add(version, err)
+					return
+				}
+				defer fp.Close()
+				output = io.MultiWriter(output, colorable.NewColorable(fp))
+			}
+
+			tag := fmt.Sprintf("%v/%v", opt.Tag, version)
+			err = Build(ctx, tempDir, tag, version, opt.NoCache, output)
+			if err == context.Canceled {
+				errs.Add("", err)
+				return
+			} else if err != nil {
+				msg := fmt.Sprintf(chalk.Red.Color("Faild to build a docker image for %v"), version)
+				errs.Add(
+					version,
+					fmt.Errorf("%v\n%v", msg, err.Error()))
+				fmt.Fprintln(logger, msg)
+				return
+			}
+			fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Built a image for %v", version)))
+
+			for _, envs := range set {
+
+				wg.Add(1)
+				go func(envs []string) {
+					semaphore <- struct{}{}
+					defer func() {
+						<-semaphore
+						wg.Done()
+					}()
+
+					// Run tests in a sandbox.
+					sec := display.AddSection(fmt.Sprintf("Running tests (%v: %v)", version, envs))
+					defer display.DeleteSection(sec)
+
+					var output io.Writer
+					writer := sec.Writer()
+					defer writer.Close()
+					output = writer
+					if opt.NoColor {
+						output = colorable.NewNonColorable(output)
+					}
+
+					if opt.OutputLog {
+						var fp *os.File
+						fp, err = os.OpenFile(
+							fmt.Sprintf("loci-%v.log", strings.Join(append([]string{version}, envs...), "-")),
+							os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+						if err != nil {
+							errs.Add(fmt.Sprintf("%v:%v", version, envs), err)
+							return
+						}
+						defer fp.Close()
+						output = io.MultiWriter(output, colorable.NewColorable(fp))
+					}
+
+					name := opt.Name
+					if name != "" {
+						i++
+						name = fmt.Sprintf("%s-%d", name, i)
+					}
+
+					err = Start(ctx, tag, name, envs, output)
+					if err == context.Canceled {
+						errs.Add("", err)
+					} else if err != nil {
+						errs.Add(fmt.Sprintf("%v:%v", version, envs), fmt.Errorf("%s\n%s", chalk.Red.Color(err.Error()), sec.String()))
+						fmt.Fprintln(logger, chalk.Red.Color(fmt.Sprintf("Failed tests (%v: %v) ", version, envs)))
+					} else {
+						fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Passed tests (%v: %v) ", version, envs)))
+					}
+					return
+
+				}(envs)
+
+			}
+
 			return
-		}
 
-		for _, envs := range set {
-
-			// Run tests in sandboxes.
-			fmt.Printf(decorator.Bold("Start CI (%v: %v)\n"), version, envs)
-			os.Stdout.Sync()
-
-			name := opt.Name
-			if name != "" {
-				i++
-				name = fmt.Sprintf("%s-%d", name, i)
-			}
-			err := Start(ctx, tag, name, envs)
-			if err != nil {
-				return err
-			}
-		}
+		}(version, set)
 
 	}
 
-	return nil
+	wg.Wait()
+	display.Close()
+
+	if errs.Size() == 0 {
+		fmt.Fprintln(stdout, chalk.Green.Color("All tests have been passed."))
+	} else {
+		errList := errs.GetList()
+		if errList[0] == context.Canceled {
+			err = cli.NewExitError("canceled", 1)
+		} else {
+			err = cli.NewMultiError(errList...)
+		}
+	}
+	return
+
 }
 
 // getRepository returns the repository path from a given remote URL of

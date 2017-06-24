@@ -24,7 +24,7 @@ readonly TRAVIS_GO_VERSION=$(go version | cut -f 3 -d " " | sed s/go//g)
 {{end}}
 
 {{define "install"}}
-echo "Install Steps:"
+echo -e "\e[33mInstall Steps:\e[m"
 git config --global http.https://gopkg.in.followRedirects true
 {{if .Install}}
 {{range .Install}}
@@ -38,7 +38,7 @@ go get -t ./...
 {{end}}
 
 {{define "script"}}
-echo "Script Steps:"
+echo -e "\e[33mScript Steps:\e[m"
 {{/* "if script isn't given, use make or the default golang test command." */}}
 {{if .Script}}
 {{range .Script}}

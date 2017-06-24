@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -66,6 +65,17 @@ type buildLog struct {
 		Code    int
 		Message string
 	}
+}
+
+// pullLog defines a JSON format used in logging information of ImagePull.
+type pullLog struct {
+	Status         string `json:"status"`
+	ProgressDetail struct {
+		Current int `json:"current"`
+		Total   int `json:"total"`
+	} `json:"progressDetail"`
+	Progress string `json:"progress"`
+	ID       string `json:"id"`
 }
 
 // Dockerfile creates a Dockerfile from an instance of Travis.
@@ -116,9 +126,44 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 
 }
 
+// PrepareBaseImage pulls a docker images represented by the given ref if
+// necessary; it also writes summarized lorring information to the given output.
+func PrepareBaseImage(ctx context.Context, ref string, output io.Writer) (err error) {
+
+	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
+	if err != nil {
+		return
+	}
+
+	reader, err := cli.ImagePull(ctx, ref, types.ImagePullOptions{})
+	if err != nil {
+		return
+	}
+	defer reader.Close()
+
+	var log pullLog
+	status := make(map[string]string)
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		json.Unmarshal(scanner.Bytes(), &log)
+		if log.ID != "" {
+			cur := status[log.ID]
+			if cur != log.Status {
+				status[log.ID] = log.Status
+				fmt.Fprintln(output, log.Status, log.ID)
+			}
+		} else {
+			fmt.Fprintln(output, log.Status)
+		}
+	}
+
+	return
+
+}
+
 // Build builds a docker image from a directory. The built image named tag.
 // The directory must have Dockerfile.
-func Build(ctx context.Context, dir, tag, version string, noCache bool) (err error) {
+func Build(ctx context.Context, dir, tag, version string, noCache bool, output io.Writer) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -132,8 +177,8 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool) (err err
 
 	// Send the build context.
 	go func() {
+		defer writer.Close()
 		archiveContext(ctx, dir, writer)
-		writer.Close()
 	}()
 
 	// Start to build an image.
@@ -154,25 +199,16 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool) (err err
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		defer os.Stdout.Sync()
 
 		s := bufio.NewScanner(res.Body)
 		for s.Scan() {
-			select {
-			case <-ctx.Done():
-				err = ctx.Err()
-				return
-			default:
-				e := s.Text()
-
-				var log buildLog
-				if json.Unmarshal([]byte(e), &log) == nil {
-					if log.Error != "" {
-						err = fmt.Errorf(log.Error)
-						return
-					}
-					os.Stdout.WriteString(log.Stream)
+			var log buildLog
+			if json.Unmarshal(s.Bytes(), &log) == nil {
+				if log.Error != "" {
+					err = fmt.Errorf(log.Error)
+					return
 				}
+				io.WriteString(output, log.Stream)
 			}
 		}
 	}()
@@ -192,7 +228,7 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool) (err err
 // the container will have a random temporary name and be deleted after
 // after all steps end. env is a list of environment variables to be passed
 // to the created container.
-func Start(ctx context.Context, tag, name string, env []string) (err error) {
+func Start(ctx context.Context, tag, name string, env []string, output io.Writer) (err error) {
 
 	// Create a docker client.
 	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
@@ -227,7 +263,7 @@ func Start(ctx context.Context, tag, name string, env []string) (err error) {
 		return
 	}
 	defer stream.Close()
-	go stdcopy.StdCopy(os.Stdout, os.Stderr, stream.Reader)
+	go stdcopy.StdCopy(output, output, stream.Reader)
 
 	// Start the container.
 	options := types.ContainerStartOptions{}
@@ -250,7 +286,7 @@ func Start(ctx context.Context, tag, name string, env []string) (err error) {
 		return
 	case status := <-exit:
 		if status.StatusCode != 0 {
-			err = fmt.Errorf("Testing container returns an error: %v", status.StatusCode)
+			err = fmt.Errorf("Testing container returns an error (status code: %v)", status.StatusCode)
 		}
 		return
 	}
@@ -290,7 +326,6 @@ func archiveContext(ctx context.Context, root string, writer io.Writer) (err err
 			// Write a file header.
 			header, err := tar.FileInfoHeader(info, info.Name())
 			if err != nil {
-				fmt.Println(err.Error())
 				return err
 			}
 			tarWriter.WriteHeader(header)

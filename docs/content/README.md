@@ -33,8 +33,24 @@ Loci also requires [Docker](https://www.docker.com/) to run tests in a sandbox.
 
 [![Docker logo](img/small_h-trans.png)](https://www.docker.com/)
 
+### Demo
+<script type="text/javascript" src="https://asciinema.org/a/YGjZzFBlteajYOEoUug1GVSRj.js" id="asciicast-YGjZzFBlteajYOEoUug1GVSRj" async></script>
+
 ### Usage
-If your current directory has `.travis.yml`, run just `loci`.
+If your current directory has `.travis.yml`, run just `loci` like
+
+```shell
+$ loci
+```
+
+If your `.travis.yml` specifies more than two runtime versions, Loci will run
+those tests palatally. If you want to run tests on a selected one runtime
+version, use `--select`/`-s` flag. For example, the following command runs tests
+on only Python 3.6:
+
+```shell
+$ loci -s 3.6
+```  
 
 Here is the help text of the `loci` command:
 
@@ -44,29 +60,28 @@ loci [global options] [script file]
   If script file isn't given, .travis.yml will be used.
 
 GLOBAL OPTIONS:
-   --name NAME, -n NAME  creating a container named NAME to run tests,
-                         and that container will not be deleted.
-   --tag TAG, -t TAG     creating an image named TAG.
-   --base TAG, -b TAG    use image TAG as the base image.
-                         (default: "ubuntu:latest")
-   --verbose             verbose mode, which prints Dockerfile and
-                         entrypoint.sh.
-   --apt-proxy URL       URL for a proxy server of apt repository.
-                         [$APT_PROXY]
-   --pypi-proxy URL      URL for a proxy server of pypi repository.
-                         [$PYPI_PROXY]
-   --http-proxy URL      URL for a http proxy server. [$HTTP_PROXY]
-   --https-proxy URL     URL for a https proxy server. [$HTTPS_PROXY]
-   --no-proxy LIST       Comma separated URL LIST for which proxies won't
-                         be used. [$NO_PROXY]
-   --no-build-cache      Do not use cache when building the image.
-   --no-color            Omit to print color codes.
-   --help, -h            show help
-   --version, -v         print the version
+   --name NAME, -n NAME              base NAME of containers running tests. If not given, containers will be
+                                     deleted.
+   --select VERSION, -s VERSION      select specific runtime VERSION where tests running on.
+   --tag TAG, -t TAG                 specify a TAG name of the docker image to be build.
+   --max-processors value, -p value  max processors used to run tests.
+   --log, -l                         store logging information to files.
+   --base TAG, -b TAG                use image TAG as the base image. (default: "ubuntu:latest")
+   --apt-proxy URL                   URL for a proxy server of apt repository. If environment variable
+                                     APT_PROXY exists, that value will be used by default.
+   --pypi-proxy URL                  URL for a proxy server of PyPI repository. If environment variable
+                                     PYPI_PROXY exists, that value will be used by default.
+   --http-proxy URL                  URL for a http proxy server. If environment variable HTTP_PROXY exists,
+                                     that value will be used by default.
+   --https-proxy URL                 URL for a https proxy server. If environment variable HTTPS_PROXY exists,
+                                     that value will be used by default.
+   --no-proxy LIST                   Comma separated URL LIST for which proxies won't be used. If environment
+                                     variable NO_PROXY exists, that value will be used by default.
+   --no-build-cache                  Do not use cache when building the image.
+   --no-color                        Omit to print color codes.
+   --help, -h                        show help
+   --version, -v                     print the version
 ~~~
-
-Note that `$XYZ` means that environment variable `$XYZ` will be used
-if the associated option value isn't given.
 
 Loci builds docker images every time to run tests in a sandbox.
 The default image name will be the repository name of the project with

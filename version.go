@@ -12,7 +12,7 @@ package main
 
 const (
 	// Name defines the name of this command.
-	Name string = "loci"
+	Name string = "Loci"
 	// Version defines version number.
 	Version string = "0.4.5"
 )

@@ -13,9 +13,18 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/urfave/cli"
 )
+
+// max returns the bigger value of the given two integers.
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
 
 // GlobalFlags defines global flags.
 var GlobalFlags = []cli.Flag{
@@ -23,21 +32,30 @@ var GlobalFlags = []cli.Flag{
 	// TODO: delete name option because lots of containers will be created.
 	cli.StringFlag{
 		Name: "name, n",
-		Usage: "creating a container named `NAME` to run tests. " +
-			"If name is given, container will not be deleted.",
+		Usage: "base `NAME` of containers running tests. " +
+			"If not given, containers will be deleted.",
+	},
+	cli.StringFlag{
+		Name:  "select, s",
+		Usage: "select specific runtime `VERSION` where tests running on.",
 	},
 	cli.StringFlag{
 		Name:  "tag, t",
 		Usage: "specify a `TAG` name of the docker image to be build.",
 	},
+	cli.IntFlag{
+		Name:  "max-processors, p",
+		Usage: "max processors used to run tests.",
+		Value: max(runtime.NumCPU()-2, 1),
+	},
+	cli.BoolFlag{
+		Name:  "log, l",
+		Usage: "store logging information to files.",
+	},
 	cli.StringFlag{
 		Name:  "base, b",
 		Usage: "use image `TAG` as the base image.",
 		Value: "ubuntu:latest",
-	},
-	cli.BoolFlag{
-		Name:  "verbose",
-		Usage: "verbose mode, which prints Dockerfile and entrypoint.sh.",
 	},
 	cli.StringFlag{
 		Name:   "apt-proxy",
