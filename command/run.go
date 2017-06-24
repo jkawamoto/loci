@@ -141,6 +141,13 @@ func run(opt *RunOpt) (err error) {
 	}
 	defer os.RemoveAll(tempDir)
 
+	// Prepare docker images.
+	fmt.Fprintln(logger, chalk.Yellow.Color("Preparing docker images for sandbox containers"))
+	err = PrepareBaseImage(ctx, opt.BaseImage, logger)
+	if err != nil {
+		return
+	}
+
 	// Archive source files.
 	fmt.Fprintln(logger, chalk.Yellow.Color("Archiving source codes"))
 	pwd, err := os.Getwd()

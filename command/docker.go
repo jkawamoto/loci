@@ -67,6 +67,17 @@ type buildLog struct {
 	}
 }
 
+// pullLog defines a JSON format used in logging information of ImagePull.
+type pullLog struct {
+	Status         string `json:"status"`
+	ProgressDetail struct {
+		Current int `json:"current"`
+		Total   int `json:"total"`
+	} `json:"progressDetail"`
+	Progress string `json:"progress"`
+	ID       string `json:"id"`
+}
+
 // Dockerfile creates a Dockerfile from an instance of Travis.
 func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte, err error) {
 
@@ -110,6 +121,41 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 		return
 	}
 	res = buf.Bytes()
+
+	return
+
+}
+
+// PrepareBaseImage pulls a docker images represented by the given ref if
+// necessary; it also writes summarized lorring information to the given output.
+func PrepareBaseImage(ctx context.Context, ref string, output io.Writer) (err error) {
+
+	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
+	if err != nil {
+		return
+	}
+
+	reader, err := cli.ImagePull(ctx, ref, types.ImagePullOptions{})
+	if err != nil {
+		return
+	}
+	defer reader.Close()
+
+	var log pullLog
+	status := make(map[string]string)
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		json.Unmarshal(scanner.Bytes(), &log)
+		if log.ID != "" {
+			cur := status[log.ID]
+			if cur != log.Status {
+				status[log.ID] = log.Status
+				fmt.Fprintln(output, log.Status, log.ID)
+			}
+		} else {
+			fmt.Fprintln(output, log.Status)
+		}
+	}
 
 	return
 
