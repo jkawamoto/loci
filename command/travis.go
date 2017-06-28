@@ -12,6 +12,7 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -104,11 +105,11 @@ func NewTravisFromFile(filename string) (res *Travis, err error) {
 
 // ArgumentSet returns a set of arguments to run entrypoint based on a build
 // matrix.
-func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
+func (t *Travis) ArgumentSet(logger io.Writer) (res TestCaseSet, err error) {
 
 	switch t.Language {
 	case "python":
-		res, err = t.argumentSetPython()
+		res, err = t.argumentSetPython(logger)
 	case "go":
 		res, err = t.argumentSetGo()
 	default:

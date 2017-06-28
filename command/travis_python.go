@@ -12,19 +12,36 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"strings"
+
+	"github.com/ttacon/chalk"
+)
+
+// const (
+// 	// PythonNightlyVersion defines a python version used as the nightly version.
+// 	PythonNightlyVersion = "3.7-dev"
+// )
+
+var (
+	// ErrUnknownPythonVersion is returned when the given python version is not
+	// supported.
+	ErrUnknownPythonVersion = fmt.Errorf("Given Python version is not supported")
 )
 
 // argumentSetPython returns a set of arguments to run entrypoint based on a build
 // matrix for python projects.
-func (t *Travis) argumentSetPython() (res TestCaseSet, err error) {
+func (t *Travis) argumentSetPython(logger io.Writer) (res TestCaseSet, err error) {
 
 	res = make(TestCaseSet)
 
 	// Parse Matrix.Include.
 	for _, v := range t.Matrix.Include {
 		version, env, err := parseMatrixPython(v)
-		if err != nil {
+		if err == ErrUnknownPythonVersion {
+			fmt.Fprintf(logger, chalk.Yellow.Color("Python version %v is not supported\n"), version)
+			continue
+		} else if err != nil {
 			return nil, err
 		}
 		if res[version] == nil {
@@ -60,7 +77,10 @@ func (t *Travis) argumentSetPython() (res TestCaseSet, err error) {
 	// Parse Matrix.Exclude.
 	for _, v := range t.Matrix.Exclude {
 		version, env, err := parseMatrixPython(v)
-		if err != nil {
+		if err == ErrUnknownPythonVersion {
+			fmt.Fprintf(logger, chalk.Yellow.Color("Python version %v is not supported\n"), version)
+			continue
+		} else if err != nil {
 			return nil, err
 		}
 		excludes := make(map[string]struct{})
@@ -98,8 +118,17 @@ func parseMatrixPython(v interface{}) (version string, env []string, err error) 
 		return
 	}
 
+	if _, exist := m["python"]; !exist {
+		version = "empty"
+		err = ErrUnknownPythonVersion
+		return
+	}
 	version = fmt.Sprint(m["python"])
-
+	if version == "nightly" {
+		// version = PythonNightlyVersion
+		err = ErrUnknownPythonVersion
+		return
+	}
 	variables, ok := m["env"].(string)
 	if !ok {
 		err = fmt.Errorf("Env of the given item is broken.")

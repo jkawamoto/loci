@@ -179,7 +179,7 @@ func run(opt *RunOpt) (err error) {
 		return
 	}
 
-	argset, err := travis.ArgumentSet()
+	argset, err := travis.ArgumentSet(logger)
 	if err != nil {
 		return
 	}
