@@ -223,12 +223,19 @@ func (d *Display) Layout(g *gocui.Gui) error {
 }
 
 // Close closes this display.
-func (d *Display) Close() {
+func (d *Display) Close() (err error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 
 	if !d.closed {
+		d.gui.Execute(func(g *gocui.Gui) error {
+			return gocui.ErrQuit
+		})
+		err = <-d.done
 		d.gui.Close()
 		d.closed = true
 	}
+	return
 
 }
 
@@ -275,9 +282,4 @@ func (d *Display) DeleteSection(sec *Section) {
 		return g.DeleteView(sec.Header)
 	})
 
-}
-
-// Wait blocks until the given context will be canceled.
-func (d *Display) Wait() error {
-	return <-d.done
 }

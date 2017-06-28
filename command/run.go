@@ -101,6 +101,7 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
+	defer display.Close()
 	logger := display.Header.Logger
 
 	var stdout io.Writer
@@ -305,7 +306,10 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	wg.Wait()
-	display.Close()
+	err = display.Close()
+	if err != nil {
+		return
+	}
 
 	if errs.Size() == 0 {
 		fmt.Fprintln(stdout, chalk.Green.Color("All tests have been passed."))
