@@ -16,8 +16,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mitchellh/mapstructure"
-
 	"gopkg.in/yaml.v2"
 )
 
@@ -132,6 +130,7 @@ func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 
 	switch raw := aux.(type) {
 	case []interface{}:
+		// If attribute env has one list instead of global and/or matrix attributes.
 		if len(raw) == 0 {
 			return
 		}
@@ -150,10 +149,32 @@ func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 		}
 
 	case map[interface{}]interface{}:
-		if err = mapstructure.Decode(raw, e); err != nil {
-			return err
-		}
+		e.Global = parseEnvMap(raw, "global")
+		e.Matrix = parseEnvMap(raw, "matrix")
 
+	}
+
+	return
+
+}
+
+// parseEnvMap parses a map of which key and value are defined as interface{},
+// and returns a list of strings the given map's value, which is associated with
+// the given key, represents.
+func parseEnvMap(m map[interface{}]interface{}, key string) (res []string) {
+
+	if selected, exist := m[key]; exist {
+		switch items := selected.(type) {
+		case string:
+			res = []string{items}
+
+		case []interface{}:
+			for _, v := range items {
+				if s, ok := v.(string); ok {
+					res = append(res, s)
+				}
+			}
+		}
 	}
 
 	return
