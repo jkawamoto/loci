@@ -116,7 +116,7 @@ func run(opt *RunOpt) (err error) {
 	if opt.Filename == "" {
 		opt.Filename = ".travis.yml"
 	}
-	fmt.Fprintln(logger, chalk.Yellow.Color("Loading .travis.yml"))
+	fmt.Fprintln(logger, chalk.Cyan.Color("Loading .travis.yml"))
 
 	travis, err := NewTravisFromFile(opt.Filename)
 	if err != nil {
@@ -124,7 +124,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Get repository information.
-	fmt.Fprintln(logger, chalk.Yellow.Color("Checking repository information"))
+	fmt.Fprintln(logger, chalk.Cyan.Color("Checking repository information"))
 	origin, err := gitconfig.OriginURL()
 	if err != nil {
 		return
@@ -135,21 +135,21 @@ func run(opt *RunOpt) (err error) {
 	if opt.Tag == "" {
 		opt.Tag = fmt.Sprintf("loci/%s", strings.ToLower(path.Base(opt.Repository)))
 	}
-	tempDir := filepath.Join(os.TempDir(), opt.Tag)
-	if err = os.MkdirAll(tempDir, 0777); err != nil {
-		return
-	}
-	defer os.RemoveAll(tempDir)
 
 	// Prepare docker images.
-	fmt.Fprintln(logger, chalk.Yellow.Color("Preparing docker images for sandbox containers"))
+	fmt.Fprintln(logger, chalk.Cyan.Color("Preparing docker images for sandbox containers"))
 	err = PrepareBaseImage(ctx, opt.BaseImage, logger)
 	if err != nil {
 		return
 	}
 
 	// Archive source files.
-	fmt.Fprintln(logger, chalk.Yellow.Color("Archiving source code"))
+	fmt.Fprintln(logger, chalk.Cyan.Color("Archiving source code"))
+	tempDir := filepath.Join(os.TempDir(), opt.Tag)
+	if err = os.MkdirAll(tempDir, 0777); err != nil {
+		return
+	}
+	defer os.RemoveAll(tempDir)
 	pwd, err := os.Getwd()
 	if err != nil {
 		return
@@ -160,7 +160,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Create Dockerfile.
-	fmt.Fprintln(logger, chalk.Yellow.Color("Creating Dockerfile"))
+	fmt.Fprintln(logger, chalk.Cyan.Color("Creating Dockerfile"))
 	docker, err := Dockerfile(travis, opt.DockerfileOpt, SourceArchive)
 	if err != nil {
 		return
@@ -170,7 +170,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Create entrypoint.sh.
-	fmt.Fprintln(logger, chalk.Yellow.Color("Creating entrypoint.sh"))
+	fmt.Fprintln(logger, chalk.Cyan.Color("Creating entrypoint.sh"))
 	entry, err := Entrypoint(travis)
 	if err != nil {
 		return
@@ -185,7 +185,7 @@ func run(opt *RunOpt) (err error) {
 	}
 
 	// Start testing with goroutines.
-	fmt.Fprintln(logger, chalk.Yellow.Color("Start testing"))
+	fmt.Fprintln(logger, chalk.Cyan.Color("Building sandbox images and running tests"))
 	var i int
 	var wg sync.WaitGroup
 	semaphore := make(chan struct{}, opt.Processors)
@@ -236,7 +236,7 @@ func run(opt *RunOpt) (err error) {
 				msg := fmt.Sprintf(chalk.Red.Color("Faild to build a docker image for %v"), version)
 				errs.Add(
 					version,
-					fmt.Errorf("%v\n%v", msg, err.Error()))
+					fmt.Errorf("%v\n%v\n%v\n", msg, err.Error(), sec.String()))
 				fmt.Fprintln(logger, msg)
 				return
 			}
