@@ -37,7 +37,7 @@ RUN PYPI_PROXY={{.}} && \
 # Install Common APT packages.
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y apt-utils git curl wget sudo unzip
+    apt-get install -y apt-utils git curl wget sudo unzip ccache
 # Install language specific packages.
 {{block "package" .}}
 {{end}}
