@@ -27,7 +27,7 @@ func TestArchive(t *testing.T) {
 	target := path.Join(temp, "test.tar.gz")
 	t.Logf("Creating an archive file: %s", target)
 
-	if err := Archive(context.Background(), "..", target, os.Stdout, os.Stderr); err != nil {
+	if err := Archive(context.Background(), "..", target); err != nil {
 		t.Error(err.Error())
 		return
 	}
@@ -35,7 +35,7 @@ func TestArchive(t *testing.T) {
 		t.Error(err.Error())
 		return
 	}
-	// defer os.Remove(target)
+	defer os.Remove(target)
 
 	fp, err := os.Open(target)
 	if err != nil {

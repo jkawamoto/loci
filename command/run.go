@@ -155,8 +155,7 @@ func run(opt *RunOpt) (err error) {
 	if err != nil {
 		return
 	}
-	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), ioutil.Discard, os.Stderr); err != nil {
-		// if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive), logger, os.Stderr); err != nil {
+	if err = Archive(ctx, pwd, filepath.Join(tempDir, SourceArchive)); err != nil {
 		return
 	}
 

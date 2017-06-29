@@ -21,6 +21,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // pathListupFunc defines a function which lists up paths and put them to a
@@ -28,7 +30,7 @@ import (
 type pathListupFunc func(context.Context, chan<- string) error
 
 // Archive makes a tar.gz file consists of files maintained a git repository.
-func Archive(ctx context.Context, dir string, filename string, dstout, dsterr io.Writer) (err error) {
+func Archive(ctx context.Context, dir string, filename string) (err error) {
 
 	writeFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -36,10 +38,7 @@ func Archive(ctx context.Context, dir string, filename string, dstout, dsterr io
 	}
 	defer writeFile.Close()
 
-	writer := bufio.NewWriter(writeFile)
-	defer writer.Flush()
-
-	zipWriter, err := gzip.NewWriterLevel(writer, gzip.BestCompression)
+	zipWriter, err := gzip.NewWriterLevel(writeFile, gzip.BestCompression)
 	if err != nil {
 		return
 	}
@@ -59,47 +58,49 @@ func Archive(ctx context.Context, dir string, filename string, dstout, dsterr io
 	defer os.Chdir(cd)
 
 	// Listing up and write to a tarball.
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	wg, ctx := errgroup.WithContext(ctx)
+	ch := make(chan string)
+	wg.Go(func() error {
+		defer close(ch)
 
-	ch, errCh := parallelListup(ctx, listupGitSources, listupGitRepository)
-	doneTB := make(chan error)
+		eg, ctx := errgroup.WithContext(ctx)
+		eg.Go(func() error {
+			return listupGitRepository(ctx, ch)
+		})
+		eg.Go(func() error {
+			return listupGitSources(ctx, ch)
+		})
+		return eg.Wait()
 
-	// Require to close channel ch to end this goroutine.
-	go tarballing(tarWriter, ch, doneTB, dstout, dsterr)
-	err = <-doneTB
-	if err != nil {
-		return
-	}
+	})
 
-	return <-errCh
+	wg.Go(func() error {
+		return tarballing(tarWriter, ch)
+	})
+
+	return wg.Wait()
+
 }
 
 // tarballing is a go-routine which write a file given via ch to a tar writer.
-// It puts nil to done when it ends. If an error occurs, it puts the error to
-// done.
-func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error, dstout, dsterr io.Writer) {
+func tarballing(writer *tar.Writer, ch <-chan string) (err error) {
 
 	var info os.FileInfo
 	var header *tar.Header
-	var err error
-
 	for path := range ch {
 
 		// For Windows: Replace path delimiters.
 		path = filepath.ToSlash(path)
-		fmt.Fprintln(dstout, path)
 
 		// Write a file header.
 		info, err = os.Stat(path)
 		if err != nil {
-			fmt.Fprintf(dsterr, "Cannot find %s (%s)", path, err.Error())
+			err = fmt.Errorf("Cannot find %s (%s)", path, err.Error())
 			break
 		}
 
 		header, err = tar.FileInfoHeader(info, path)
 		if err != nil {
-			fmt.Fprintln(dsterr, err.Error())
 			break
 		}
 
@@ -115,44 +116,8 @@ func tarballing(writer *tar.Writer, ch <-chan string, done chan<- error, dstout,
 			break
 		}
 	}
-	done <- err
 
-}
-
-// parallelListup lists up paths using given pathListupFunc functions.
-// This method returns channels which will be used to put found paths and error.
-// both channels will be closed automatically.
-func parallelListup(ctx context.Context, fs ...pathListupFunc) (<-chan string, <-chan error) {
-
-	ch := make(chan string)
-	errCh := make(chan error)
-	errors := make([]chan error, len(fs))
-
-	for i, f := range fs {
-
-		errors[i] = make(chan error)
-		go func(_f pathListupFunc, _errCh *chan error) {
-			*_errCh <- _f(ctx, ch)
-		}(f, &errors[i])
-
-	}
-
-	go func() {
-
-		var err error
-		for _, e := range errors {
-			if new := <-e; new != nil {
-				err = new
-			}
-		}
-		close(ch)
-
-		errCh <- err
-		close(errCh)
-
-	}()
-
-	return ch, errCh
+	return
 
 }
 
@@ -161,22 +126,22 @@ func listupGitRepository(ctx context.Context, ch chan<- string) error {
 
 	return filepath.Walk(".git", func(path string, info os.FileInfo, err error) error {
 
+		// Check the given context is still alive.
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-
 		default:
-			if err != nil {
-				return err
-			}
-
-			if info.IsDir() {
-				return nil
-			}
-
-			ch <- path
-			return nil
 		}
+
+		// If an error is passed, propagate it.
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() {
+			ch <- path
+		}
+		return nil
 
 	})
 
@@ -185,49 +150,37 @@ func listupGitRepository(ctx context.Context, ch chan<- string) error {
 // listupGitSources lists up git sources and puts finding paths to a given ch.
 func listupGitSources(ctx context.Context, ch chan<- string) (err error) {
 
-	cmd := exec.Command("git", "ls-files")
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "git", "ls-files")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return
 	}
-	defer stdout.Close()
 
-	doneRL := make(chan error)
-	defer close(doneRL)
-
-	go readLine(ctx, stdout, ch, doneRL)
-	if err = cmd.Run(); err != nil {
-		<-doneRL
+	err = cmd.Start()
+	if err != nil {
 		return
 	}
 
-	return <-doneRL
+	var info os.FileInfo
+	s := bufio.NewScanner(stdout)
+	for s.Scan() {
 
-}
-
-// readLine is a go-routine which reads a line from rd and puts it to ch.
-// It sends nil to done when reads all line or some error when an error
-// occurs.
-func readLine(ctx context.Context, rd io.Reader, ch chan<- string, done chan<- error) {
-
-	scanner := bufio.NewScanner(rd)
-	for scanner.Scan() {
-		select {
-		case <-ctx.Done():
-			done <- ctx.Err()
-			return
-
-		default:
-			path := scanner.Text()
-			info, err := os.Stat(path)
-			if err == nil && !info.IsDir() {
-				ch <- path
-			}
-
+		path := s.Text()
+		if info, err = os.Stat(path); err == nil && !info.IsDir() {
+			ch <- path
 		}
+
 	}
-	// done <- scanner.Err()
-	done <- nil
+
+	err = s.Err()
+	if err != nil {
+		return
+	}
+
+	return cmd.Wait()
 
 }
 
