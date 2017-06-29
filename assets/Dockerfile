@@ -36,7 +36,7 @@ RUN PYPI_PROXY={{.}} && \
 
 # Install Common APT packages.
 RUN apt-get update && \
-    apt-get upgrade -y && \
+    # apt-get upgrade -y && \
     apt-get install -y apt-utils git curl wget sudo unzip ccache
 # Install language specific packages.
 {{block "package" .}}
@@ -46,8 +46,8 @@ ARG VERSION
 {{block "version" .}}
 {{end}}
 # Install required packages.
-{{range .Travis.Addons.Apt.Packages}}
-RUN apt-get install -y {{.}}
+{{if .Travis.Addons.Apt.Packages}}
+RUN apt-get install -y {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}}
 {{end}}
 
 {{block "source" .}}

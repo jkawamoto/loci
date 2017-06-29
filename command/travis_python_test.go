@@ -326,7 +326,8 @@ matrix:
 		t.Error(err.Error())
 	}
 
-	if len(res) != 0 {
+	// Python 2.7 is automatically added when no available runtimes are specified.
+	if len(res) != 1 {
 		t.Fatal("Generated arguments are wrong:", res)
 	}
 
