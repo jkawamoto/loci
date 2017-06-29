@@ -44,9 +44,13 @@ func newHeader(update DisplayUpdateFunc) (header *Header) {
 		for scanner.Scan() {
 
 			header.body = append(header.body, scanner.Text())
-			update(func(writer io.Writer) {
-				for _, line := range header.body {
-					fmt.Fprintln(writer, line)
+			update(func(view *gocui.View) {
+				_, h := view.Size()
+				for i, line := range header.body {
+					if len(header.body)-i > h {
+						continue
+					}
+					fmt.Fprintln(view, line)
 				}
 			})
 
@@ -86,9 +90,13 @@ func (s *Section) Writer() io.WriteCloser {
 		scanner := bufio.NewScanner(reader)
 		for scanner.Scan() {
 			s.Body = append(s.Body, scanner.Text())
-			s.update(func(writer io.Writer) {
-				for _, line := range s.Body {
-					fmt.Fprintln(writer, line)
+			s.update(func(view *gocui.View) {
+				_, h := view.Size()
+				for i, line := range s.Body {
+					if len(s.Body)-i > h {
+						continue
+					}
+					fmt.Fprintln(view, line)
 				}
 			})
 		}
@@ -122,7 +130,7 @@ type Display struct {
 }
 
 // DisplayUpdateHandler defines a handler function to update section body.
-type DisplayUpdateHandler func(writer io.Writer)
+type DisplayUpdateHandler func(view *gocui.View)
 
 // DisplayUpdateFunc is a function which a section calls to update the section
 // body.
