@@ -1,3 +1,13 @@
+## 0.5.1 (2017-06-29)
+### Update
+- Skipping tests for unsupported python versions
+
+### Fixed
+- Failed to parse attribute env if it contains secret values
+- Missing apt package ccache
+- Bugs about user interface
+
+
 ## 0.5.0 (2017-06-24)
 ### Update
 - Support parallel running tests.
