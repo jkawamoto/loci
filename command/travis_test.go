@@ -347,3 +347,33 @@ env:
 	}
 
 }
+
+func TestParseSecretEnv(t *testing.T) {
+
+	globals := []string{
+		"DB=postgres",
+		"SH=bash",
+		"PACKAGE_VERSION=\"1.0.*\"",
+	}
+	travis, err := NewTravis([]byte(`language: go
+env:
+  global:
+    - DB=postgres
+    - SH=bash
+    - PACKAGE_VERSION="1.0.*"
+    - secret: xxxxxxxxxxxxxxx
+`))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	if len(travis.Env.Global) != 3 {
+		t.Fatal("The number of global variables is wrong:", travis.Env.Global)
+	}
+	for i, v := range globals {
+		if travis.Env.Global[i] != v {
+			t.Error("A global variable is not match:", travis.Env.Global)
+		}
+	}
+
+}

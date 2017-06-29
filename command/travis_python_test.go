@@ -9,7 +9,10 @@
 //
 package command
 
-import "testing"
+import (
+	"io/ioutil"
+	"testing"
+)
 
 // PythonCase defines a case of matrix evaluation for python projects.
 type PythonCase struct {
@@ -41,7 +44,7 @@ func TestPythonMatrixInclude(t *testing.T) {
 		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Include)
 	}
 
-	res, err := travis.ArgumentSet()
+	res, err := travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -85,7 +88,7 @@ matrix:
 		t.Error("Size of items in matrix.exclude is wrong:", travis.Matrix.Exclude)
 	}
 
-	res, err := travis.ArgumentSet()
+	res, err := travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -134,7 +137,7 @@ func TestPythonArgumentSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -157,7 +160,7 @@ env:
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -185,7 +188,7 @@ env:
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -215,7 +218,7 @@ env:
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -263,7 +266,7 @@ func TestPythonArgumentSetWithFullDescriptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err := travis.ArgumentSet()
+	res, err := travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -294,6 +297,38 @@ func TestPythonArgumentSetWithFullDescriptions(t *testing.T) {
 		if len(set[1]) != 3 || set[1][0] != "GLOBAL=global" || set[1][1] != "FOO=bar" || set[1][2] != "BAR=foo" {
 			t.Error("Env has wrong values:", res)
 		}
+	}
+
+}
+
+func TestPythonUnknownArgumentSet(t *testing.T) {
+
+	var err error
+	// The following configuration is copied from matplotlib.
+	travis, err := NewTravis([]byte(`language: "python"
+matrix:
+  include:
+    - python: "nightly"
+      env: PRE=--pre
+    - os: osx
+      osx_image: xcode7.3
+      language: generic
+`))
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if len(travis.Matrix.Include) != 2 {
+		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Exclude)
+	}
+
+	res, err := travis.ArgumentSet(ioutil.Discard)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	// Python 2.7 is automatically added when no available runtimes are specified.
+	if len(res) != 1 {
+		t.Fatal("Generated arguments are wrong:", res)
 	}
 
 }

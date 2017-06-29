@@ -12,6 +12,7 @@ package command
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -116,10 +117,8 @@ func TestDockerfilePython(t *testing.T) {
 		t.Error("Dockerfile doesn't install pip packages:", dockerfile)
 	}
 
-	if !strings.Contains(dockerfile, "RUN apt-get install -y package1") {
-		t.Error("Dockerfile doesn't install required packages:", dockerfile)
-	}
-	if !strings.Contains(dockerfile, "RUN apt-get install -y package2") {
+	m := regexp.MustCompile(`RUN apt-get install -y \s* package1 \s* package2`)
+	if m.FindString(dockerfile) == "" {
 		t.Error("Dockerfile doesn't install required packages:", dockerfile)
 	}
 

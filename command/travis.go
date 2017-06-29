@@ -12,11 +12,10 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/mitchellh/mapstructure"
 
 	"gopkg.in/yaml.v2"
 )
@@ -106,11 +105,11 @@ func NewTravisFromFile(filename string) (res *Travis, err error) {
 
 // ArgumentSet returns a set of arguments to run entrypoint based on a build
 // matrix.
-func (t *Travis) ArgumentSet() (res TestCaseSet, err error) {
+func (t *Travis) ArgumentSet(logger io.Writer) (res TestCaseSet, err error) {
 
 	switch t.Language {
 	case "python":
-		res, err = t.argumentSetPython()
+		res, err = t.argumentSetPython(logger)
 	case "go":
 		res, err = t.argumentSetGo()
 	default:
@@ -132,6 +131,7 @@ func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 
 	switch raw := aux.(type) {
 	case []interface{}:
+		// If attribute env has one list instead of global and/or matrix attributes.
 		if len(raw) == 0 {
 			return
 		}
@@ -150,10 +150,32 @@ func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 		}
 
 	case map[interface{}]interface{}:
-		if err = mapstructure.Decode(raw, e); err != nil {
-			return err
-		}
+		e.Global = parseEnvMap(raw, "global")
+		e.Matrix = parseEnvMap(raw, "matrix")
 
+	}
+
+	return
+
+}
+
+// parseEnvMap parses a map of which key and value are defined as interface{},
+// and returns a list of strings the given map's value, which is associated with
+// the given key, represents.
+func parseEnvMap(m map[interface{}]interface{}, key string) (res []string) {
+
+	if selected, exist := m[key]; exist {
+		switch items := selected.(type) {
+		case string:
+			res = []string{items}
+
+		case []interface{}:
+			for _, v := range items {
+				if s, ok := v.(string); ok {
+					res = append(res, s)
+				}
+			}
+		}
 	}
 
 	return

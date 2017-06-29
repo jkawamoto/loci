@@ -206,6 +206,7 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool, output i
 			if json.Unmarshal(s.Bytes(), &log) == nil {
 				if log.Error != "" {
 					err = fmt.Errorf(log.Error)
+					fmt.Fprintf(output, "Error: %v - %v\n", log.ErrorDetail.Code, log.ErrorDetail.Message)
 					return
 				}
 				io.WriteString(output, log.Stream)

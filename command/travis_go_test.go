@@ -9,7 +9,10 @@
 //
 package command
 
-import "testing"
+import (
+	"io/ioutil"
+	"testing"
+)
 
 // GoCase defines a case of matrix evaluation for go projects.
 type GoCase struct {
@@ -41,7 +44,7 @@ func TestGoMatrixInclude(t *testing.T) {
 		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Include)
 	}
 
-	res, err := travis.ArgumentSet()
+	res, err := travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -89,7 +92,7 @@ matrix:
 		t.Error("Size of items in matrix.include is wrong:", travis.Matrix.Exclude)
 	}
 
-	res, err := travis.ArgumentSet()
+	res, err := travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -137,7 +140,7 @@ func TestGoArgumentSet(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -158,7 +161,7 @@ env:
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -180,7 +183,7 @@ env:
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -208,7 +211,7 @@ env:
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -238,7 +241,7 @@ env:
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err = travis.ArgumentSet()
+	res, err = travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -286,7 +289,7 @@ func TestGoArgumentSetWithFullDescriptions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	res, err := travis.ArgumentSet()
+	res, err := travis.ArgumentSet(ioutil.Discard)
 	if err != nil {
 		t.Error(err.Error())
 	}
