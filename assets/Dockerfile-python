@@ -24,6 +24,6 @@ RUN PATH="/root/.pyenv/bin:$PATH" && \
     eval "$(pyenv init -)" && \
     eval "$(pyenv virtualenv-init -)" && \
     PYVERSION=$(pyenv install -l | sed "s/ //g" | grep -E "^$VERSION($|[^-])" | tail -1) && \
-    pyenv install -s -v $PYVERSION && \
+    env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install -s -v $PYVERSION && \
     pyenv local $PYVERSION
 {{end}}
