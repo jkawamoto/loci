@@ -10,7 +10,7 @@ slug: readme
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](./info/licenses/)
 [![Build Status](https://travis-ci.org/jkawamoto/loci.svg?branch=master)](https://travis-ci.org/jkawamoto/loci)
 [![wercker status](https://app.wercker.com/status/25b462a013ed96bf51254862938e7659/s/master "wercker status")](https://app.wercker.com/project/byKey/25b462a013ed96bf51254862938e7659)
-[![Release](https://img.shields.io/badge/release-0.5.0-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.5.0)
+[![Release](https://img.shields.io/badge/release-0.5.1-brightgreen.svg)](https://github.com/jkawamoto/loci/releases/tag/v0.5.1)
 [![Japanese](https://img.shields.io/badge/qiita-%E6%97%A5%E6%9C%AC%E8%AA%9E-brightgreen.svg)](http://qiita.com/jkawamoto/items/a409dd9cd6e63034aa28)
 
 Loci runs CI tests locally to make sure your commits will pass such tests
