@@ -78,18 +78,18 @@ GLOBAL OPTIONS:
 Loci works with [docker](https://www.docker.com/).
 If your environment doesn't have docker, install it first.
 
-To build the newest version of Loci, use `go get` command:
-
-```shell
-$ go get github.com/jkawamoto/loci
-```
-
-If you're a [Homebrew](http://brew.sh/) user, you can install Loci by
-the following commands:
+If you're a [Homebrew](http://brew.sh/) or [Linuxbrew](http://linuxbrew.sh/)
+user, you can install Loci by the following commands:
 
 ```shell
 $ brew tap jkawamoto/loci
 $ brew install loci
+```
+
+To build the newest version of Loci, use `go get` command:
+
+```shell
+$ go get github.com/jkawamoto/loci
 ```
 
 Otherwise, compiled binaries are also available in
