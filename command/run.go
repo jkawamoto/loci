@@ -307,18 +307,14 @@ func run(opt *RunOpt) (err error) {
 	wg.Wait()
 	err = display.Close()
 	if err != nil {
-		return
+		errs.Add("", err)
 	}
 
 	if errs.Size() == 0 {
 		fmt.Fprintln(stdout, chalk.Green.Color("All tests have been passed."))
 	} else {
 		errList := errs.GetList()
-		if errList[0] == context.Canceled {
-			err = cli.NewExitError("canceled", 1)
-		} else {
-			err = cli.NewMultiError(errList...)
-		}
+		err = cli.NewMultiError(errList...)
 	}
 	return
 
