@@ -130,7 +130,7 @@ func Dockerfile(travis *Travis, opt *DockerfileOpt, archive string) (res []byte,
 // necessary; it also writes summarized lorring information to the given output.
 func PrepareBaseImage(ctx context.Context, ref string, output io.Writer) (err error) {
 
-	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
+	cli, err := client.NewEnvClient()
 	if err != nil {
 		return
 	}
@@ -166,7 +166,7 @@ func PrepareBaseImage(ctx context.Context, ref string, output io.Writer) (err er
 func Build(ctx context.Context, dir, tag, version string, noCache bool, output io.Writer) (err error) {
 
 	// Create a docker client.
-	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
+	cli, err := client.NewEnvClient()
 	if err != nil {
 		return
 	}
@@ -232,7 +232,7 @@ func Build(ctx context.Context, dir, tag, version string, noCache bool, output i
 func Start(ctx context.Context, tag, name string, env []string, output io.Writer) (err error) {
 
 	// Create a docker client.
-	cli, err := client.NewClient(client.DefaultDockerHost, "", nil, nil)
+	cli, err := client.NewEnvClient()
 	if err != nil {
 		return
 	}
