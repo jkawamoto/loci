@@ -72,8 +72,58 @@ type Matrix struct {
 	Exclude []interface{} `yaml:"exclude,omitempty"`
 }
 
+// TestCase is a set of environment variables and represented as a map of which
+// a key is a name of one environment variable and the associated value is the
+// value of the variable.
+type TestCase map[string]string
+
+// Slice returns a slice of strings representing this test case.
+func (c TestCase) Slice() (res []string) {
+	for key, value := range c {
+		res = append(res, fmt.Sprintf("%v=%v", key, value))
+	}
+	return
+}
+
+// Copy returns a hard copy of this test case.
+func (c TestCase) Copy() TestCase {
+	res := make(TestCase)
+	for k, v := range c {
+		res[k] = v
+	}
+	return res
+}
+
+// Merge updates this TestCase so that it also has key and values defined in the
+// given test case. If both test cases have a same key, the value associated
+// with the key will be overwritten by the value in the given test case.
+func (c TestCase) Merge(o TestCase) TestCase {
+	for k, v := range o {
+		c[k] = v
+	}
+	return c
+}
+
+// Match returns true if and only if the given TestCase has same configuration
+// as this test case.
+func (c TestCase) Match(o TestCase) bool {
+
+	if len(c) != len(o) {
+		return false
+	}
+	for k, v := range o {
+		if c[k] != v {
+			return false
+		}
+	}
+	return true
+
+}
+
 // TestCaseSet defines a set of arguments for build matrix.
-type TestCaseSet map[string][][]string
+// The test case set is a map of which key is a version and the associated value
+// is a list of test cases.
+type TestCaseSet map[string][]TestCase
 
 // NewTravis creates a Travis object from a byte array.
 func NewTravis(buf []byte) (res *Travis, err error) {
@@ -114,7 +164,7 @@ func (t *Travis) ArgumentSet(logger io.Writer) (res TestCaseSet, err error) {
 		res, err = t.argumentSetGo()
 	default:
 		res = make(TestCaseSet)
-		res[""] = [][]string{}
+		res[""] = []TestCase{}
 	}
 
 	return
@@ -143,6 +193,7 @@ func (e *Env) UnmarshalYAML(unmarshal func(interface{}) error) (err error) {
 			}
 			value[i] = v
 		}
+		// If each string has more than two variables, it means matrix configuration.
 		if len(strings.Split(strings.TrimSpace(value[0]), " ")) == 1 {
 			e.Global = value
 		} else {
@@ -178,6 +229,33 @@ func parseEnvMap(m map[interface{}]interface{}, key string) (res []string) {
 		}
 	}
 
+	return
+
+}
+
+// parseEnv parses a string representing a set of environment variable
+// definitions; and returns a TestCase.
+func parseEnv(env string) (c TestCase) {
+	c = make(TestCase)
+
+	b := 0
+	quoted := false
+	for i, v := range env {
+		if v == '"' {
+			quoted = !quoted
+		}
+		if !quoted && v == ' ' {
+			pair := strings.SplitN(strings.Replace(env[b:i], "\"", "", 2), "=", 2)
+			if len(pair) == 2 {
+				c[pair[0]] = pair[1]
+			}
+			b = i + 1
+		}
+	}
+	pair := strings.SplitN(strings.Replace(env[b:], "\"", "", 2), "=", 2)
+	if len(pair) == 2 {
+		c[pair[0]] = pair[1]
+	}
 	return
 
 }

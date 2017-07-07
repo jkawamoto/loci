@@ -197,7 +197,7 @@ func run(opt *RunOpt) (err error) {
 		}
 
 		wg.Add(1)
-		go func(version string, set [][]string) (err error) {
+		go func(version string, set []TestCase) (err error) {
 			semaphore <- struct{}{}
 			defer func() {
 				<-semaphore
@@ -242,7 +242,7 @@ func run(opt *RunOpt) (err error) {
 			}
 			fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Built a docker image for %v", version)))
 
-			for _, envs := range set {
+			for _, c := range set {
 
 				wg.Add(1)
 				go func(envs []string) {
@@ -294,7 +294,7 @@ func run(opt *RunOpt) (err error) {
 					}
 					return
 
-				}(envs)
+				}(c.Slice())
 
 			}
 

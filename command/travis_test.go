@@ -19,6 +19,93 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+func TestTestCaseSlice(t *testing.T) {
+
+	c := TestCase{
+		"FOO": "foo",
+		"BAR": "bar",
+	}
+
+	var foo, bar bool
+	for _, s := range c.Slice() {
+		switch s {
+		case "FOO=foo":
+			foo = true
+		case "BAR=bar":
+			bar = true
+		default:
+			t.Error("The slice converted from a test case has a wrong string:", s)
+		}
+	}
+	if !foo || !bar {
+		t.Errorf("The slice converted from a test case has missing variables: FOO=%v, BAR=%v", foo, bar)
+	}
+
+}
+
+func TestTestCaseCopy(t *testing.T) {
+
+	a := TestCase{
+		"FOO": "foo",
+		"BAR": "bar",
+	}
+	b := a.Copy()
+	a["FOO"] = "piyo"
+
+	if b["FOO"] != "foo" || b["BAR"] != "bar" {
+		t.Error("Copied test case is not a hard copy", b)
+	}
+
+}
+
+func TestTestCaseMerge(t *testing.T) {
+
+	a := TestCase{
+		"FOO": "foo",
+		"BAR": "bar",
+	}
+	b := TestCase{
+		"BAR":  "piyo",
+		"FUGA": "fuga",
+	}
+	a.Merge(b)
+
+	var foo, bar, fuga bool
+	for key, value := range a {
+		switch {
+		case key == "FOO" && value == "foo":
+			foo = true
+		case key == "BAR" && value == "piyo":
+			bar = true
+		case key == "FUGA" && value == "fuga":
+			fuga = true
+		default:
+			t.Errorf("Merged test case has a wrong pair: %v=%v", key, value)
+		}
+	}
+	if !foo || !bar || !fuga {
+		t.Errorf("Merged test case has missing pairs: FOO=%v, BAR=%v, FUGA=%v", foo, bar, fuga)
+	}
+
+}
+
+func TestTestCaseMatch(t *testing.T) {
+
+	a := TestCase{
+		"FOO": "foo",
+		"BAR": "bar",
+	}
+	if !a.Match(a.Copy()) {
+		t.Error("Match returns false for a copied test case")
+	}
+	b := a.Copy()
+	a["FOO"] = "piyo"
+	if a.Match(b) {
+		t.Error("Match returns true for a different test case")
+	}
+
+}
+
 func storeAndLoadTravis(src *Travis) (res *Travis, err error) {
 	temp := os.TempDir()
 	target := path.Join(temp, "sample.yml")
@@ -374,6 +461,31 @@ env:
 		if travis.Env.Global[i] != v {
 			t.Error("A global variable is not match:", travis.Env.Global)
 		}
+	}
+
+}
+
+func TestParseEnvStrings(t *testing.T) {
+
+	var res TestCase
+	res = parseEnv("FOO=bar")
+	if len(res) != 1 || res["FOO"] != "bar" {
+		t.Error("parseEnv returns wrong envs:", res)
+	}
+
+	res = parseEnv("FOO=bar BAR=fuga")
+	if len(res) != 2 || res["FOO"] != "bar" || res["BAR"] != "fuga" {
+		t.Error("parseEnv returns wrong envs:", res)
+	}
+
+	res = parseEnv(`FOO="bar fuga"`)
+	if len(res) != 1 || res["FOO"] != "bar fuga" {
+		t.Error("parseEnv returns wrong envs:", res)
+	}
+
+	res = parseEnv(`FOO="bar fuga" BAR="foo fuga"`)
+	if len(res) != 2 || res["FOO"] != "bar fuga" || res["BAR"] != "foo fuga" {
+		t.Error("parseEnv returns wrong envs:", res)
 	}
 
 }
