@@ -9,7 +9,9 @@
 #
 {{define "package"}}
 ENV GOPATH /data
-RUN apt-get install -y golang
+RUN apt-get update && \
+    apt-get install -y golang && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install gimme
 RUN mkdir -p $GOPATH/bin && \
@@ -20,6 +22,7 @@ RUN mkdir -p $GOPATH/bin && \
 {{define "version"}}
 # Install a specific version of Go
 RUN PATH="$GOPATH/bin/:$PATH" && \
+    echo "Set Go $VERSION" && \
     [ $VERSION = "any" ] || eval "$(GIMME_GO_VERSION=$VERSION gimme)"
 {{end}}
 
