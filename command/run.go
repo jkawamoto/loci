@@ -205,7 +205,7 @@ func run(opt *RunOpt) (err error) {
 			}()
 
 			// Build a container image.
-			sec := display.AddSection(fmt.Sprintf("Building a image for %v", version))
+			sec := display.AddSection(fmt.Sprintf("Building a docker image for %v", version))
 			defer display.DeleteSection(sec)
 
 			var output io.Writer
@@ -240,7 +240,7 @@ func run(opt *RunOpt) (err error) {
 				fmt.Fprintln(logger, msg)
 				return
 			}
-			fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Built a image for %v", version)))
+			fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Built a docker image for %v", version)))
 
 			for _, envs := range set {
 
