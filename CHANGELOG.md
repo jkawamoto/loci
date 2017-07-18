@@ -1,3 +1,13 @@
+## 0.5.2 (2017-07-18)
+### Update
+- Support remote docker servers.
+- Output logging messages whenever some of tests are failed.
+
+### Fixed
+- Missing global environment variables.
+- Missing packages and reducing sandbox image sizes.
+
+
 ## 0.5.1 (2017-06-29)
 ### Update
 - Skipping tests for unsupported python versions
