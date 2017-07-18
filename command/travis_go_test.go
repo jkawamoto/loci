@@ -56,13 +56,13 @@ func TestGoMatrixInclude(t *testing.T) {
 
 	if set, ok := res["1.6"]; !ok {
 		t.Error("Version is wrong:", res)
-	} else if len(set) != 1 || len(set[0]) != 1 || set[0][0] != "FOO=bar" {
+	} else if len(set) != 1 || len(set[0]) != 1 || set[0]["FOO"] != "bar" {
 		t.Error("Env has wrong values:", res)
 	}
 
 	if set, ok := res["1.7"]; !ok {
 		t.Error("Version is wrong:", res)
-	} else if len(set) != 1 || len(set[0]) != 1 || set[0][0] != "FOO=fuga" {
+	} else if len(set) != 1 || len(set[0]) != 1 || set[0]["FOO"] != "fuga" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -107,10 +107,10 @@ matrix:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -119,7 +119,7 @@ matrix:
 	} else if len(set) != 1 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -171,7 +171,7 @@ env:
 	}
 	if set, ok := res["any"]; !ok {
 		t.Error("Version is wrong:", res)
-	} else if len(set) != 1 || len(set[0]) != 1 || set[0][0] != "FOO=bar" {
+	} else if len(set) != 1 || len(set[0]) != 1 || set[0]["FOO"] != "bar" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -196,10 +196,10 @@ env:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -254,10 +254,10 @@ env:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -266,10 +266,10 @@ env:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -302,10 +302,10 @@ func TestGoArgumentSetWithFullDescriptions(t *testing.T) {
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 3 || set[0][0] != "GLOBAL=global" || set[0][1] != "FOO=foo" || set[0][2] != "BAR=bar" {
+		if len(set[0]) != 3 || set[0]["GLOBAL"] != "global" || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 3 || set[1][0] != "GLOBAL=global" || set[1][1] != "FOO=bar" || set[1][2] != "BAR=foo" {
+		if len(set[1]) != 3 || set[1]["GLOBAL"] != "global" || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -314,10 +314,10 @@ func TestGoArgumentSetWithFullDescriptions(t *testing.T) {
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 3 || set[0][0] != "GLOBAL=global" || set[0][1] != "FOO=foo" || set[0][2] != "BAR=bar" {
+		if len(set[0]) != 3 || set[0]["GLOBAL"] != "global" || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 3 || set[1][0] != "GLOBAL=global" || set[1][1] != "FOO=bar" || set[1][2] != "BAR=foo" {
+		if len(set[1]) != 3 || set[1]["GLOBAL"] != "global" || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}

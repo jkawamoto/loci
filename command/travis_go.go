@@ -20,67 +20,51 @@ import (
 func (t *Travis) argumentSetGo() (res TestCaseSet, err error) {
 
 	res = make(TestCaseSet)
+	global := parseEnv(strings.Join(t.Env.Global, " "))
 
 	// Parse Matrix.Include.
 	for _, v := range t.Matrix.Include {
-		version, env, err := parseMatrixGo(v)
+		version, c, err := parseMatrixGo(v)
 		if err != nil {
 			return nil, err
 		}
-		if res[version] == nil {
-			res[version] = [][]string{env}
-		} else {
-			res[version] = append(res[version], env)
-		}
-
+		res[version] = append(res[version], global.Copy().Merge(c))
 	}
 
+	// Parse general environment.
 	if len(t.Go) == 0 && len(res) == 0 {
 		t.Go = []string{"any"}
 	}
 	for _, version := range t.Go {
 
 		if len(t.Env.Matrix) == 0 {
-			res[version] = [][]string{t.Env.Global}
-
+			// If there is no matrix configuration, use only global configuration.
+			res[version] = append(res[version], global)
 		} else {
-			res[version] = [][]string{}
+			// Look up each matrix case, and merge sprcific configuration to the
+			// global one.
 			for _, m := range t.Env.Matrix {
-				envs := t.Env.Global
-				for _, pair := range strings.Split(strings.TrimSpace(m), " ") {
-					envs = append(envs, pair)
-				}
-				res[version] = append(res[version], envs)
+				c := parseEnv(m)
+				res[version] = append(res[version], global.Copy().Merge(c))
 			}
-
 		}
 
 	}
 
 	// Parse Matrix.Exclude.
 	for _, v := range t.Matrix.Exclude {
-		version, env, err := parseMatrixGo(v)
+		version, exclude, err := parseMatrixGo(v)
 		if err != nil {
 			return nil, err
 		}
-		excludes := make(map[string]struct{})
-		for _, e := range env {
-			excludes[e] = struct{}{}
-		}
 		if set, ok := res[version]; ok {
-			res[version] = [][]string{}
-			for _, item := range set {
-				skip := false
-				for _, pair := range item {
-					if _, exist := excludes[pair]; exist {
-						skip = true
-						break
-					}
-				}
-				if !skip {
-					res[version] = append(res[version], item)
+			var new []TestCase
+			for _, c := range set {
+				if !c.Match(exclude) {
+					new = append(new, c)
 				}
 			}
+			res[version] = new
 		}
 	}
 
@@ -88,7 +72,9 @@ func (t *Travis) argumentSetGo() (res TestCaseSet, err error) {
 
 }
 
-func parseMatrixGo(v interface{}) (version string, env []string, err error) {
+// parseMatrixGo parses an interface representing an entry of env.matrix;
+// and returns the version and test case the interface specifies for golang.
+func parseMatrixGo(v interface{}) (version string, c TestCase, err error) {
 
 	m, ok := v.(map[interface{}]interface{})
 	if !ok {
@@ -103,7 +89,7 @@ func parseMatrixGo(v interface{}) (version string, env []string, err error) {
 		err = fmt.Errorf("Env of the given item is broken.")
 		return
 	}
-	env = parseEnv(variables)
+	c = parseEnv(variables)
 
 	return
 

@@ -22,6 +22,7 @@ ENV HTTPS_PROXY {{.}}
 {{with .NoProxy}}
 ENV NO_PROXY {{.}}
 {{end}}
+ENV TRAVIS_OS_NAME linux
 
 {{with .AptProxy}}
 RUN echo "Acquire::http { Proxy \"{{.}}\"; };" >> /etc/apt/apt.conf.d/01proxy
@@ -36,8 +37,8 @@ RUN PYPI_PROXY={{.}} && \
 
 # Install Common APT packages.
 RUN apt-get update && \
-    # apt-get upgrade -y && \
-    apt-get install -y apt-utils git curl wget sudo unzip ccache
+    apt-get install -y apt-utils git curl wget sudo unzip ccache pkg-config xvfb libgtk2.0-dev freeglut3-dev && \
+    rm -rf /var/lib/apt/lists/*
 # Install language specific packages.
 {{block "package" .}}
 {{end}}
@@ -47,7 +48,9 @@ ARG VERSION
 {{end}}
 # Install required packages.
 {{if .Travis.Addons.Apt.Packages}}
-RUN apt-get install -y {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}}
+RUN apt-get update && \
+    apt-get install -y {{range .Travis.Addons.Apt.Packages}} {{.}} {{end}} && \
+    rm -rf /var/lib/apt/lists/*
 {{end}}
 
 {{block "source" .}}

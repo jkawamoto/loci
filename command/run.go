@@ -12,6 +12,8 @@ package command
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,6 +21,7 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -197,7 +200,7 @@ func run(opt *RunOpt) (err error) {
 		}
 
 		wg.Add(1)
-		go func(version string, set [][]string) (err error) {
+		go func(version string, set []TestCase) (err error) {
 			semaphore <- struct{}{}
 			defer func() {
 				<-semaphore
@@ -205,7 +208,7 @@ func run(opt *RunOpt) (err error) {
 			}()
 
 			// Build a container image.
-			sec := display.AddSection(fmt.Sprintf("Building a image for %v", version))
+			sec := display.AddSection(fmt.Sprintf("Building a docker image for %v", version))
 			defer display.DeleteSection(sec)
 
 			var output io.Writer
@@ -240,9 +243,9 @@ func run(opt *RunOpt) (err error) {
 				fmt.Fprintln(logger, msg)
 				return
 			}
-			fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Built a image for %v", version)))
+			fmt.Fprintln(logger, chalk.Green.Color(fmt.Sprintf("Built a docker image for %v", version)))
 
-			for _, envs := range set {
+			for _, c := range set {
 
 				wg.Add(1)
 				go func(envs []string) {
@@ -266,14 +269,22 @@ func run(opt *RunOpt) (err error) {
 
 					if opt.OutputLog {
 						var fp *os.File
+						hash := md5.Sum([]byte(strings.Join(envs, "-")))
 						fp, err = os.OpenFile(
-							fmt.Sprintf("loci-%v.log", strings.Join(append([]string{version}, envs...), "-")),
+							fmt.Sprintf("loci-%v-%v.log", version, strconv.FormatInt(int64(binary.BigEndian.Uint64(hash[:])), 36)),
 							os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 						if err != nil {
 							errs.Add(fmt.Sprintf("%v:%v", version, envs), err)
 							return
 						}
 						defer fp.Close()
+
+						fmt.Fprintln(fp, "* Environment variables *")
+						for _, v := range envs {
+							fmt.Fprintln(fp, v)
+						}
+						fmt.Fprintln(fp, "")
+
 						output = io.MultiWriter(output, colorable.NewColorable(fp))
 					}
 
@@ -294,7 +305,7 @@ func run(opt *RunOpt) (err error) {
 					}
 					return
 
-				}(envs)
+				}(c.Slice())
 
 			}
 
@@ -307,18 +318,14 @@ func run(opt *RunOpt) (err error) {
 	wg.Wait()
 	err = display.Close()
 	if err != nil {
-		return
+		errs.Add("", err)
 	}
 
 	if errs.Size() == 0 {
 		fmt.Fprintln(stdout, chalk.Green.Color("All tests have been passed."))
 	} else {
 		errList := errs.GetList()
-		if errList[0] == context.Canceled {
-			err = cli.NewExitError("canceled", 1)
-		} else {
-			err = cli.NewMultiError(errList...)
-		}
+		err = cli.NewMultiError(errList...)
 	}
 	return
 

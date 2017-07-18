@@ -112,7 +112,7 @@ func (s *Section) String() string {
 
 	return fmt.Sprintf(
 		"%v\n%v",
-		chalk.Bold.TextStyle(s.Header),
+		chalk.Cyan.Color(s.Header),
 		strings.Join(s.Body, "\n"))
 
 }

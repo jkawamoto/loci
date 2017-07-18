@@ -55,12 +55,12 @@ func TestPythonMatrixInclude(t *testing.T) {
 	}
 	if set, ok := res["2.7"]; !ok {
 		t.Error("Version is wrong:", res)
-	} else if len(set) != 1 || len(set[0]) != 1 || set[0][0] != "FOO=bar" {
+	} else if len(set) != 1 || len(set[0]) != 1 || set[0]["FOO"] != "bar" {
 		t.Error("Env has wrong values:", res)
 	}
 	if set, ok := res["3.5"]; !ok {
 		t.Error("Version is wrong:", res)
-	} else if len(set) != 1 || len(set[0]) != 1 || set[0][0] != "FOO=fuga" {
+	} else if len(set) != 1 || len(set[0]) != 1 || set[0]["FOO"] != "fuga" {
 		t.Error("Env has wrong values:", res)
 	}
 
@@ -103,10 +103,10 @@ matrix:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -115,7 +115,7 @@ matrix:
 	} else if len(set) != 1 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -173,10 +173,10 @@ env:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -231,10 +231,10 @@ env:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -243,10 +243,10 @@ env:
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 2 || set[0][0] != "FOO=foo" || set[0][1] != "BAR=bar" {
+		if len(set[0]) != 2 || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 2 || set[1][0] != "FOO=bar" || set[1][1] != "BAR=foo" {
+		if len(set[1]) != 2 || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -279,10 +279,10 @@ func TestPythonArgumentSetWithFullDescriptions(t *testing.T) {
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 3 || set[0][0] != "GLOBAL=global" || set[0][1] != "FOO=foo" || set[0][2] != "BAR=bar" {
+		if len(set[0]) != 3 || set[0]["GLOBAL"] != "global" || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 3 || set[1][0] != "GLOBAL=global" || set[1][1] != "FOO=bar" || set[1][2] != "BAR=foo" {
+		if len(set[1]) != 3 || set[1]["GLOBAL"] != "global" || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -291,10 +291,10 @@ func TestPythonArgumentSetWithFullDescriptions(t *testing.T) {
 	} else if len(set) != 2 {
 		t.Error("Env has wrong values:", res)
 	} else {
-		if len(set[0]) != 3 || set[0][0] != "GLOBAL=global" || set[0][1] != "FOO=foo" || set[0][2] != "BAR=bar" {
+		if len(set[0]) != 3 || set[0]["GLOBAL"] != "global" || set[0]["FOO"] != "foo" || set[0]["BAR"] != "bar" {
 			t.Error("Env has wrong values:", res)
 		}
-		if len(set[1]) != 3 || set[1][0] != "GLOBAL=global" || set[1][1] != "FOO=bar" || set[1][2] != "BAR=foo" {
+		if len(set[1]) != 3 || set[1]["GLOBAL"] != "global" || set[1]["FOO"] != "bar" || set[1]["BAR"] != "foo" {
 			t.Error("Env has wrong values:", res)
 		}
 	}
@@ -329,6 +329,82 @@ matrix:
 	// Python 2.7 is automatically added when no available runtimes are specified.
 	if len(res) != 1 {
 		t.Fatal("Generated arguments are wrong:", res)
+	}
+
+}
+
+func TestPythonOverwriteEvnSet(t *testing.T) {
+
+	var err error
+	// The following configuration is copied from matplotlib.
+	travis, err := NewTravis([]byte(`language: "python"
+env:
+  global:
+    - secure: some_encrypted_value
+    - BUILD_DOCS=false
+matrix:
+  include:
+    - python: 2.7
+      env: MOCK=mock NUMPY=numpy==1.7.1 PANDAS=pandas NOSE=nose
+    - python: 3.5
+      env: BUILD_DOCS=true
+`))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	res, err := travis.ArgumentSet(ioutil.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res) != 2 {
+		t.Error("The number of generated test cases is wrong", res)
+	}
+
+	if cases, exist := res["2.7"]; !exist {
+		t.Error("Version 2.7 is not included in the generated test sets", res)
+	} else if len(cases) != 1 {
+		t.Error("Number of generated tast cases for 2.7 is wrong", res)
+	} else {
+		var mock, numpy, pandas, nose, docs bool
+		for k, v := range cases[0] {
+			switch {
+			case k == "MOCK" && v == "mock":
+				mock = true
+			case k == "NUMPY" && v == "numpy==1.7.1":
+				numpy = true
+			case k == "PANDAS" && v == "pandas":
+				pandas = true
+			case k == "NOSE" && v == "nose":
+				nose = true
+			case k == "BUILD_DOCS" && v == "false":
+				docs = true
+			default:
+				t.Error("A test case has wrong environment variables", v)
+			}
+		}
+		if !mock || !numpy || !pandas || !nose || !docs {
+			t.Errorf("Missing variables: MOCK=%v, NUMPY=%v, PANDAS=%v, NOSE=%v, BUILD_DOCS=%v", mock, numpy, pandas, nose, docs)
+		}
+	}
+
+	if cases, exist := res["3.5"]; !exist {
+		t.Error("Version 3.5 is not included in the generated test sets", res)
+	} else if len(cases) != 1 {
+		t.Error("Number of generated tast cases for 3.5 is wrong", res)
+	} else {
+		var docs bool
+		for k, v := range cases[0] {
+			switch {
+			case k == "BUILD_DOCS" && v == "true":
+				docs = true
+			default:
+				t.Error("A test case has wrong environment variables", v)
+			}
+		}
+		if !docs {
+			t.Errorf("Missing variables: BUILD_DOCS=%v", docs)
+		}
 	}
 
 }

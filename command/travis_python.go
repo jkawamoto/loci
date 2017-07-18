@@ -34,22 +34,18 @@ var (
 func (t *Travis) argumentSetPython(logger io.Writer) (res TestCaseSet, err error) {
 
 	res = make(TestCaseSet)
+	global := parseEnv(strings.Join(t.Env.Global, " "))
 
 	// Parse Matrix.Include.
 	for _, v := range t.Matrix.Include {
-		version, env, err := parseMatrixPython(v)
+		version, c, err := parseMatrixPython(v)
 		if err == ErrUnknownPythonVersion {
 			fmt.Fprintf(logger, chalk.Yellow.Color("Python version %v is not supported\n"), version)
 			continue
 		} else if err != nil {
 			return nil, err
 		}
-		if res[version] == nil {
-			res[version] = [][]string{env}
-		} else {
-			res[version] = append(res[version], env)
-		}
-
+		res[version] = append(res[version], global.Copy().Merge(c))
 	}
 
 	if len(t.Python) == 0 && len(res) == 0 {
@@ -58,49 +54,36 @@ func (t *Travis) argumentSetPython(logger io.Writer) (res TestCaseSet, err error
 	for _, version := range t.Python {
 
 		if len(t.Env.Matrix) == 0 {
-			res[version] = [][]string{t.Env.Global}
-
+			// If there is no matrix configuration, use only global configuration.
+			res[version] = append(res[version], global)
 		} else {
-			res[version] = [][]string{}
+			// Look up each matrix case, and merge sprcific configuration to the
+			// global one.
 			for _, m := range t.Env.Matrix {
-				envs := t.Env.Global
-				for _, pair := range strings.Split(strings.TrimSpace(m), " ") {
-					envs = append(envs, pair)
-				}
-				res[version] = append(res[version], envs)
+				c := parseEnv(m)
+				res[version] = append(res[version], global.Copy().Merge(c))
 			}
-
 		}
 
 	}
 
 	// Parse Matrix.Exclude.
 	for _, v := range t.Matrix.Exclude {
-		version, env, err := parseMatrixPython(v)
+		version, exclude, err := parseMatrixPython(v)
 		if err == ErrUnknownPythonVersion {
 			fmt.Fprintf(logger, chalk.Yellow.Color("Python version %v is not supported\n"), version)
 			continue
 		} else if err != nil {
 			return nil, err
 		}
-		excludes := make(map[string]struct{})
-		for _, e := range env {
-			excludes[e] = struct{}{}
-		}
 		if set, ok := res[version]; ok {
-			res[version] = [][]string{}
-			for _, item := range set {
-				skip := false
-				for _, pair := range item {
-					if _, exist := excludes[pair]; exist {
-						skip = true
-						break
-					}
-				}
-				if !skip {
-					res[version] = append(res[version], item)
+			var new []TestCase
+			for _, c := range set {
+				if !c.Match(exclude) {
+					new = append(new, c)
 				}
 			}
+			res[version] = new
 		}
 	}
 
@@ -110,7 +93,7 @@ func (t *Travis) argumentSetPython(logger io.Writer) (res TestCaseSet, err error
 
 // parseMatrixPython parses a given item v in an include/exclude list.
 // v must be castable to map[interface{}]interface{}.
-func parseMatrixPython(v interface{}) (version string, env []string, err error) {
+func parseMatrixPython(v interface{}) (version string, c TestCase, err error) {
 
 	m, ok := v.(map[interface{}]interface{})
 	if !ok {
@@ -134,7 +117,7 @@ func parseMatrixPython(v interface{}) (version string, env []string, err error) 
 		err = fmt.Errorf("Env of the given item is broken.")
 		return
 	}
-	env = parseEnv(variables)
+	c = parseEnv(variables)
 
 	return
 
