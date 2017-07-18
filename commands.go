@@ -28,8 +28,6 @@ func max(a, b int) int {
 
 // GlobalFlags defines global flags.
 var GlobalFlags = []cli.Flag{
-	// TODO: Remote docker host.
-	// TODO: delete name option because lots of containers will be created.
 	cli.StringFlag{
 		Name: "name, n",
 		Usage: "base `NAME` of containers running tests. " +
