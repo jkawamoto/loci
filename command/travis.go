@@ -15,6 +15,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -82,6 +83,7 @@ func (c TestCase) Slice() (res []string) {
 	for key, value := range c {
 		res = append(res, fmt.Sprintf("%v=%v", key, value))
 	}
+	sort.Strings(res)
 	return
 }
 

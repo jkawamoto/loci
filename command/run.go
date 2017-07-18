@@ -12,6 +12,8 @@ package command
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,6 +21,7 @@ import (
 	"os/signal"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -266,14 +269,22 @@ func run(opt *RunOpt) (err error) {
 
 					if opt.OutputLog {
 						var fp *os.File
+						hash := md5.Sum([]byte(strings.Join(envs, "-")))
 						fp, err = os.OpenFile(
-							fmt.Sprintf("loci-%v.log", strings.Join(append([]string{version}, envs...), "-")),
+							fmt.Sprintf("loci-%v-%v.log", version, strconv.FormatInt(int64(binary.BigEndian.Uint64(hash[:])), 36)),
 							os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 						if err != nil {
 							errs.Add(fmt.Sprintf("%v:%v", version, envs), err)
 							return
 						}
 						defer fp.Close()
+
+						fmt.Fprintln(fp, "* Environment variables *")
+						for _, v := range envs {
+							fmt.Fprintln(fp, v)
+						}
+						fmt.Fprintln(fp, "")
+
 						output = io.MultiWriter(output, colorable.NewColorable(fp))
 					}
 
