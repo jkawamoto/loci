@@ -77,6 +77,7 @@ GLOBAL OPTIONS:
 ## Installation
 Loci works with [docker](https://www.docker.com/).
 If your environment doesn't have docker, install it first.
+The minimum required docker version is 1.12.0 (API version: 1.24).
 
 If you're a [Homebrew](http://brew.sh/) or [Linuxbrew](http://linuxbrew.sh/)
 user, you can install Loci by the following commands:
