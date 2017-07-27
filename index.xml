@@ -313,7 +313,8 @@ give a container name with &lt;code&gt;--name&lt;/code&gt; or &lt;code&gt;-n&lt;
 &lt;h3 id=&#34;installation&#34;&gt;Installation&lt;/h3&gt;
 
 &lt;p&gt;Loci works with &lt;a href=&#34;https://www.docker.com/&#34;&gt;docker&lt;/a&gt;.
-If your environment doesn&amp;rsquo;t have docker, install it first.&lt;/p&gt;
+If your environment doesn&amp;rsquo;t have docker, install it first.
+The minimum required docker version is 1.12.0 (API version: 1.24).&lt;/p&gt;
 
 &lt;p&gt;If you&amp;rsquo;re a &lt;a href=&#34;http://brew.sh/&#34;&gt;Homebrew&lt;/a&gt; or &lt;a href=&#34;http://linuxbrew.sh/&#34;&gt;Linuxbrew&lt;/a&gt;
 user, you can install Loci by the following commands:&lt;/p&gt;
