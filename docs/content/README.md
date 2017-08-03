@@ -34,7 +34,7 @@ Loci also requires [Docker](https://www.docker.com/) to run tests in a sandbox.
 [![Docker logo](img/small_h-trans.png)](https://www.docker.com/)
 
 ### Demo
-<script type="text/javascript" src="https://asciinema.org/a/YGjZzFBlteajYOEoUug1GVSRj.js" id="asciicast-YGjZzFBlteajYOEoUug1GVSRj" async></script>
+<script type="text/javascript" src="https://asciinema.org/a/126089.js" id="asciicast-126089" async></script>
 
 ### Usage
 If your current directory has `.travis.yml`, run just `loci` like

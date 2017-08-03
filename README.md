@@ -15,7 +15,7 @@ for [Python](https://www.python.org/) and [Go](https://golang.org/) projects.
 Loci also requires [Docker](https://www.docker.com/) to run tests in a sandbox.
 
 ## Demo
-[![asciicast](https://asciinema.org/a/YGjZzFBlteajYOEoUug1GVSRj.png)](https://asciinema.org/a/YGjZzFBlteajYOEoUug1GVSRj)
+[![asciicast](https://asciinema.org/a/126089.png)](https://asciinema.org/a/126089)
 
 ## Usage
 If your current directory has `.travis.yml`, run just `loci` like
