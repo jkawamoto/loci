@@ -150,7 +150,7 @@ func NewDisplay(ctx context.Context, title string, maxSection int) (display *Dis
 		gui:        g,
 		done:       make(chan error),
 		Header: newHeader(func(handler DisplayUpdateHandler) {
-			g.Execute(func(g *gocui.Gui) (err error) {
+			g.Update(func(g *gocui.Gui) (err error) {
 				v, err := g.View("header")
 				if err != nil {
 					return
@@ -236,7 +236,7 @@ func (d *Display) Close() (err error) {
 	defer d.mutex.Unlock()
 
 	if !d.closed {
-		d.gui.Execute(func(g *gocui.Gui) error {
+		d.gui.Update(func(g *gocui.Gui) error {
 			return gocui.ErrQuit
 		})
 		err = <-d.done
@@ -253,7 +253,7 @@ func (d *Display) AddSection(header string) *Section {
 	defer d.mutex.Unlock()
 
 	s := newSection(header, func(handler DisplayUpdateHandler) {
-		d.gui.Execute(func(g *gocui.Gui) (err error) {
+		d.gui.Update(func(g *gocui.Gui) (err error) {
 			v, err := g.View(header)
 			if err != nil {
 				return
@@ -269,7 +269,7 @@ func (d *Display) AddSection(header string) *Section {
 		return d.sections[i].Header < d.sections[j].Header
 	})
 
-	d.gui.Execute(d.Layout)
+	d.gui.Update(d.Layout)
 	return s
 }
 
@@ -286,7 +286,7 @@ func (d *Display) DeleteSection(sec *Section) {
 		}
 	}
 
-	d.gui.Execute(func(g *gocui.Gui) error {
+	d.gui.Update(func(g *gocui.Gui) error {
 		return g.DeleteView(sec.Header)
 	})
 
