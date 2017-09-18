@@ -1,3 +1,12 @@
+## 0.5.3 (2017-09-18)
+### Update
+- Use Ubuntu Trusty as the base image according to Travis CI's
+  [update](https://twitter.com/travisci/status/888472266455089152).
+
+### Fixed
+- Follow [gocui](https://github.com/jroimartin/gocui) library method rename. (PR #5)
+
+
 ## 0.5.2 (2017-07-18)
 ### Update
 - Support remote docker servers.
