@@ -53,7 +53,7 @@ var GlobalFlags = []cli.Flag{
 	cli.StringFlag{
 		Name:  "base, b",
 		Usage: "use image `TAG` as the base image.",
-		Value: "ubuntu:latest",
+		Value: "ubuntu:trusty",
 	},
 	cli.StringFlag{
 		Name:   "apt-proxy",
