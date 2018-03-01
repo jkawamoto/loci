@@ -75,7 +75,7 @@ This software uses the following open source libraries:
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 > SOFTWARE.
 
-## [docker](https://github.com/docker/docker)
+## [docker](https://github.com/moby/moby)
 
 > Copyright 2013-2016 Docker, Inc.
 >
