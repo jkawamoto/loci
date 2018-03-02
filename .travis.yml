@@ -15,9 +15,6 @@ cache:
     - $GOPATH/pkg
 
 install:
-- rm -rf $GOPATH/src/github.com/docker
-- rm -rf $GOPATH/src/github.com/jkawamoto
-- rm -rf $GOPATH/src/github.com/jteeuwen
 - make get-deps
 script:
 - echo $TEST_ENV
