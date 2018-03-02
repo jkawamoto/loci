@@ -4,8 +4,18 @@ go:
 env:
 - TEST_ENV=true TEST_ENV2=false
 - TEST_ENV=false TEST_ENV2=true
+before_cache:
+- rm -rf $GOPATH/src/github.com/docker
+- rm -rf $GOPATH/src/github.com/jkawamoto
+- rm -rf $GOPATH/src/github.com/jteeuwen
+
+cache:
+  directories:
+    - $GOPATH/src
+    - $GOPATH/pkg
+
 install:
-- make get-deps
+- make -d get-deps
 script:
 - echo $TEST_ENV
 - if [[ $TEST_ENV = true ]]; then make test; fi
